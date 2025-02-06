@@ -102,19 +102,31 @@ const Empresa = () => {
   /*despliega la informacion de la tabla */
   // Usar useCallback para asegurar que la función no se recree en cada renderizado
   const loadgetAllEmpresas = useCallback(async () => {
-    const res = await getAllEmpresas();
-
-    const empresasData = res.data ? res.data : res;
-
-    const formattedData = empresasData.map((empresa) => ({
-      key: empresa.id, 
-      Empresa: empresa.nombre,
-      RFC: empresa.rfc,
-      Direccion: `${empresa.calle} ${empresa.numero}, ${empresa.colonia}, ${empresa.ciudad}, ${empresa.estado}, ${empresa.codigoPostal}`,
-    }));
-
-    setEmpresas(formattedData); // Actualizar el estado con los datos formateados
-  }, []); // El array vacío asegura que no se recreará la función a menos que algo cambie
+    try {
+      const res = await getAllEmpresas();
+      const empresasData = res.data ? res.data : res;
+  
+      // Obtener el id de la organización del usuario autenticado
+      const userOrganizationId = localStorage.getItem("organizacion_id"); // O la forma en la que almacenas el ID de la organización
+  
+      // Filtrar solo las empresas de la organización del usuario
+      const filteredEmpresas = empresasData.filter(
+        (empresa) => empresa.organizacion === parseInt(userOrganizationId)
+      );
+  
+      const formattedData = filteredEmpresas.map((empresa) => ({
+        key: empresa.id,
+        Empresa: empresa.nombre,
+        RFC: empresa.rfc,
+        Direccion: `${empresa.calle} ${empresa.numero}, ${empresa.colonia}, ${empresa.ciudad}, ${empresa.estado}, ${empresa.codigoPostal}`,
+      }));
+  
+      setEmpresas(formattedData);
+    } catch (error) {
+      console.error("Error al cargar las empresas:", error);
+    }
+  }, []);
+  
 
   useEffect(() => {
     const fetchRegimenFiscal= async()=>{
