@@ -115,12 +115,11 @@ const Cotizar = () => {
 
     fetchData();
   }, []);
-
   const fetchCotizacionesYEstados = async () => {
     try {
       const cotResponse = await getAllCotizacion();
       const cotizaciones = cotResponse.data;
-
+  
       // Obtener todos los estados una sola vez
       const estadosMap = {};
       await Promise.all(
@@ -134,49 +133,49 @@ const Cotizar = () => {
           }
         })
       );
-
+  
       // Obtener clientes, empresas y monedas en paralelo
       const [clientesResp, empresasResp, monedasResp] = await Promise.all([
         getAllCliente(),
         getAllEmpresas(),
         getAllTipoMoneda(),
       ]);
-
+  
       const clientes = clientesResp.data;
       const empresas = empresasResp.data;
       const monedas = monedasResp.data;
-
+  
       // Crear diccionarios para acceso rápido
       const clientesMap = clientes.reduce((acc, cli) => {
         acc[cli.id] = cli;
         return acc;
       }, {});
-
+  
       const empresasMap = empresas.reduce((acc, emp) => {
         acc[emp.id] = emp;
         return acc;
       }, {});
-
+  
       const monedasMap = monedas.reduce((acc, mon) => {
         acc[mon.id] = mon;
         return acc;
       }, {});
-
+  
       // Aplicar la transformación completa
       const cotizacionesConDetalles = cotizaciones.map((cot) => {
         const cliente = clientesMap[cot.cliente] || {};
         const empresa = empresasMap[cliente.empresa] || {};
-        const moneda = monedasMap[empresa.tipoMoneda] || {};
-
+        const moneda = monedasMap[cot.tipoMoneda] || {};
+  
         return {
           ...cot,
           empresa: empresa.nombre || "",
           contacto: `${cliente.nombrePila || ""} ${cliente.apPaterno || ""} ${cliente.apMaterno || ""}`.trim(),
-          moneda: moneda.nombre || "",
+          moneda: moneda.codigo || "", // Mostrar el código de la moneda (o descripción si prefieres)
           estado: estadosMap[cot.estado] || "Desconocido",
         };
       });
-
+  
       setCotizacion(cotizacionesConDetalles);
     } catch (error) {
       console.error("Error al obtener cotizaciones y detalles:", error);

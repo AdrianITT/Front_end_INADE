@@ -1,18 +1,16 @@
-
-import React, { useState, useEffect,} from "react";
+import React, { useState, useEffect } from "react";
 import "./Crearcotizacion.css";
-import { Form, Input, Button, Row, Col, Select, Checkbox, Divider, message, DatePicker,Card, Modal } from "antd";
+import { Form, Input, Button, Row, Col, Select, Checkbox, Divider, message, DatePicker, Card, Modal } from "antd";
 import dayjs from "dayjs";
-import { useParams,useNavigate} from "react-router-dom";
-import { getClienteById   } from "../../apis/ClienteApi";
-import {getEmpresaById} from '../../apis/EmpresaApi';
+import { useParams, useNavigate } from "react-router-dom";
+import { getClienteById } from "../../apis/ClienteApi";
+import { getEmpresaById } from '../../apis/EmpresaApi';
 import { getAllTipoMoneda } from "../../apis/Moneda";
 import { getAllIva } from "../../apis/ivaApi";
 import { getAllServicio } from "../../apis/ServiciosApi";
 import { createCotizacion } from "../../apis/CotizacionApi";
 import { createCotizacionServicio } from "../../apis/CotizacionServicioApi";
-
-
+import { getInfoSistema } from "../../apis/InfoSistemaApi";
 
 const { TextArea } = Input;
 
@@ -20,86 +18,96 @@ const RegistroCotizacion = () => {
   const navigate = useNavigate();
   const [servicios, setServicios] = useState([]);
   const { clienteId } = useParams();
-  const [clienteData, setClienteData] = useState(null);  // Guardar los datos del cliente
+  const [clienteData, setClienteData] = useState(null);
   const [fechaSolicitada, setFechaSolicitada] = useState(null);
   const [empresas, setEmpresaData] = useState([]);
-  const [tipomoneda, setTipoMoneda]=useState([]);
-  const [ivaApi, setIva]= useState([]);
+  const [tiposMonedaData, setTiposMonedaData] = useState([]); // Datos completos de tipos de moneda
+  const [tipoMonedaSeleccionada, setTipoMonedaSeleccionada] = useState(null); // Valor seleccionado
+  const [ivasData, setIvasData] = useState([]); // Datos completos de IVA
+  const [ivaSeleccionado, setIvaSeleccionado] = useState(null); // Valor seleccionado
   const [fechaCaducidad, setFechaCaducidad] = useState(null);
   const [nota, setNota] = useState("");
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [descuento, setDescuento] = useState(0);
+  const [tipoCambioDolar, setTipoCambioDolar] = useState(1);
 
+  // Obtener el tipo de cambio del dólar
+  useEffect(() => {
+    const fetchTipoCambio = async () => {
+      try {
+        const response = await getInfoSistema();
+        const tipoCambio = parseFloat(response.data[0].tipoCambioDolar);
+        setTipoCambioDolar(tipoCambio);
+      } catch (error) {
+        console.error("Error al obtener el tipo de cambio del dólar", error);
+      }
+    };
+    fetchTipoCambio();
+  }, []);
 
   const handleFechaSolicitadaChange = (date) => {
     setFechaSolicitada(date);
     if (date) {
-      setFechaCaducidad(dayjs(date).add(1, "month")); // Calcula la fecha de caducidad (+1 mes)
+      setFechaCaducidad(dayjs(date).add(1, "month"));
     } else {
-      setFechaCaducidad(null); // Si la fecha solicitada se elimina, también se elimina la fecha de caducidad
+      setFechaCaducidad(null);
     }
   };
 
-  // Obtén los datos del cliente cuando el componente se monta
-    useEffect(() => {
-      const fetchCliente = async () => {
-        try {
-          const response = await getClienteById(clienteId);  // Realiza la llamada a la API para obtener los datos
-          setClienteData(response.data);  // Establece los datos del cliente
-          // Una vez obtenidos los datos del cliente, obtenemos los datos de la empresa
+  useEffect(() => {
+    const fetchCliente = async () => {
+      try {
+        const response = await getClienteById(clienteId);
+        setClienteData(response.data);
         if (response.data && response.data.empresa) {
           const empresaId = response.data.empresa;
           const empresaResponse = await getEmpresaById(empresaId);
-          setEmpresaData(empresaResponse.data); // Establece los datos de la empresa
+          setEmpresaData(empresaResponse.data);
         }
+      } catch (error) {
+        console.error("Error al obtener los datos del cliente", error);
+        message.error("Error al cargar los datos del cliente");
+      }
+    };
+    fetchCliente();
+  }, [clienteId]);
 
-        } catch (error) {
-          console.error("Error al obtener los datos del cliente", error);
-
-          message.error("Error al cargar los datos del cliente");
-        }
-      };
-      
-      fetchCliente();
-    }, [clienteId]);
-
-    useEffect(()=>{
-      const fetchTipoMoneda= async()=>{
-        try{
-            const response=await getAllTipoMoneda();
-            setTipoMoneda(response.data);
-        }catch(error){
-        console.error('Error al cargar los titulos', error);
-        }
-      };
-      const fetchIva= async()=>{
-        try{
-            const response=await getAllIva();
-            setIva(response.data);
-        }catch(error){
-        console.error('Error al cargar los titulos', error);
-        }
-      };
-      const fetchServicios = async () => {
-        try {
-          const response = await getAllServicio();
-          setServicios(response.data); // Asume que la respuesta tiene una lista de servicios
-        } catch (error) {
-          console.error("Error al cargar los servicios", error);
-        }
-      };
-      fetchIva();
-      fetchTipoMoneda();
-      fetchServicios();
-    },[clienteId]);
-    
+  useEffect(() => {
+    const fetchTipoMoneda = async () => {
+      try {
+        const response = await getAllTipoMoneda();
+        setTiposMonedaData(response.data); // Almacena los datos completos
+      } catch (error) {
+        console.error('Error al cargar los tipos de moneda', error);
+      }
+    };
+    const fetchIva = async () => {
+      try {
+        const response = await getAllIva();
+        setIvasData(response.data); // Almacena los datos completos
+      } catch (error) {
+        console.error('Error al cargar los IVA', error);
+      }
+    };
+    const fetchServicios = async () => {
+      try {
+        const response = await getAllServicio();
+        setServicios(response.data);
+      } catch (error) {
+        console.error("Error al cargar los servicios", error);
+      }
+    };
+    fetchIva();
+    fetchTipoMoneda();
+    fetchServicios();
+  }, [clienteId]);
 
   const [conceptos, setConceptos] = useState([
     { id: 1, servicio: "", cantidad: 1, precio: 0, notas: "" },
   ]);
 
-  // Verifica si los datos del cliente y empresa están disponibles
   if (!clienteData || !empresas) {
-    return <div>Loading...</div>; // Mostrar mensaje de carga si no hay datos
+    return <div>Loading...</div>;
   }
 
   const handleAddConcepto = () => {
@@ -121,64 +129,69 @@ const RegistroCotizacion = () => {
     setConceptos(updatedConceptos);
   };
 
-  const calcularTotales = () => {
-    const subtotal = conceptos.reduce((acc, curr) => acc + curr.cantidad * curr.precio, 0);
-    const iva = subtotal * 0.08; // Tasa de IVA actual 8%
-    return { subtotal, iva, total: subtotal + iva };
-  };
-
   const handleServicioChange = (conceptoId, servicioId) => {
-    // Encontrar el servicio seleccionado
     const servicioSeleccionado = servicios.find(servicio => servicio.id === servicioId);
     if (servicioSeleccionado) {
-      // Actualiza los valores de precio y cantidad
       const updatedConceptos = conceptos.map((concepto) =>
         concepto.id === conceptoId ? {
           ...concepto,
           servicio: servicioSeleccionado.id,
-          precio: servicioSeleccionado.precio || 0, // Ajusta según tu estructura de servicio
+          precio: servicioSeleccionado.precio || 0,
         } : concepto
       );
       setConceptos(updatedConceptos);
     }
   };
 
-  const { subtotal, iva, total } = calcularTotales();
+  const calcularTotales = () => {
+    const subtotal = conceptos.reduce((acc, curr) => acc + curr.cantidad * curr.precio, 0);
+    const descuentoValor = subtotal * (descuento / 100);
+    const subtotalConDescuento = subtotal - descuentoValor;
+    const iva = subtotalConDescuento * 0.16;
+    const total = subtotalConDescuento + iva;
+
+    // Aplicar el tipo de cambio si la moneda es USD (id = 2)
+    const esUSD = tipoMonedaSeleccionada === 2;
+    const factorConversion = esUSD ? tipoCambioDolar : 1;
+
+    return {
+      subtotal: subtotal / factorConversion,
+      descuentoValor: descuentoValor / factorConversion,
+      subtotalConDescuento: subtotalConDescuento / factorConversion,
+      iva: iva / factorConversion,
+      total: total / factorConversion,
+    };
+  };
+
+  const { subtotal, descuentoValor, subtotalConDescuento, iva, total } = calcularTotales();
 
   const handleSubmit = async () => {
     try {
-      
-      // Primero, creamos la cotización
-      console.log(tipomoneda, ivaApi, tipomoneda)
-      
       const cotizacionData = {
-        fechaSolicitud: dayjs(fechaSolicitada).format("YYYY-MM-DD"),  // Formato sin hora
-        fechaCaducidad: dayjs(fechaCaducidad).format("YYYY-MM-DD"),  // Formato sin hora
-        denominacion: String(tipomoneda),  // Asumiendo que tipomoneda es un solo objeto y no un array
-        iva: ivaApi,  // Asumiendo que ivaApi es un solo objeto y no un array
+        fechaSolicitud: dayjs(fechaSolicitada).format("YYYY-MM-DD"),
+        fechaCaducidad: dayjs(fechaCaducidad).format("YYYY-MM-DD"),
+        denominacion: `Cotización en ${tipoMonedaSeleccionada === 2 ? "USD" : "MXN"}`,
+        iva: ivaSeleccionado,
         cliente: clienteData.id,
-        estado: 1, // Suponiendo que el estado se marca como 1 (activo)
+        estado: 1,
         notas: nota,
+        descuento: descuento,
+        tipoMoneda: tipoMonedaSeleccionada,
       };
-      
-      const cotizacionResponse = await createCotizacion(cotizacionData); // API para crear cotización
-      setIsModalVisible(true); // <-- Abre el modal
-      
+
+      const cotizacionResponse = await createCotizacion(cotizacionData);
+      setIsModalVisible(true);
+
       const cotizacionId = cotizacionResponse.data.id;
-        // Ahora, enviamos los conceptos
-        const conceptosPromises = conceptos.map((concepto) => {
+      const conceptosPromises = conceptos.map((concepto) => {
         const conceptoData = {
           cantidad: concepto.cantidad,
           cotizacion: cotizacionId,
           servicio: concepto.servicio,
         };
-        return createCotizacionServicio(conceptoData); // API para crear conceptos
+        return createCotizacionServicio(conceptoData);
       });
-      // Redirige a la lista de cotizaciones
-      // Esperamos a que todos los conceptos se creen
       await Promise.all(conceptosPromises);
-      //message.success("Cotización creada correctamente");
-      //navigate("/home"); // Redirige a la lista de cotizaciones
     } catch (error) {
       console.error("Error al crear la cotización", error);
       message.error("Error al crear la cotización");
@@ -193,24 +206,14 @@ const RegistroCotizacion = () => {
           <strong>Por favor, complete todos los campos requeridos con la información correcta.</strong>
         </div>
         <div className="cotizacion-info-card">
-          <p>
-
-          </p>
-          <p>
-            <strong>RFC:</strong> {empresas.rfc}
-          </p>
-          <p>
-            <strong>Representante:</strong> {clienteData.nombrePila} {clienteData.apPaterno} {clienteData.apMaterno}
-          </p>
-          <p>
-            <strong>Contacto:</strong> {clienteData.correo} - {clienteData.telefono} | {clienteData.celular}
-          </p>
+          <p><strong>RFC:</strong> {empresas.rfc}</p>
+          <p><strong>Representante:</strong> {clienteData.nombrePila} {clienteData.apPaterno} {clienteData.apMaterno}</p>
+          <p><strong>Contacto:</strong> {clienteData.correo} - {clienteData.telefono} | {clienteData.celular}</p>
         </div>
 
         <Row gutter={16}>
           <Col span={12}>
-            <Form.Item label="Fecha Solicitada"
-            rules={[{ required: true, message: 'Por favor ingresa la fecha.' }]}>
+            <Form.Item label="Fecha Solicitada" rules={[{ required: true, message: 'Por favor ingresa la fecha.' }]}>
               <DatePicker
                 value={fechaSolicitada}
                 onChange={handleFechaSolicitadaChange}
@@ -220,8 +223,7 @@ const RegistroCotizacion = () => {
             </Form.Item>
           </Col>
           <Col span={12}>
-            <Form.Item label="Fecha Caducidad"
-            rules={[{ required: true, message: 'Por favor ingresa la fecha.' }]}>
+            <Form.Item label="Fecha Caducidad" rules={[{ required: true, message: 'Por favor ingresa la fecha.' }]}>
               <DatePicker
                 value={fechaCaducidad}
                 format="DD/MM/YYYY"
@@ -234,26 +236,28 @@ const RegistroCotizacion = () => {
 
         <Row gutter={16}>
           <Col span={12}>
-            <Form.Item label="Denominación" required
-            rules={[{ required: true, message: 'Por favor ingresa Denominacion.' }]}>
-              <Select onChange={(value) => setTipoMoneda(value)}>
-                {Array.isArray(tipomoneda) && tipomoneda.map((moneda) =>(
-                  <Select.Option key={moneda.id}
-                  value={moneda.id}>
-                    {moneda.nombre}
+            <Form.Item label="Tipo de Moneda" rules={[{ required: true, message: 'Por favor selecciona el tipo de moneda.' }]}>
+              <Select
+                value={tipoMonedaSeleccionada}
+                onChange={(value) => setTipoMonedaSeleccionada(value)}
+              >
+                {tiposMonedaData.map((moneda) => (
+                  <Select.Option key={moneda.id} value={moneda.id}>
+                    {moneda.codigo} - {moneda.descripcion}
                   </Select.Option>
                 ))}
               </Select>
             </Form.Item>
           </Col>
           <Col span={12}>
-            <Form.Item label="Tasa del IVA actual"
-            rules={[{ required: true, message: 'Por favor ingresa los IVA.' }]}>
-              <Select onChange={(value) => setIva(value)}>
-              {Array.isArray(ivaApi) && ivaApi.map((ivas)=>(
-                  <Select.Option key={ivas.id}
-                  value={ivas.id}>
-                    {ivas.porcentaje}
+            <Form.Item label="Tasa del IVA actual" rules={[{ required: true, message: 'Por favor selecciona el IVA.' }]}>
+              <Select
+                value={ivaSeleccionado}
+                onChange={(value) => setIvaSeleccionado(value)}
+              >
+                {ivasData.map((ivas) => (
+                  <Select.Option key={ivas.id} value={ivas.id}>
+                    {ivas.porcentaje}%
                   </Select.Option>
                 ))}
               </Select>
@@ -261,38 +265,46 @@ const RegistroCotizacion = () => {
           </Col>
         </Row>
 
-        <Form.Item label="notas" name="nota">
-          <TextArea rows={2} value={nota}
-            onChange={(e) => setNota(e.target.value)}
-            placeholder="Notas que aparecerán al final de la cotización (Opcional)"/>
+        <Form.Item label="Descuento (%)" rules={[{ required: true, message: 'Por favor ingresa el descuento.' }]}>
+          <Input
+            type="number"
+            min="0"
+            max="100"
+            value={descuento}
+            onChange={(e) => setDescuento(parseFloat(e.target.value))}
+          />
         </Form.Item>
-        <Form.Item label="Correos Adicionales">
-          <Input placeholder="Ingresa correos adicionales, separados por comas (Opcional)" />
+
+        <Form.Item label="Notas" name="nota">
+          <TextArea
+            rows={2}
+            value={nota}
+            onChange={(e) => setNota(e.target.value)}
+            placeholder="Notas que aparecerán al final de la cotización (Opcional)"
+          />
         </Form.Item>
 
         <Divider>Agregar Conceptos</Divider>
         {conceptos.map((concepto) => (
-          <div key={concepto.id} ><Card>
+          <div key={concepto.id}><Card>
             <h3>Concepto {concepto.id}</h3>
             <Row gutter={16}>
               <Col span={12}>
-                <Form.Item label="Servicio"
-                rules={[{ required: true, message: 'Por favor ingresa el servicio.' }]}>
-                <Select
-                      placeholder="Selecciona un servicio"
-                      onChange={(value) => handleServicioChange(concepto.id, value)}
-                    >
-                      {servicios.map((servicio) => (
-                        <Select.Option key={servicio.id} value={servicio.id}>
-                          {servicio.nombreServicio}
-                        </Select.Option>
-                      ))}
-                    </Select>
+                <Form.Item label="Servicio" rules={[{ required: true, message: 'Por favor selecciona el servicio.' }]}>
+                  <Select
+                    placeholder="Selecciona un servicio"
+                    onChange={(value) => handleServicioChange(concepto.id, value)}
+                  >
+                    {servicios.map((servicio) => (
+                      <Select.Option key={servicio.id} value={servicio.id}>
+                        {servicio.nombreServicio}
+                      </Select.Option>
+                    ))}
+                  </Select>
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <Form.Item label="Cantidad de servicios"
-                rules={[{ required: true, message: 'Por favor ingresa la cantidad.' }]}>
+                <Form.Item label="Cantidad de servicios" rules={[{ required: true, message: 'Por favor ingresa la cantidad.' }]}>
                   <Input
                     type="number"
                     min="1"
@@ -304,8 +316,7 @@ const RegistroCotizacion = () => {
             </Row>
             <Row gutter={16}>
               <Col span={12}>
-                <Form.Item label="Precio de servicio"
-                rules={[{ required: true, message: 'Por favor ingresa el precio' }]}>
+                <Form.Item label="Precio de servicio" rules={[{ required: true, message: 'Por favor ingresa el precio.' }]}>
                   <Input
                     type="number"
                     min="0"
@@ -326,30 +337,33 @@ const RegistroCotizacion = () => {
 
         <div className="cotizacion-totals-buttons">
           <div className="cotizacion-totals">
-            <p>Subtotal: {subtotal.toFixed(2)} MXN</p>
-            <p>IVA: {iva.toFixed(2)} MXN</p>
-            <p>Total: {total.toFixed(2)} MXN</p>
+            <p>Subtotal: {subtotal.toFixed(2)} {tipoMonedaSeleccionada === 2 ? "USD" : "MXN"}</p>
+            <p>Descuento ({descuento}%): {descuentoValor.toFixed(2)} {tipoMonedaSeleccionada === 2 ? "USD" : "MXN"}</p>
+            <p>Subtotal con descuento: {subtotalConDescuento.toFixed(2)} {tipoMonedaSeleccionada === 2 ? "USD" : "MXN"}</p>
+            <p>IVA (16%): {iva.toFixed(2)} {tipoMonedaSeleccionada === 2 ? "USD" : "MXN"}</p>
+            <p>Total: {total.toFixed(2)} {tipoMonedaSeleccionada === 2 ? "USD" : "MXN"}</p>
           </div>
           <div className="cotizacion-action-buttons">
-            <div className="margin-button" ><Button type="default" danger>Cancelar</Button></div>
-            <div className="margin-button" >
-              <Button type="primary" onClick={handleSubmit}>Crear</Button></div>
+            <div className="margin-button"><Button type="default" danger>Cancelar</Button></div>
+            <div className="margin-button">
+              <Button type="primary" onClick={handleSubmit}>Crear</Button>
+            </div>
           </div>
         </div>
       </Form>
 
       <Modal
-      title="Información"
-      open={isModalVisible}
-      onOk={() => {
-        setIsModalVisible(false);
-         navigate("/cotizar"); // si deseas redirigir
-      }}
-      onCancel={() =>{setIsModalVisible(false); navigate("/cotizar");} }
-      okText="Cerrar"
-    >
-      <p>¡Se creó exitosamente!</p>
-    </Modal>
+        title="Información"
+        open={isModalVisible}
+        onOk={() => {
+          setIsModalVisible(false);
+          navigate("/cotizar");
+        }}
+        onCancel={() => { setIsModalVisible(false); navigate("/cotizar"); }}
+        okText="Cerrar"
+      >
+        <p>¡Se creó exitosamente!</p>
+      </Modal>
     </div>
   );
 };
