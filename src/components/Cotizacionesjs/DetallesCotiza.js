@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Input, Tabs, Card, Table, Row, Col, Typography, Button, Menu, Dropdown, Checkbox, Form, Alert, Modal, message, Spin } from "antd";
+import { Input, Tabs, Card, Table, Row, Col, Typography, Button, Menu, Dropdown, Checkbox, Form, Modal, message, Spin } from "antd";
 import { MailTwoTone, CopyTwoTone, EditTwoTone, CheckCircleTwoTone, FilePdfTwoTone } from "@ant-design/icons";
 
 import { getAllCotizacion, updateCotizacion } from "../../apis/CotizacionApi";
@@ -30,6 +30,7 @@ const CotizacionDetalles = () => {
   const [servicios, setServicios] = useState([]);
   const [tipoCambioDolar, setTipoCambioDolar] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [additionalEmails, setAdditionalEmails] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -143,9 +144,25 @@ const CotizacionDetalles = () => {
     setIsModalVisible(false);
   };
 
-  const handleSendEmail = () => {
-    console.log("Correo enviado");
-    setIsModalVisible(false);
+  const handleSendEmail = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(`${Api_Host.defaults.baseURL}/cotizacion/${id}/pdf/enviar?emails=${additionalEmails}`, {
+        method: 'GET',
+      });
+
+      if (response.ok) {
+        message.success("Correo enviado correctamente");
+      } else {
+        message.error("Hubo un error al enviar el correo");
+      }
+    } catch (error) {
+      console.error("Error al enviar el correo:", error);
+      message.error("Hubo un error al enviar el correo");
+    } finally {
+      setLoading(false);
+      setIsModalVisible(false);
+    }
   };
 
   const updateEstadoCotizacion = async (nuevoEstado) => {
@@ -308,16 +325,14 @@ const CotizacionDetalles = () => {
         >
           <h4>Selecciona los correos a los que deseas enviar la cotización:</h4>
           <Form layout="vertical">
-            <Checkbox>Cliente: {cotizacionInfo?.correo || "N/A"}</Checkbox>
-            <Checkbox>Tu correo: </Checkbox>
-            <Form.Item label="Mensaje Personalizado: (Opcional)">
-              <Input.TextArea placeholder="Si no se agrega un mensaje, se utilizará un mensaje predeterminado." />
+            <Checkbox checked disabled>Cliente: {cotizacionInfo?.correo || "N/A"}</Checkbox>
+            <Form.Item label="Correos adicionales: (Opcional)">
+              <Input 
+                placeholder="Ingresa correos adicionales separados por comas" 
+                value={additionalEmails}
+                onChange={(e) => setAdditionalEmails(e.target.value)}
+              />
             </Form.Item>
-            <Alert
-              message="Si no se agrega un mensaje, se utilizará un mensaje predeterminado."
-              type="warning"
-              showIcon
-            />
           </Form>
         </Modal>
       </div>
