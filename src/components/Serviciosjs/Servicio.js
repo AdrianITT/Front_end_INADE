@@ -462,11 +462,8 @@ const Servicio = () => {
                   ))}
                   </Select>
               </Form.Item>
-              <Form.Item label="Descuento:" name="descuento">
-                <Input placeholder="0" />
-              </Form.Item>
               <Form.Item name="crearServicio" valuePropName="checked">
-                <Checkbox onChange={(e) => setShowInput(e.target.checked)}>Crear servicio</Checkbox>
+                <Checkbox onChange={(e) => setShowInput(e.target.checked)}>Crear Metodo</Checkbox>
               </Form.Item>
               {showInput ? (
                 <Form.Item label="Método:" name="metodoInput" rules={[{ required: true, message: "Por favor ingrese el método" }]}>
@@ -587,9 +584,6 @@ const Servicio = () => {
                     </Select.Option>
                   ))}
                 </Select>
-              </Form.Item>
-              <Form.Item label="Descuento:" name="descuento">
-                <Input placeholder="0" />
               </Form.Item>
               <Form.Item label="Método:" name="metodos" rules={[{ required: true }]}>
                   <Select placeholder="Selecciona un método">

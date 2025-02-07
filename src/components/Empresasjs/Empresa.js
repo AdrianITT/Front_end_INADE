@@ -7,7 +7,6 @@ import { SearchOutlined, EditOutlined, CloseOutlined } from '@ant-design/icons';
 //import { Link } from 'react-router-dom';
 import {getAllEmpresas, createEmpresas, deleteEmpresa, updateEmpresa,getEmpresaById} from '../../apis/EmpresaApi';
 import { getAllRegimenFiscal } from '../../apis/Regimenfiscla';
-import { getAllTipoMoneda } from '../../apis/Moneda';
 
 
 const Empresa = () => {
@@ -19,10 +18,9 @@ const Empresa = () => {
   const [empresas, setEmpresas] = useState([]);
   const [empresaIdToDelete, setEmpresasIdToDelete]= useState(null);
   const [regimenfiscal, setRegimenFiscal]=useState([]); 
-  const [tipomoneda, setTipoMoneda]=useState([]);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false); // <-- Modal éxito
 
-  /*Funciones del modal de edicion de daots */
+  /*Funciones del modal de edicion de datos */
   const showEditModal = (id) => {
     setIsEditModalOpen(true);
     // Cargar los datos de la empresa a editar
@@ -33,7 +31,6 @@ const Empresa = () => {
         nombre: res.data.nombre,
         rfc: res.data.rfc,
         regimenFiscal: res.data.regimenFiscal,
-        tipoMoneda: res.data.tipoMoneda,
         condicionPago: res.data.condicionPago,
         calle: res.data.calle,
         numero: res.data.numero,
@@ -41,43 +38,35 @@ const Empresa = () => {
         ciudad: res.data.ciudad,
         codigoPostal: res.data.codigoPostal,
         estado: res.data.estado,
-        organizacion:res.data.organizacion,
+        organizacion: res.data.organizacion,
       });
     };
     fetchEmpresa();
   };
-  
+
   const handleEditOk = async () => {
     try {
-      const values = await form.validateFields();
-      const response = await updateEmpresa(empresaToEdit.id, {
-        nombre: values.nombre,
-        rfc: values.rfc,
-        regimenFiscal: parseInt(values.regimenFiscal),
-        tipoMoneda: parseInt(values.tipoMoneda),
-        condicionPago: values.condicionPago,
-        calle: values.calle,
-        numero: values.numero,
-        colonia: values.colonia,
-        ciudad: values.ciudad,
-        codigoPostal: values.codigoPostal,
-        estado: values.estado,
-        organizacion:parseInt(values.organizacion),
-      });
-  
+      const data = await form.validateFields();
+      // Asignar el ID de la organización del usuario que ha iniciado sesión
+      const userOrganizationId = localStorage.getItem("organizacion_id"); // O la forma en la que almacenas el ID de la organización
+      const empresaData = {
+        ...data,
+        organizacion: parseInt(userOrganizationId),
+      };
+      // Llamar a la función para actualizar la empresa
+      const response = await updateEmpresa(empresaToEdit.id, empresaData);
       if (response && response.data) {
         loadgetAllEmpresas(); // Recargar los datos de la tabla
-        setIsEditModalOpen(false); // Cerrar el modal
+        setIsEditModalOpen(false);
+        setIsSuccessModalOpen(true); // Mostrar modal de éxito
       }
     } catch (error) {
-      console.log('Error al actualizar la empresa', error);
+      console.log("Error al validar el formulario", error);
     }
   };
   
   
-  const handleEditCancel = () => {
-    setIsEditModalOpen(false);
-  };
+
 
     // Función que elimina el Empresa
     const handleDeleteEmpresa = async (id) => {
@@ -137,15 +126,7 @@ const Empresa = () => {
       console.error('Error al cargar los titulos', error);
       }
     };
-    const fetchTipoMoneda= async()=>{
-      try{
-          const response=await getAllTipoMoneda();
-          setTipoMoneda(response.data);
-      }catch(error){
-      console.error('Error al cargar los titulos', error);
-      }
-    };
-    fetchTipoMoneda();
+
     fetchRegimenFiscal();
     loadgetAllEmpresas();
   }, [loadgetAllEmpresas]); // Solo se ejecutará cuando loadgetAllEmpresas cambie
@@ -154,19 +135,19 @@ const Empresa = () => {
   const handleOk = async () => {
     try {
       const data = await form.validateFields();
+      // Asignar el ID de la organización del usuario que ha iniciado sesión
+      const userOrganizationId = localStorage.getItem("organizacion_id"); // O la forma en la que almacenas el ID de la organización
+      const empresaData = {
+        ...data,
+        organizacion: parseInt(userOrganizationId),
+      };
       // Llamar a la función para crear la empresa
-      const response = await createEmpresas(data);
-
-      // Si la respuesta es exitosa, actualizar los datos en la tabla
+      const response = await createEmpresas(empresaData);
       if (response && response.data) {
         loadgetAllEmpresas(); // Recargar los datos de la tabla
-        // Cerrar modal de creación
         setIsModalOpen(false); 
-        // Mostrar modal de éxito
-        setIsSuccessModalOpen(true);
+        setIsSuccessModalOpen(true); // Mostrar modal de éxito
       }
-
-      //setIsModalOpen(false); // Cerrar el modal
     } catch (error) {
       console.log("Error al validar el formulario", error);
     }
@@ -419,21 +400,6 @@ const Empresa = () => {
                     ))}
                </Select>
                </Form.Item>
-               <Form.Item label="Moneda:" name="tipoMoneda">
-               <Select>
-               {tipomoneda.map((moneda)=>(
-                      <Select.Option key={moneda.id}
-                      value={moneda.id}>
-                        {moneda.nombre}
-                      </Select.Option>
-                    ))}
-               </Select>
-               </Form.Item>
-               <Form.Item label="organizacion" name="organizacion">
-               <Select>
-                    <Select.Option id="5" value={5}>organizacion</Select.Option>
-               </Select>
-               </Form.Item>
               <Form.Item
                     label="Condiciones de pago:"
                     name="condicionPago"
@@ -544,77 +510,138 @@ const Empresa = () => {
       <Modal
         title="Editar Empresa"
         visible={isEditModalOpen}
-        onCancel={handleEditCancel}
         onOk={handleEditOk}
-        footer={[
-          <Button key="cancel" onClick={handleEditCancel}>
-            Cancelar
-          </Button>,
-          <Button key="submit" type="primary" onClick={handleEditOk}>
-            Actualizar
-          </Button>,
-        ]}
+        onCancel={() => setIsEditModalOpen(false)}
       >
         <Form
           form={form}
-          layout="vertical"
-          name="edit_empresa"
-          initialValues={empresaToEdit}
+          name='wrap'
+          labelCol={{
+            flex: '150px',
+          }}
+          labelAlign="left"
+          labelWrap
+          wrapperCol={{
+            flex: 1,
+          }}
+          colon={false}
+          style={{
+            maxWidth: '100%',
+          }}
         >
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item label="Nombre" name="nombre" rules={[{ required: true, message: 'Por favor ingresa el nombre de la empresa.' }]}>
+              <Form.Item
+                label="Nombre de Empresa"
+                name="nombre"
+                rules={[
+                  {
+                    required: true,
+                  },
+                ]}
+              >
                 <Input />
               </Form.Item>
-              <Form.Item label="RFC" name="rfc" rules={[{ required: true, message: 'Por favor ingresa el RFC.' }]}>
+              <Form.Item
+                label="RFC"
+                name="rfc"
+                rules={[
+                  {
+                    required: true,
+                  },
+                ]}
+              >
                 <Input />
               </Form.Item>
-              <Form.Item label="Regimen fiscal:" name="regimenFiscal">
-               <Select>
-                    {regimenfiscal.map((regimen)=>(
-                      <Select.Option key={regimen.id}
-                      value={regimen.id}>
-                        {regimen.codigo}-{regimen.nombre}
-                      </Select.Option>
-                    ))}
-               </Select>
-               </Form.Item>
-               <Form.Item label="Moneda:" name="tipoMoneda">
-               <Select>
-               {tipomoneda.map((moneda)=>(
-                      <Select.Option key={moneda.id}
-                      value={moneda.id}>
-                        {moneda.nombre}
-                      </Select.Option>
-                    ))}
-               </Select>
-               </Form.Item>
-              <Form.Item label="Condiciones de pago" name="condicionPago" rules={[{ required: true, message: 'Por favor ingresa las condiciones de pago.' }]}>
+              <Form.Item
+                label="Regimen fiscal:"
+                name="regimenFiscal"
+              >
+                <Select>
+                  {regimenfiscal.map((regimen) => (
+                    <Select.Option key={regimen.id} value={regimen.id}>
+                      {regimen.codigo}-{regimen.nombre}
+                    </Select.Option>
+                  ))}
+                </Select>
+              </Form.Item>
+              <Form.Item
+                label="Condición de Pago:"
+                name="condicionPago"
+                rules={[
+                  {
+                    required: true,
+                  },
+                ]}
+              >
                 <Input />
               </Form.Item>
-              <Form.Item label="organizacion" name="organizacion">
-               <Select>
-                    <Select.Option id="1" value={1}>organizacion</Select.Option>
-               </Select>
-               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item label="Calle" name="calle" rules={[{ required: true, message: 'Por favor ingresa la calle.' }]}>
+              <Form.Item
+                label="Calle:"
+                name="calle"
+                rules={[
+                  {
+                    required: true,
+                  },
+                ]}
+              >
                 <Input />
               </Form.Item>
-              <Form.Item label="Número" name="numero" rules={[{ required: true, message: 'Por favor ingresa el número.' }]}>
+              <Form.Item
+                label="Numero:"
+                name="numero"
+                rules={[
+                  {
+                    required: true,
+                  },
+                ]}
+              >
                 <Input />
               </Form.Item>
-              <Form.Item label="Colonia" name="colonia" rules={[{ required: true, message: 'Por favor ingresa la colonia.' }]}>
+              <Form.Item
+                label="Colonia:"
+                name="colonia"
+                rules={[
+                  {
+                    required: true,
+                  },
+                ]}
+              >
                 <Input />
               </Form.Item>
-              <Form.Item label="Ciudad" name="ciudad" rules={[{ required: true, message: 'Por favor ingresa la ciudad.' }]}>
+              <Form.Item
+                label="Ciudad:"
+                name="ciudad"
+                rules={[
+                  {
+                    required: true,
+                  },
+                ]}
+              >
                 <Input />
               </Form.Item>
-              <Form.Item label="Código Postal" name="codigoPostal" rules={[{ required: true, message: 'Por favor ingresa el código postal.' }]}>
+              <Form.Item
+                label="Codigo Postal:"
+                name="codigoPostal"
+                rules={[
+                  {
+                    required: true,
+                  },
+                ]}
+              >
                 <Input />
               </Form.Item>
-              <Form.Item label="Estado" name="estado" rules={[{ required: true, message: 'Por favor ingresa el estado.' }]}>
+              <Form.Item
+                label="Estado:"
+                name="estado"
+                rules={[
+                  {
+                    required: true,
+                  },
+                ]}
+              >
                 <Input />
               </Form.Item>
             </Col>

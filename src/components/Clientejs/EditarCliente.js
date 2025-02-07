@@ -1,9 +1,10 @@
-import React, {useEffect, useState} from "react";
+import React, { useEffect, useState } from "react";
 import { Form, Input, Button, Row, Col, Select, message } from "antd";
-import { useNavigate, useParams} from "react-router-dom"; // Importa useNavigate
+import { useNavigate, useParams } from "react-router-dom"; // Importa useNavigate
 import "./Cliente.css";
-import { updateCliente, getClienteById   } from "../../apis/ClienteApi";
+import { updateCliente, getClienteById } from "../../apis/ClienteApi";
 import { getAllTitulo } from '../../apis/TituloApi';
+import { getAllUsoCDFI } from '../../apis/UsocfdiApi'; // Asegúrate de que este API esté implementada correctamente
 
 const EditarCliente = () => {
   const { clienteId } = useParams();  // Obtén el id desde la URL
@@ -12,12 +13,13 @@ const EditarCliente = () => {
   const [loading, setLoading] = useState(true);  // Estado de carga
   const [form] = Form.useForm();
   const [titulos, setTitulos] = useState([]);
+  const [usoCfdiOptions, setUsoCfdiOptions] = useState([]);  // Opciones de UsoCfdi
 
   // Obtén los datos del cliente cuando el componente se monta
   useEffect(() => {
     const fetchCliente = async () => {
       try {
-        const response = await getClienteById (clienteId);  // Realiza la llamada a la API para obtener los datos
+        const response = await getClienteById(clienteId);  // Realiza la llamada a la API para obtener los datos
         setClienteData(response.data);  // Establece los datos del cliente
         setLoading(false);  // Cambia el estado de carga
       } catch (error) {
@@ -26,17 +28,36 @@ const EditarCliente = () => {
         message.error("Error al cargar los datos del cliente");
       }
     };
+
     const fetchTitulos = async () => {
-        try {
-          const response = await getAllTitulo();
-          setTitulos(response.data);  // Guardar los títulos en el estado
-        } catch (error) {
-          console.error('Error al cargar los títulos:', error);
-        }
+      try {
+        const response = await getAllTitulo();
+        setTitulos(response.data);  // Guardar los títulos en el estado
+      } catch (error) {
+        console.error('Error al cargar los títulos:', error);
       }
+    };
+
+    const fetchUsoCfdi = async () => {
+      try {
+        const response = await getAllUsoCDFI(); // Obtén las opciones de UsoCfdi desde la API
+        setUsoCfdiOptions(response.data); // Almacena las opciones
+      } catch (error) {
+        console.error('Error al cargar los Usos de CFDI:', error);
+        message.error("Error al cargar los Usos de CFDI");
+      }
+    };
+
     fetchCliente();
     fetchTitulos();
+    fetchUsoCfdi();
   }, [clienteId]);
+
+  useEffect(() => {
+    if (clienteData) {
+      form.setFieldsValue(clienteData);  // Establece los valores en el formulario una vez que se cargan los datos
+    }
+  }, [clienteData, form]);
 
   if (loading) {
     return <div>Loading...</div>;
@@ -45,21 +66,23 @@ const EditarCliente = () => {
   // Maneja la actualización del cliente
   const handleSave = async (values) => {
     try {
-      // Mantenemos el id de la empresa intacto
+      // Preservamos los valores originales y añadimos la empresa
       const updatedValues = { ...values };
 
-      // Aquí preservamos el id de la empresa
-      updatedValues.empresa = clienteData.empresa; // Asignamos el id de la empresa que no debe cambiar
+      // Añadimos el campo UsoCfdi
+      updatedValues.empresa = clienteData.empresa;  // Aseguramos que el id de empresa no cambie
+      updatedValues.UsoCfdi = values.UsoCfdi || clienteData.UsoCfdi || 3;  // Si no se proporciona, se usa el valor original o por defecto
 
-      await updateCliente(clienteId, updatedValues); // Llama a la API para actualizar los datos
+      console.log("Datos enviados a la API:", updatedValues);  // Depuración para verificar el formato
+
+      await updateCliente(clienteId, updatedValues);  // Llama a la API para actualizar los datos
       message.success("Cliente actualizado correctamente");
-      navigate("/cliente"); // Redirige a la lista de clientes
+      navigate("/cliente");  // Redirige a la lista de clientes
     } catch (error) {
       console.error("Error al actualizar el cliente", error);
       message.error("Error al actualizar el cliente");
     }
   };
-  
 
   const handleGoBack = () => {
     navigate(-1); // Navega a la página anterior
@@ -69,9 +92,8 @@ const EditarCliente = () => {
     <div className="editar-cliente-container">
       <h1 className="editar-cliente-title">Editar Cliente</h1>
       <Form
-      form={form} // Usa el formulario gestionado por Form.useForm()
+        form={form}  // Usa el formulario gestionado por Form.useForm()
         layout="vertical"
-        initialValues={clienteData} // Inicializa el formulario con los datos del cliente
         onFinish={handleSave}
         className="editar-cliente-form"
       >
@@ -86,13 +108,13 @@ const EditarCliente = () => {
             </Form.Item>
           </Col>
           <Col span={12}>
-          <Form.Item
-            label="Apellidos materno:"
-            name="apMaterno"
-            rules={[{ required: true, message: 'Por favor ingresa los apellidos.' }]}
-          >
-            <Input placeholder="Ingresa Ambos apellidos del cliente" />
-          </Form.Item>
+            <Form.Item
+              label="Apellidos materno:"
+              name="apMaterno"
+              rules={[{ required: true, message: 'Por favor ingresa los apellidos.' }]}
+            >
+              <Input placeholder="Ingresa Ambos apellidos del cliente" />
+            </Form.Item>
           </Col>
           <Col span={12}>
             <Form.Item
@@ -112,12 +134,11 @@ const EditarCliente = () => {
               rules={[{ required: true, message: "Por favor selecciona un título" }]}
             >
               <Select placeholder="Selecciona un título">
-                {titulos.map((titulo)=>(
-                <Select.Option key={titulo.id} 
-                value={titulo.id}>
-                {titulo.titulo} - {titulo.abreviatura}
-                </Select.Option>
-              ))}
+                {titulos.map((titulo) => (
+                  <Select.Option key={titulo.id} value={titulo.id}>
+                    {titulo.titulo} - {titulo.abreviatura}
+                  </Select.Option>
+                ))}
               </Select>
             </Form.Item>
           </Col>
@@ -153,6 +174,26 @@ const EditarCliente = () => {
             </Form.Item>
           </Col>
         </Row>
+
+        {/* Campo para seleccionar UsoCfdi */}
+        <Row gutter={16}>
+          <Col span={12}>
+            <Form.Item
+              label="Uso CFDI:"
+              name="UsoCfdi"
+              rules={[{ required: true, message: "Por favor selecciona un uso CFDI" }]}
+            >
+              <Select placeholder="Selecciona un uso CFDI">
+                {usoCfdiOptions.map((usoCfdi) => (
+                  <Select.Option key={usoCfdi.id} value={usoCfdi.id}>
+                    {usoCfdi.codigo} - {usoCfdi.descripcion}
+                  </Select.Option>
+                ))}
+              </Select>
+            </Form.Item>
+          </Col>
+        </Row>
+
         <div className="editar-cliente-buttons">
           <Button type="primary" htmlType="submit">
             Guardar cambios
