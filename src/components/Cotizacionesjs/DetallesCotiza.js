@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Input, Tabs, Card, Table, Row, Col, Typography, Button, Menu, Dropdown, Checkbox, Form, Modal, message, Spin } from "antd";
+import { Input, Tabs, Card, Table, Row, Col, Typography, Button, Menu, Dropdown, Checkbox, Form, Alert, Modal, message, Spin} from "antd";
 import { MailTwoTone, CopyTwoTone, EditTwoTone, CheckCircleTwoTone, FilePdfTwoTone } from "@ant-design/icons";
 
-import { getAllCotizacion, updateCotizacion } from "../../apis/CotizacionApi";
+import { getAllCotizacion, updateCotizacion} from "../../apis/CotizacionApi";
 import { getAllCliente } from "../../apis/ClienteApi";
 import { getAllTipoMoneda } from "../../apis/Moneda";
 import { getAllEmpresas } from "../../apis/EmpresaApi";
-import { getAllServicio } from "../../apis/ServiciosApi";
-import { getAllIva } from "../../apis/ivaApi";
+import {getAllServicio} from "../../apis/ServiciosApi";
+import {getAllIva} from "../../apis/ivaApi";
 import { getAllCotizacionServicio } from "../../apis/CotizacionServicioApi";
+//import { PDFCotizacion } from "../../apis/PDFApi";
 import { Api_Host } from "../../apis/api";
-import { getInfoSistema } from "../../apis/InfoSistemaApi";
+
 
 const { Title, Text } = Typography;
 
@@ -28,16 +29,16 @@ const CotizacionDetalles = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [cotizacionInfo, setCotizacionInfo] = useState([]);
   const [servicios, setServicios] = useState([]);
-  const [tipoCambioDolar, setTipoCambioDolar] = useState(1);
+  
   const [loading, setLoading] = useState(false);
-  const [additionalEmails, setAdditionalEmails] = useState("");
+  //const [CotizacionServicio, setCotizacionServicio]=useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true); // Activar el estado de carga
       try {
         // Ejecutar todas las llamadas en paralelo
-        const [cotizacionesData, clientesData, monedasData, empresasData, ivaData, serviciosData, cotizacionServicioData, infoSistemaData] = await Promise.all([
+        const [cotizacionesData, clientesData, monedasData, empresasData, ivaData, serviciosData, cotizacionServicioData] = await Promise.all([
           getAllCotizacion(),
           getAllCliente(),
           getAllTipoMoneda(),
@@ -45,49 +46,41 @@ const CotizacionDetalles = () => {
           getAllIva(),
           getAllServicio(),
           getAllCotizacionServicio(),
-          getInfoSistema(),
         ]);
-
-        // Obtener el tipo de cambio del dólar
-        const infoSistema = infoSistemaData.data.find(info => info.id === 1); // Ajusta según sea necesario
-        const tipoCambio = parseFloat(infoSistema.tipoCambioDolar);
-        setTipoCambioDolar(tipoCambio);
-
+  
         // Relacionar los datos
         const cotizacionData = cotizacionesData.data.find(cot => cot.id === parseInt(id));
-
+  
         if (cotizacionData) {
           const cliente = clientesData.data.find(cliente => cliente.id === cotizacionData.cliente);
           const empresa = empresasData.data.find(empresa => empresa.id === cliente?.empresa);
-          const moneda = monedasData.data.find(moneda => moneda.id === cotizacionData.tipoMoneda);
+          const moneda = monedasData.data.find(moneda => moneda.id === cotizacionData.id);
           const ivaR = ivaData.data.find(ivaItem => ivaItem.id === cotizacionData.iva);
-
+  
           const cotizacionConDetalles = {
             ...cotizacionData,
             clienteNombre: `${cliente?.nombrePila} ${cliente?.apPaterno} ${cliente?.apMaterno}`,
             empresaNombre: empresa?.nombre,
-            monedaNombre: moneda?.codigo + " " + moneda?.descripcion,
+            monedaNombre: moneda?.codigo,
             direccion: `${empresa?.calle} ${empresa?.numero} ${empresa?.colonia} ${empresa?.ciudad} ${empresa?.estado} ${empresa?.codigoPostal}`,
             tasaIVA: ivaR?.porcentaje,
             fechaSolicitud: cotizacionData?.fechaSolicitud,
             fechaCaducidad: cotizacionData?.fechaCaducidad,
             precio: cotizacionData.precio,
             correo: cliente.correo,
-            tipoMonedaId: moneda?.id,
-            descuento: cotizacionData.descuento || 0, // Obtener el descuento de la cotización
           };
-
+  
           setCotizacionInfo(cotizacionConDetalles);
-
+  
           // Si la cotización tiene servicios, obtenemos la relación de los servicios
           if (cotizacionData && cotizacionData.servicios && Array.isArray(cotizacionData.servicios)) {
             const serviciosRelacionados = cotizacionData.servicios;  // Array de IDs de servicios
-
+  
             // Filtrar solo los servicios que están relacionados con la cotización
             const serviciosFiltrados = serviciosData.data.filter(servicio =>
               serviciosRelacionados.includes(servicio.id) // Filtra los servicios con los IDs de la cotización
             );
-
+  
             // Asociar la cantidad de cotizacion_servicio con los servicios
             const serviciosConCantidad = serviciosFiltrados.map(servicio => {
               const cotizacionServicio = cotizacionServicioData.data.find(cotServ => cotServ.servicio === servicio.id && cotServ.cotizacion === cotizacionData.id);
@@ -97,11 +90,11 @@ const CotizacionDetalles = () => {
               return {
                 ...servicio,
                 cantidad,
-                subtotal: cotizacionConDetalles.tipoMonedaId === 2 ? subtotal / tipoCambio : subtotal,
-                precio: cotizacionConDetalles.tipoMonedaId === 2 ? precio / tipoCambio : precio,
+                subtotal,
+                precio,
               };
             });
-
+  
             setServicios(serviciosConCantidad); // Almacenar los servicios con la cantidad
           }
         }
@@ -111,7 +104,7 @@ const CotizacionDetalles = () => {
         setLoading(false); // Desactivar el estado de carga
       }
     };
-
+  
     fetchData();
   }, [id]);
 
@@ -120,17 +113,20 @@ const CotizacionDetalles = () => {
 
     try {
       // Abrir el PDF en una nueva pestaña
-      window.open(Api_Host.defaults.baseURL + `/cotizacion/${id}/pdf`);
+      window.open(Api_Host.defaults.baseURL+`/cotizacion/${id}/pdf`);
 
       // Si la respuesta es exitosa, puedes procesarla
       message.success("PDF descargado correctamente");
+      //setLoading(false); // Desactivar el estado de carga
     } catch (error) {
       console.error("Error al descargar el PDF:", error);
       message.error("Hubo un error al descargar el PDF");
-    } finally {
+      //setLoading(false); // Desactivar el estado de carga
+    }finally {
       setLoading(false); // Desactivar el estado de carga
     }
   };
+
 
   const mostrarCard = () => {
     setIsVisible(false); // Cambia el estado para hacerlo visible
@@ -144,40 +140,25 @@ const CotizacionDetalles = () => {
     setIsModalVisible(false);
   };
 
-  const handleSendEmail = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch(`${Api_Host.defaults.baseURL}/cotizacion/${id}/pdf/enviar?emails=${additionalEmails}`, {
-        method: 'GET',
-      });
-
-      if (response.ok) {
-        message.success("Correo enviado correctamente");
-      } else {
-        message.error("Hubo un error al enviar el correo");
-      }
-    } catch (error) {
-      console.error("Error al enviar el correo:", error);
-      message.error("Hubo un error al enviar el correo");
-    } finally {
-      setLoading(false);
-      setIsModalVisible(false);
-    }
+  const handleSendEmail = () => {
+    console.log("Correo enviado");
+    setIsModalVisible(false);
   };
 
-  const updateEstadoCotizacion = async (nuevoEstado) => {
-    try {
+  const updateEstadoCotizacion=async (nuevoEstado)=>{
+    try{
       const cotizacionData = {
         ...cotizacionInfo,  // Mantén el resto de los datos intactos
         estado: nuevoEstado,  // Actualiza solo el estado
       };
       const response = await updateCotizacion(cotizacionInfo.id, cotizacionData); // Enviar la actualización al backend
       setCotizacionInfo(response.data);  // Actualiza el estado en el frontend
-    } catch (error) {
+
+    }catch(error){
       console.error("Error al actualizar el estado de la cotización", error);
       message.error("Error al actualizar el estado de la cotización");
     }
-  };
+  }
 
   // Menú desplegable
   const menu = (
@@ -194,20 +175,19 @@ const CotizacionDetalles = () => {
       <Menu.Item key="4" icon={<CheckCircleTwoTone twoToneColor="#52c41a" />} onClick={() => updateEstadoCotizacion(2)}>
         Actualizar estado
       </Menu.Item>
-      <Menu.Item key="5" icon={<FilePdfTwoTone />}
-        onClick={handleDownloadPDF}
-        loading={loading}>
+      <Menu.Item key="5" icon={<FilePdfTwoTone />} 
+      onClick={handleDownloadPDF}
+      loading={loading}>
         Ver PDF
       </Menu.Item>
     </Menu>
   );
 
-  // Calcular los totales con descuento
+
+  
   const Csubtotal = servicios.reduce((acc, servicio) => acc + (servicio.subtotal || 0), 0);
-  const descuentoValor = Csubtotal * (cotizacionInfo?.descuento || 0) / 100; // Calcular el descuento
-  const subtotalConDescuento = Csubtotal - descuentoValor; // Subtotal después del descuento
-  const Civa = subtotalConDescuento * (cotizacionInfo?.tasaIVA || 0); // IVA sobre el subtotal con descuento
-  const Ctotal = subtotalConDescuento + Civa; // Total final
+  const Civa = Csubtotal * (cotizacionInfo?.tasaIVA || 0);
+  const Ctotal = Csubtotal + Civa;
 
   return (
     <Spin spinning={loading}>
@@ -215,7 +195,7 @@ const CotizacionDetalles = () => {
         <div>
           <h1>Detalles de la Cotización {id} Proyecto</h1>
         </div>
-
+        
         <Tabs defaultActiveKey="1">
           <Tabs.TabPane tab="Detalles" key="1">
             <Row gutter={16}>
@@ -226,10 +206,10 @@ const CotizacionDetalles = () => {
                   <p><Text strong>Dirección:</Text> {cotizacionInfo?.direccion || "N/A"}</p>
                   <p><Text strong>Fecha solicitada:</Text> {cotizacionInfo?.fechaSolicitud || "N/A"}</p>
                   <p><Text strong>Fecha de caducidad:</Text> {cotizacionInfo?.fechaCaducidad || "N/A"}</p>
-                  <p><Text strong>Tipo de moneda:</Text> {cotizacionInfo?.monedaNombre || "N/A"}</p>
+                  <p><Text strong>Denominación:</Text> {cotizacionInfo?.monedaNombre || "N/A"}</p>
                   <p><Text strong>Tasa IVA:</Text> {cotizacionInfo?.tasaIVA || "N/A"}</p>
-                  <p><Text strong>Descuento:</Text> {cotizacionInfo?.descuento || 0}%</p>
                   <p><Text strong>Notas:</Text> {cotizacionInfo?.notas || "N/A"}</p>
+                  <p><Text strong>Correos adicionales:</Text> {cotizacionInfo?.correosAdicionales || "N/A"}</p>
                 </Card>
               </Col>
               <Col span={8}>
@@ -250,7 +230,7 @@ const CotizacionDetalles = () => {
                   </Card>
                 )}
 
-                {cotizacionInfo?.estado > 1 && (
+                {cotizacionInfo?.estado > 1 &&(
                   <Card
                     title="Ordenes"
                     bordered
@@ -278,11 +258,9 @@ const CotizacionDetalles = () => {
                     </Dropdown>
                   }
                 >
-                  <p><Text strong>Subtotal:</Text> {Csubtotal.toFixed(2)}</p>
-                  <p><Text strong>Descuento ({cotizacionInfo?.descuento || 0}%):</Text> {descuentoValor.toFixed(2)}</p>
-                  <p><Text strong>Subtotal con descuento:</Text> {subtotalConDescuento.toFixed(2)}</p>
-                  <p><Text strong>IVA ({cotizacionInfo?.tasaIVA * 100 || 0}%):</Text> {Civa.toFixed(2)}</p>
-                  <p><Text strong>Total:</Text> {Ctotal.toFixed(2)}</p>
+                  <p><Text strong>Subtotal:</Text>{servicios.reduce((acc, servicio) => acc + (servicio.subtotal || 0), 0).toFixed(2)}</p>
+                  <p><Text strong>IVA ({cotizacionInfo?.tasaIVA * 100 || 0}%):</Text> {Civa.toFixed(2)} </p>
+                  <p><Text strong>Importe:</Text> {Ctotal.toFixed(2)} </p>
                   {cotizacionInfo?.estado > 1 ? (
                     <div>
                       <Text strong>Estado: Aprobado</Text>
@@ -325,14 +303,16 @@ const CotizacionDetalles = () => {
         >
           <h4>Selecciona los correos a los que deseas enviar la cotización:</h4>
           <Form layout="vertical">
-            <Checkbox checked disabled>Cliente: {cotizacionInfo?.correo || "N/A"}</Checkbox>
-            <Form.Item label="Correos adicionales: (Opcional)">
-              <Input 
-                placeholder="Ingresa correos adicionales separados por comas" 
-                value={additionalEmails}
-                onChange={(e) => setAdditionalEmails(e.target.value)}
-              />
+            <Checkbox>Cliente: {cotizacionInfo?.correo || "N/A"}</Checkbox>
+            <Checkbox>Tu correo: </Checkbox>
+            <Form.Item label="Mensaje Personalizado: (Opcional)">
+              <Input.TextArea placeholder="Si no se agrega un mensaje, se utilizará un mensaje predeterminado." />
             </Form.Item>
+            <Alert
+              message="Si no se agrega un mensaje, se utilizará un mensaje predeterminado."
+              type="warning"
+              showIcon
+            />
           </Form>
         </Modal>
       </div>
