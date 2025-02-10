@@ -1,18 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Input, Tabs, Card, Table, Row, Col, Typography, Button, Menu, Dropdown, Checkbox, Form, Alert, Modal, message, Spin} from "antd";
+import { Input, Tabs, Card, Table, Row, Col, Typography, Button, Menu, Dropdown, Checkbox, Form, Alert, Modal, message, Spin, Select } from "antd";
 import { MailTwoTone, CopyTwoTone, EditTwoTone, CheckCircleTwoTone, FilePdfTwoTone } from "@ant-design/icons";
-
-import { getAllCotizacion, updateCotizacion} from "../../apis/CotizacionApi";
+import { getAllCotizacion, updateCotizacion } from "../../apis/CotizacionApi";
 import { getAllCliente } from "../../apis/ClienteApi";
 import { getAllTipoMoneda } from "../../apis/Moneda";
 import { getAllEmpresas } from "../../apis/EmpresaApi";
-import {getAllServicio} from "../../apis/ServiciosApi";
-import {getAllIva} from "../../apis/ivaApi";
+import { getAllServicio } from "../../apis/ServiciosApi";
+import { getAllIva } from "../../apis/ivaApi";
 import { getAllCotizacionServicio } from "../../apis/CotizacionServicioApi";
-//import { PDFCotizacion } from "../../apis/PDFApi";
 import { Api_Host } from "../../apis/api";
-
+import { getInfoSistema } from "../../apis/InfoSistemaApi";
 
 const { Title, Text } = Typography;
 
@@ -29,15 +27,44 @@ const CotizacionDetalles = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [cotizacionInfo, setCotizacionInfo] = useState([]);
   const [servicios, setServicios] = useState([]);
-  
   const [loading, setLoading] = useState(false);
-  //const [CotizacionServicio, setCotizacionServicio]=useState(null);
+  const [tipoMoneda, setTipoMoneda] = useState({});
+  const [tipoCambioDolar, setTipoCambioDolar] = useState(1);
+  const [iva, setIva] = useState({});
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [form] = Form.useForm();
+  const [tipoMonedaOptions, setTipoMonedaOptions] = useState([]);
+  const [ivaOptions, setIvaOptions] = useState([]);
+
+  useEffect(() => {
+    const fetchTipoMoneda = async () => {
+      try {
+        const response = await getAllTipoMoneda();
+        setTipoMonedaOptions(response.data);
+      } catch (error) {
+        console.error("Error al obtener los tipos de moneda", error);
+      }
+    };
+    fetchTipoMoneda();
+  }, []);
+
+  useEffect(() => {
+    const fetchTipoCambio = async () => {
+      try {
+        const response = await getInfoSistema();
+        const tipoCambio = parseFloat(response.data[0].tipoCambioDolar);
+        setTipoCambioDolar(tipoCambio);
+      } catch (error) {
+        console.error("Error al obtener el tipo de cambio del dólar", error);
+      }
+    };
+    fetchTipoCambio();
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true); // Activar el estado de carga
       try {
-        // Ejecutar todas las llamadas en paralelo
         const [cotizacionesData, clientesData, monedasData, empresasData, ivaData, serviciosData, cotizacionServicioData] = await Promise.all([
           getAllCotizacion(),
           getAllCliente(),
@@ -47,16 +74,14 @@ const CotizacionDetalles = () => {
           getAllServicio(),
           getAllCotizacionServicio(),
         ]);
-  
-        // Relacionar los datos
+
         const cotizacionData = cotizacionesData.data.find(cot => cot.id === parseInt(id));
-  
         if (cotizacionData) {
           const cliente = clientesData.data.find(cliente => cliente.id === cotizacionData.cliente);
           const empresa = empresasData.data.find(empresa => empresa.id === cliente?.empresa);
-          const moneda = monedasData.data.find(moneda => moneda.id === cotizacionData.id);
+          const moneda = monedasData.data.find(moneda => moneda.id === cotizacionData.tipoMoneda);
           const ivaR = ivaData.data.find(ivaItem => ivaItem.id === cotizacionData.iva);
-  
+
           const cotizacionConDetalles = {
             ...cotizacionData,
             clienteNombre: `${cliente?.nombrePila} ${cliente?.apPaterno} ${cliente?.apMaterno}`,
@@ -69,19 +94,19 @@ const CotizacionDetalles = () => {
             precio: cotizacionData.precio,
             correo: cliente.correo,
           };
-  
+
           setCotizacionInfo(cotizacionConDetalles);
-  
-          // Si la cotización tiene servicios, obtenemos la relación de los servicios
+          setTipoMoneda(moneda);
+          setIva(ivaR);
+          setIvaOptions(ivaData.data);
+
+
           if (cotizacionData && cotizacionData.servicios && Array.isArray(cotizacionData.servicios)) {
-            const serviciosRelacionados = cotizacionData.servicios;  // Array de IDs de servicios
-  
-            // Filtrar solo los servicios que están relacionados con la cotización
+            const serviciosRelacionados = cotizacionData.servicios;
             const serviciosFiltrados = serviciosData.data.filter(servicio =>
-              serviciosRelacionados.includes(servicio.id) // Filtra los servicios con los IDs de la cotización
+              serviciosRelacionados.includes(servicio.id)
             );
-  
-            // Asociar la cantidad de cotizacion_servicio con los servicios
+
             const serviciosConCantidad = serviciosFiltrados.map(servicio => {
               const cotizacionServicio = cotizacionServicioData.data.find(cotServ => cotServ.servicio === servicio.id && cotServ.cotizacion === cotizacionData.id);
               const cantidad = cotizacionServicio ? cotizacionServicio.cantidad : 0;
@@ -91,11 +116,10 @@ const CotizacionDetalles = () => {
                 ...servicio,
                 cantidad,
                 subtotal,
-                precio,
               };
             });
-  
-            setServicios(serviciosConCantidad); // Almacenar los servicios con la cantidad
+
+            setServicios(serviciosConCantidad);
           }
         }
       } catch (error) {
@@ -125,6 +149,45 @@ const CotizacionDetalles = () => {
     }finally {
       setLoading(false); // Desactivar el estado de carga
     }
+  };
+
+  const showEditModal = () => {
+    form.setFieldsValue({
+      fechaSolicitud: cotizacionInfo?.fechaSolicitud,
+      fechaCaducidad: cotizacionInfo?.fechaCaducidad,
+      iva: cotizacionInfo?.iva,
+      tipoMoneda: cotizacionInfo?.tipoMoneda,
+    });
+    setIsEditModalVisible(true);
+  };
+
+  const handleEditOk = async () => {
+    try {
+      const values = await form.validateFields();
+      const updatedCotizacion = {
+        ...cotizacionInfo,
+        fechaSolicitud: values.fechaSolicitud,
+        fechaCaducidad: values.fechaCaducidad,
+        descuento: values.descuento,
+        iva: values.iva,
+        tipoMoneda: values.tipoMoneda,
+      };
+  
+      const response = await updateCotizacion(cotizacionInfo.id, updatedCotizacion);
+      setCotizacionInfo(response.data);
+      message.success("Cotización actualizada con éxito");
+      setIsEditModalVisible(false);
+  
+      // Recargar la página
+      window.location.reload();
+    } catch (error) {
+      console.error("Error al actualizar la cotización", error);
+      message.error("Error al actualizar la cotización");
+    }
+  };
+
+  const handleEditCancel = () => {
+    setIsEditModalVisible(false);
   };
 
 
@@ -160,7 +223,6 @@ const CotizacionDetalles = () => {
     }
   }
 
-  // Menú desplegable
   const menu = (
     <Menu>
       <Menu.Item key="1" icon={<MailTwoTone />} onClick={showEmailModal}>
@@ -169,25 +231,26 @@ const CotizacionDetalles = () => {
       <Menu.Item key="2" icon={<CopyTwoTone />}>
         Duplicar
       </Menu.Item>
-      <Menu.Item key="3" icon={<EditTwoTone />}>
+      <Menu.Item key="3" icon={<EditTwoTone />} onClick={showEditModal}>
         Editar
       </Menu.Item>
       <Menu.Item key="4" icon={<CheckCircleTwoTone twoToneColor="#52c41a" />} onClick={() => updateEstadoCotizacion(2)}>
         Actualizar estado
       </Menu.Item>
-      <Menu.Item key="5" icon={<FilePdfTwoTone />} 
-      onClick={handleDownloadPDF}
-      loading={loading}>
+      <Menu.Item key="5" icon={<FilePdfTwoTone />} onClick={handleDownloadPDF} loading={loading}>
         Ver PDF
       </Menu.Item>
     </Menu>
   );
-
-
   
   const Csubtotal = servicios.reduce((acc, servicio) => acc + (servicio.subtotal || 0), 0);
-  const Civa = Csubtotal * (cotizacionInfo?.tasaIVA || 0);
-  const Ctotal = Csubtotal + Civa;
+  const Cdescuento = Csubtotal * (cotizacionInfo?.descuento / 100 || 0);
+  const Csubtotaldescuento = Csubtotal - Cdescuento;
+  const Civa = Csubtotaldescuento * (cotizacionInfo?.tasaIVA || 0);
+  const Ctotal = Csubtotaldescuento + Civa;
+
+  const esUSD = tipoMoneda?.id === 2;
+  const factorConversion = esUSD ? tipoCambioDolar : 1;
 
   return (
     <Spin spinning={loading}>
@@ -206,10 +269,9 @@ const CotizacionDetalles = () => {
                   <p><Text strong>Dirección:</Text> {cotizacionInfo?.direccion || "N/A"}</p>
                   <p><Text strong>Fecha solicitada:</Text> {cotizacionInfo?.fechaSolicitud || "N/A"}</p>
                   <p><Text strong>Fecha de caducidad:</Text> {cotizacionInfo?.fechaCaducidad || "N/A"}</p>
-                  <p><Text strong>Denominación:</Text> {cotizacionInfo?.monedaNombre || "N/A"}</p>
-                  <p><Text strong>Tasa IVA:</Text> {cotizacionInfo?.tasaIVA || "N/A"}</p>
+                  <p><Text strong>Denominación:</Text> {cotizacionInfo?.denominacion || "N/A"}</p>
+                  <p><Text strong>Tasa IVA:</Text> {cotizacionInfo?.tasaIVA * 100 || 0}%</p>
                   <p><Text strong>Notas:</Text> {cotizacionInfo?.notas || "N/A"}</p>
-                  <p><Text strong>Correos adicionales:</Text> {cotizacionInfo?.correosAdicionales || "N/A"}</p>
                 </Card>
               </Col>
               <Col span={8}>
@@ -258,9 +320,11 @@ const CotizacionDetalles = () => {
                     </Dropdown>
                   }
                 >
-                  <p><Text strong>Subtotal:</Text>{servicios.reduce((acc, servicio) => acc + (servicio.subtotal || 0), 0).toFixed(2)}</p>
-                  <p><Text strong>IVA ({cotizacionInfo?.tasaIVA * 100 || 0}%):</Text> {Civa.toFixed(2)} </p>
-                  <p><Text strong>Importe:</Text> {Ctotal.toFixed(2)} </p>
+                  <p><Text strong>Subtotal:</Text> {(Csubtotal / factorConversion).toFixed(2)} {esUSD ? "USD" : "MXN"}</p>
+                  <p><Text strong>Descuento:</Text> {(Cdescuento / factorConversion).toFixed(2)} {esUSD ? "USD" : "MXN"}</p>
+                  <p><Text strong>Subtotal con descuento:</Text> {(Csubtotaldescuento / factorConversion).toFixed(2)} {esUSD ? "USD" : "MXN"}</p>
+                  <p><Text strong>IVA ({cotizacionInfo?.tasaIVA * 100 || 0}%):</Text> {(Civa / factorConversion).toFixed(2)} {esUSD ? "USD" : "MXN"}</p>
+                  <p><Text strong>Importe:</Text> {(Ctotal / factorConversion).toFixed(2)} {esUSD ? "USD" : "MXN"}</p>
                   {cotizacionInfo?.estado > 1 ? (
                     <div>
                       <Text strong>Estado: Aprobado</Text>
@@ -276,7 +340,11 @@ const CotizacionDetalles = () => {
               </Col>
             </Row>
             <Table
-              dataSource={servicios}
+              dataSource={servicios.map(servicio => ({
+                ...servicio,
+                precio: (servicio.precio / factorConversion).toFixed(2),
+                subtotal: (servicio.subtotal / factorConversion).toFixed(2),
+              }))}
               columns={columnsServicios}
               bordered
               pagination={false}
@@ -315,6 +383,44 @@ const CotizacionDetalles = () => {
             />
           </Form>
         </Modal>
+        <Modal
+        title="Editar Cotización"
+        visible={isEditModalVisible}
+        onOk={handleEditOk}
+        onCancel={handleEditCancel}
+        okText="Guardar"
+        cancelText="Cancelar"
+      >
+        <Form form={form} layout="vertical">
+          <Form.Item label="Fecha de Solicitud" name="fechaSolicitud" rules={[{ required: true, message: "Por favor ingrese la fecha de solicitud" }]}>
+            <Input type="date" />
+          </Form.Item>
+          <Form.Item label="Fecha de Caducidad" name="fechaCaducidad" rules={[{ required: true, message: "Por favor ingrese la fecha de caducidad" }]}>
+            <Input type="date" />
+          </Form.Item>
+          <Form.Item label="Descuento" name="descuento" rules={[{ required: true, message: "Por favor ingrese el descuento" }]}>
+            <Input type="number" min={0} max={100} />
+          </Form.Item>
+          <Form.Item label="IVA" name="iva" rules={[{ required: true, message: "Por favor seleccione el IVA" }]}>
+            <Select>
+              {ivaOptions.map(iva => (
+                <Select.Option key={iva.id} value={iva.id}>
+                  {iva.porcentaje * 100}% {/* Muestra el porcentaje como un número entero */}
+                </Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
+          <Form.Item label="Tipo de Moneda" name="tipoMoneda" rules={[{ required: true, message: "Por favor seleccione el tipo de moneda" }]}>
+            <Select>
+              {tipoMonedaOptions.map(moneda => (
+                <Select.Option key={moneda.id} value={moneda.id}>
+                  {moneda.codigo} - {moneda.descripcion}
+                </Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
+        </Form>
+      </Modal>
       </div>
     </Spin>
   );

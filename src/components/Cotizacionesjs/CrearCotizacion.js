@@ -147,7 +147,8 @@ const RegistroCotizacion = () => {
     const subtotal = conceptos.reduce((acc, curr) => acc + curr.cantidad * curr.precio, 0);
     const descuentoValor = subtotal * (descuento / 100);
     const subtotalConDescuento = subtotal - descuentoValor;
-    const iva = subtotalConDescuento * 0.16;
+    const ivaPorcentaje = ivasData.find(iva => iva.id === ivaSeleccionado)?.porcentaje || 16;
+    const iva = subtotalConDescuento * (ivaPorcentaje);
     const total = subtotalConDescuento + iva;
 
     // Aplicar el tipo de cambio si la moneda es USD (id = 2)
@@ -340,7 +341,7 @@ const RegistroCotizacion = () => {
             <p>Subtotal: {subtotal.toFixed(2)} {tipoMonedaSeleccionada === 2 ? "USD" : "MXN"}</p>
             <p>Descuento ({descuento}%): {descuentoValor.toFixed(2)} {tipoMonedaSeleccionada === 2 ? "USD" : "MXN"}</p>
             <p>Subtotal con descuento: {subtotalConDescuento.toFixed(2)} {tipoMonedaSeleccionada === 2 ? "USD" : "MXN"}</p>
-            <p>IVA (16%): {iva.toFixed(2)} {tipoMonedaSeleccionada === 2 ? "USD" : "MXN"}</p>
+            <p>IVA ({ivasData.find(iva => iva.id === ivaSeleccionado)?.porcentaje || 16}%): {iva.toFixed(2)} {tipoMonedaSeleccionada === 2 ? "USD" : "MXN"}</p>
             <p>Total: {total.toFixed(2)} {tipoMonedaSeleccionada === 2 ? "USD" : "MXN"}</p>
           </div>
           <div className="cotizacion-action-buttons">

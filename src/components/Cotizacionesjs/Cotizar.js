@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { Table, Input, Button, Spin, Menu } from "antd"; // Importar Dropdown y Menu
+import React, { useState, useEffect, useMemo } from "react";
+import { Table, Input, Button, Spin, Menu } from "antd";
 import { Link } from "react-router-dom";
 import "./cotizar.css";
 import { getAllCotizacion } from "../../apis/CotizacionApi";
@@ -17,39 +17,31 @@ const columnsCotizaciones = [
   },
   { title: "Empresa", dataIndex: "empresa", key: "empresa" },
   { title: "Contacto", dataIndex: "contacto", key: "contacto" },
-  { title: "Solicitud", dataIndex: "fechaSolicitud", key: "fechaSolicitud",
-    sorter: (a, b) => {
-      // Convertir las fechas a timestamps para compararlas
-      const dateA = new Date(a.fechaCaducidad).getTime();
-      const dateB = new Date(b.fechaCaducidad).getTime();
-      return dateA - dateB; // Ordenar de menor a mayor
-    },
-    sortDirections: ["ascend", "descend"], // Habilitar ambos órdenes (ascendente y descendente)
-   },
+  {
+    title: "Solicitud",
+    dataIndex: "fechaSolicitud",
+    key: "fechaSolicitud",
+    sorter: (a, b) => new Date(a.fechaCaducidad) - new Date(b.fechaCaducidad),
+    sortDirections: ["ascend", "descend"],
+  },
   {
     title: "Expiración",
     dataIndex: "fechaCaducidad",
     key: "fechaCaducidad",
-    sorter: (a, b) => {
-      // Convertir las fechas a timestamps para compararlas
-      const dateA = new Date(a.fechaCaducidad).getTime();
-      const dateB = new Date(b.fechaCaducidad).getTime();
-      return dateA - dateB; // Ordenar de menor a mayor
-    },
-    sortDirections: ["ascend", "descend"], // Habilitar ambos órdenes (ascendente y descendente)
+    sorter: (a, b) => new Date(a.fechaCaducidad) - new Date(b.fechaCaducidad),
+    sortDirections: ["ascend", "descend"],
   },
   { title: "Moneda", dataIndex: "moneda", key: "moneda" },
   {
     title: "Estado",
     dataIndex: "estado",
     key: "estado",
-    // Agregar un filtro personalizado en la columna de estado
     filterDropdown: ({ setSelectedKeys, selectedKeys, confirm }) => (
       <div style={{ padding: 8 }}>
         <Menu
           onClick={({ key }) => {
-            setSelectedKeys(key === "all" ? [] : [key]); // "all" para quitar el filtro
-            confirm(); // Aplicar el filtro
+            setSelectedKeys(key === "all" ? [] : [key]);
+            confirm();
           }}
           selectedKeys={selectedKeys}
         >
@@ -60,10 +52,7 @@ const columnsCotizaciones = [
         </Menu>
       </div>
     ),
-    onFilter: (value, record) => {
-      if (value === "all") return true; // Mostrar todos si se selecciona "Todos"
-      return record.estado === value; // Filtrar por estado
-    },
+    onFilter: (value, record) => value === "all" || record.estado === value,
   },
   {
     title: "Acción",
@@ -82,45 +71,17 @@ const Cotizar = () => {
   const [searchText, setSearchText] = useState("");
   const [filteredData, setFilteredData] = useState([]);
   const [cotizaciones, setCotizacion] = useState([]);
-  const [, setClientes] = useState([]);
-  const [, setMonedas] = useState([]);
-  const [, setEmpresas] = useState([]);
-  const [isLoading, setIsLoading] = useState(true); // Estado de carga
+  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setIsLoading(true); // Activar el estado de carga
+  const organizationId = parseInt(localStorage.getItem("organizacion_id"), 10);
 
-        // Realizar todas las llamadas a la API en paralelo
-        const [cotizacionesResponse, clientesResponse, monedasResponse, empresasResponse] =
-          await Promise.all([
-            getAllCotizacion(),
-            getAllCliente(),
-            getAllTipoMoneda(),
-            getAllEmpresas(),
-          ]);
+  // Función para crear diccionarios
+  const createDictionary = (data, key) =>
+    data.reduce((acc, item) => ({ ...acc, [item[key]]: item }), {});
 
-        setCotizacion(cotizacionesResponse.data);
-        setClientes(clientesResponse.data);
-        setMonedas(monedasResponse.data);
-        setEmpresas(empresasResponse.data);
-        await fetchCotizacionesYEstados();
-      } catch (error) {
-        console.error("Error al cargar los datos", error);
-      } finally {
-        setIsLoading(false); // Desactivar el estado de carga
-      }
-    };
-
-    fetchData();
-  }, []);
-  const fetchCotizacionesYEstados = async () => {
+  // Función para obtener y transformar cotizaciones
+  const fetchCotizacionesYEstados = async (cotizaciones, clientes, empresas, monedas) => {
     try {
-      const cotResponse = await getAllCotizacion();
-      const cotizaciones = cotResponse.data;
-  
-      // Obtener todos los estados una sola vez
       const estadosMap = {};
       await Promise.all(
         cotizaciones.map(async (cot) => {
@@ -133,70 +94,86 @@ const Cotizar = () => {
           }
         })
       );
-  
-      // Obtener clientes, empresas y monedas en paralelo
-      const [clientesResp, empresasResp, monedasResp] = await Promise.all([
-        getAllCliente(),
-        getAllEmpresas(),
-        getAllTipoMoneda(),
-      ]);
-  
-      const clientes = clientesResp.data;
-      const empresas = empresasResp.data;
-      const monedas = monedasResp.data;
-  
-      // Crear diccionarios para acceso rápido
-      const clientesMap = clientes.reduce((acc, cli) => {
-        acc[cli.id] = cli;
-        return acc;
-      }, {});
-  
-      const empresasMap = empresas.reduce((acc, emp) => {
-        acc[emp.id] = emp;
-        return acc;
-      }, {});
-  
-      const monedasMap = monedas.reduce((acc, mon) => {
-        acc[mon.id] = mon;
-        return acc;
-      }, {});
-  
-      // Aplicar la transformación completa
+
+      const clientesMap = createDictionary(clientes, "id");
+      const empresasMap = createDictionary(empresas, "id");
+      const monedasMap = createDictionary(monedas, "id");
+
       const cotizacionesConDetalles = cotizaciones.map((cot) => {
         const cliente = clientesMap[cot.cliente] || {};
         const empresa = empresasMap[cliente.empresa] || {};
         const moneda = monedasMap[cot.tipoMoneda] || {};
-  
+
         return {
           ...cot,
           empresa: empresa.nombre || "",
           contacto: `${cliente.nombrePila || ""} ${cliente.apPaterno || ""} ${cliente.apMaterno || ""}`.trim(),
-          moneda: moneda.codigo || "", // Mostrar el código de la moneda (o descripción si prefieres)
+          moneda: moneda.codigo || "",
           estado: estadosMap[cot.estado] || "Desconocido",
         };
       });
-  
+
       setCotizacion(cotizacionesConDetalles);
     } catch (error) {
       console.error("Error al obtener cotizaciones y detalles:", error);
     }
   };
 
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+
+        const [cotizacionesResponse, clientesResponse, monedasResponse, empresasResponse] =
+          await Promise.all([
+            getAllCotizacion(),
+            getAllCliente(),
+            getAllTipoMoneda(),
+            getAllEmpresas(),
+          ]);
+
+        const filteredEmpresas = empresasResponse.data.filter(
+          (empresa) => empresa.organizacion === organizationId
+        );
+
+        const filteredClientes = clientesResponse.data.filter((cliente) =>
+          filteredEmpresas.some((empresa) => empresa.id === cliente.empresa)
+        );
+
+        const filteredCotizaciones = cotizacionesResponse.data.filter((cotizacion) =>
+          filteredClientes.some((cliente) => cliente.id === cotizacion.cliente)
+        );
+
+        await fetchCotizacionesYEstados(filteredCotizaciones, filteredClientes, filteredEmpresas, monedasResponse.data);
+      } catch (error) {
+        console.error("Error al cargar los datos", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [organizationId]);
+
   const handleSearch = (value) => {
     setSearchText(value);
-    if (!value) {
-      setFilteredData([]);
-      return;
-    }
-
-    const filtered = cotizaciones.filter((item) =>
-      Object.values(item).some((field) =>
-        field !== null && field !== undefined && String(field).toLowerCase().includes(value.toLowerCase())
-      )
-    );
-
+    const filtered = value
+      ? cotizaciones.filter((item) =>
+          Object.values(item).some(
+            (field) =>
+              field !== null &&
+              field !== undefined &&
+              String(field).toLowerCase().includes(value.toLowerCase())
+          )
+        )
+      : [];
     setFilteredData(filtered);
   };
+
+  const dataSource = useMemo(
+    () => (filteredData.length > 0 ? filteredData : cotizaciones),
+    [filteredData, cotizaciones]
+  );
 
   return (
     <div className="cotizar-container">
@@ -226,7 +203,7 @@ const Cotizar = () => {
         </Link>
       </div>
 
-      {isLoading ? ( // Mostrar spinner si isLoading es true
+      {isLoading ? (
         <div style={{ textAlign: "center", marginTop: "20px" }}>
           <Spin size="large" tip="Cargando cotizaciones..." />
         </div>
@@ -234,7 +211,7 @@ const Cotizar = () => {
         <>
           <Table
             className="cotizar-table"
-            dataSource={filteredData.length > 0 ? filteredData : cotizaciones}
+            dataSource={dataSource}
             columns={columnsCotizaciones}
             bordered
             pagination={{
@@ -246,8 +223,7 @@ const Cotizar = () => {
 
           <div className="cotizar-summary">
             <div className="summary-container">
-              Número de cotizaciones:{" "}
-              {filteredData.length > 0 ? filteredData.length : cotizaciones.length}
+              Número de cotizaciones: {dataSource.length}
             </div>
           </div>
         </>
