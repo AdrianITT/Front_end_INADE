@@ -6,3 +6,4 @@ const TipoMoneda_Api= axios.create({
 })
 
 export const getAllTipoMoneda=()=> TipoMoneda_Api.get('/');
+export const getTipoMonedaById = async (id) => TipoMoneda_Api.get(`/${id}/`);
