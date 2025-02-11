@@ -174,9 +174,6 @@ const DetalleOrdenTrabajo = () => {
       <Menu.Item key="3" icon={<span><FilePdfTwoTone /></span>} onClick={handleDownloadPDF}>
         Ver PDF
       </Menu.Item>
-      <Menu.Item key="4" icon={<span><MailTwoTone /></span>}>
-        Enviar Orden de Trabajo
-      </Menu.Item>
     </Menu>
   );
 

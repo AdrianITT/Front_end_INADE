@@ -132,6 +132,7 @@ const CotizacionDetalles = () => {
     fetchData();
   }, [id]);
 
+  //DESCARGA DEL PDF
   const handleDownloadPDF = async () => {
     setLoading(true); // Activar el estado de carga
   
@@ -206,6 +207,8 @@ const CotizacionDetalles = () => {
 
   const [extraEmails, setExtraEmails] = useState("");
 
+
+  //ENVIAR CORREO
   const handleSendEmail = async () => {
       setLoading(true);
       try {
@@ -398,6 +401,7 @@ const CotizacionDetalles = () => {
             <Text>No hay documentos disponibles.</Text>
           </Tabs.TabPane>
         </Tabs>
+        {/* Modal para enviar cotización por correo */}
         <Modal
           title="Enviar Cotización"
           visible={isModalVisible}
@@ -417,11 +421,6 @@ const CotizacionDetalles = () => {
                 onChange={(e) => setExtraEmails(e.target.value)}
               />
             </Form.Item>
-            <Alert
-              message="Si no se agrega un mensaje, se utilizará un mensaje predeterminado."
-              type="warning"
-              showIcon
-            />
           </Form>
         </Modal>
 
