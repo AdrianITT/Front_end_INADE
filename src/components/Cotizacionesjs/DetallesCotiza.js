@@ -204,10 +204,51 @@ const CotizacionDetalles = () => {
     setIsModalVisible(false);
   };
 
-  const handleSendEmail = () => {
-    console.log("Correo enviado");
-    setIsModalVisible(false);
+  const [extraEmails, setExtraEmails] = useState("");
+
+  const handleSendEmail = async () => {
+      setLoading(true);
+      try {
+          const user_id = localStorage.getItem("user_id");
+          if (!user_id) {
+              message.error("No se encontró el ID del usuario.");
+              setLoading(false);
+              return;
+          }
+  
+          // Validar que los correos ingresados sean correctos
+          const emailList = extraEmails.split(",").map(email => email.trim()).filter(email => email);
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          const invalidEmails = emailList.filter(email => !emailRegex.test(email));
+  
+          if (invalidEmails.length > 0) {
+              message.error(`Correos inválidos: ${invalidEmails.join(", ")}`);
+              setLoading(false);
+              return;
+          }
+  
+          const emailQuery = emailList.length > 0 ? `&emails=${encodeURIComponent(emailList.join(","))}` : "";
+  
+          const response = await fetch(`${Api_Host.defaults.baseURL}/cotizacion/${id}/pdf/enviar?user_id=${user_id}${emailQuery}`, {
+              method: "GET",
+              headers: { "Content-Type": "application/json" },
+          });
+  
+          if (response.ok) {
+              const result = await response.text();
+              message.success(result);
+          } else {
+              message.error("Error al enviar el correo");
+          }
+      } catch (error) {
+          console.error("Error al enviar el correo:", error);
+          message.error("Hubo un error al enviar el correo");
+      } finally {
+          setLoading(false);
+      }
   };
+  
+
 
   const updateEstadoCotizacion=async (nuevoEstado)=>{
     try{
@@ -362,20 +403,19 @@ const CotizacionDetalles = () => {
           visible={isModalVisible}
           onCancel={handleCancel}
           footer={[
-            <Button key="cancel" onClick={handleCancel}>
-              Cerrar
-            </Button>,
-            <Button key="send" type="primary" onClick={handleSendEmail}>
-              Enviar
-            </Button>,
+            <Button key="cancel" onClick={handleCancel}>Cerrar</Button>,
+            <Button key="send" type="primary" onClick={handleSendEmail}>Enviar</Button>,
           ]}
         >
           <h4>Selecciona los correos a los que deseas enviar la cotización:</h4>
           <Form layout="vertical">
-            <Checkbox>Cliente: {cotizacionInfo?.correo || "N/A"}</Checkbox>
-            <Checkbox>Tu correo: </Checkbox>
-            <Form.Item label="Mensaje Personalizado: (Opcional)">
-              <Input.TextArea placeholder="Si no se agrega un mensaje, se utilizará un mensaje predeterminado." />
+            <Checkbox defaultChecked>{cotizacionInfo?.correo || "N/A"}</Checkbox>
+            <Form.Item label="Correos adicionales (separados por coma):">
+              <Input 
+                placeholder="ejemplo@correo.com, otro@correo.com"
+                value={extraEmails}
+                onChange={(e) => setExtraEmails(e.target.value)}
+              />
             </Form.Item>
             <Alert
               message="Si no se agrega un mensaje, se utilizará un mensaje predeterminado."
@@ -384,6 +424,7 @@ const CotizacionDetalles = () => {
             />
           </Form>
         </Modal>
+
         <Modal
         title="Editar Cotización"
         visible={isEditModalVisible}
