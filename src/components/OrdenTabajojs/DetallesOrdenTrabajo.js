@@ -124,11 +124,14 @@ const DetalleOrdenTrabajo = () => {
   ];
   const handleDownloadPDF = async () => {
     //setLoading(true); // Activar el estado de carga
-
+  
     try {
-      // Abrir el PDF en una nueva pestaña
-      window.open(Api_Host.defaults.baseURL+`/ordentrabajo/${orderId}/pdf`);
-
+      // Obtener el user_id desde el localStorage
+      const user_id = localStorage.getItem("user_id");
+  
+      // Abrir el PDF en una nueva pestaña, incluyendo el user_id como parámetro
+      window.open(`${Api_Host.defaults.baseURL}/ordentrabajo/${orderId}/pdf?user_id=${user_id}`);
+  
       // Si la respuesta es exitosa, puedes procesarla
       message.success("PDF descargado correctamente");
       //setLoading(false); // Desactivar el estado de carga
@@ -138,6 +141,7 @@ const DetalleOrdenTrabajo = () => {
       //setLoading(false); // Desactivar el estado de carga
     }
   };
+  
 
   const menu = (
     <Menu>
