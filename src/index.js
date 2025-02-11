@@ -106,7 +106,7 @@ const AppRouter = () => {
           <Route path="/detalles_orden" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion']}><DetallesOrden /></ProtectedRoute>} />
           <Route path="/proyectos" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion']}><Proyectos /></ProtectedRoute>} />
           <Route path="/DetalleOrdenTrabajo/:orderId" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion']}><DetalleOrdenTrabajo /></ProtectedRoute>} />
-          <Route path="/detallesfactura" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion']}><DetallesFactura /></ProtectedRoute>} />
+          <Route path="/detallesfactura/:id" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion']}><DetallesFactura /></ProtectedRoute>} />
           <Route path="/CotizacionEstadisticas" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion']}><CotizacionEstadistica /></ProtectedRoute>} />
           <Route path="/GenerarOrdenTrabajo/:id" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion']}><GenerarOrdenTrabajo /></ProtectedRoute>} />
           <Route path="/EditarCliente/:clienteId" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion']}><EditarCliente /></ProtectedRoute>} />

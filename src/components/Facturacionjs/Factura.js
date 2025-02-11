@@ -1,126 +1,106 @@
-import React, { useState } from "react";
-import { Table, Input, Button } from "antd";
+import React, { useState, useEffect } from "react";
+import { getAllFactura } from "../../apis/FacturaApi";
+import { getOrdenTrabajoById } from "../../apis/OrdenTrabajoApi"; // Asegúrate de que esta API obtiene el servicio relacionado
+import { Table, Input, Button, message } from "antd";
 import { Link } from "react-router-dom";
 
 const Factura = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const initialData = [
-    {
-      key: "1",
-      factura: "Cx0FloZIjhc_e1LZQzr8zA2",
-      fecha: "14/01/25 00:52",
-      cliente: "ESCUELA KEMPER URGATE",
-      importe: "$ 59,455.80",
-      estado: "active",
-    },
-    {
-      key: "2",
-      factura: "ARTVASfjCQORF-y5mYCV6g2",
-      fecha: "14/01/25 15:10",
-      cliente: "ESCUELA KEMPER URGATE",
-      importe: "$ 59,455.80",
-      estado: "active",
-    },
-    {
-      key: "3",
-      factura: "-GaHf0zgIV1Nq0XyG_VDRA2",
-      fecha: "15/01/25 21:02",
-      cliente: "ESCUELA KEMPER URGATE",
-      importe: "$ 46.40",
-      estado: "active",
-    },
-    {
-      key: "4",
-      factura: "Sp_VEjPZ5ehjewDPfjKxvg2",
-      fecha: "16/01/25 20:18",
-      cliente: "ESCUELA KEMPER URGATE",
-      importe: "$ 46.40",
-      estado: "active",
-    },
-    {
-      key: "5",
-      factura: "gEIhSGyFsTIVXZWNAD2-A2",
-      fecha: "16/01/25 20:21",
-      cliente: "ESCUELA KEMPER URGATE",
-      importe: "$ 59,455.80",
-      estado: "active",
-    },
-    {
-      key: "6",
-      factura: "m8va_xlnhQgp2FTOR94tsQ2",
-      fecha: "16/01/25 20:22",
-      cliente: "ESCUELA KEMPER URGATE",
-      importe: "$ 46.40",
-      estado: "active",
-    },
-    {
-      key: "7",
-      factura: "WF64UAmams5-FrIZyAPQQ2w2",
-      fecha: "16/01/25 20:23",
-      cliente: "ESCUELA KEMPER URGATE",
-      importe: "$ 46.40",
-      estado: "active",
-    },
-  ];
+  const [data, setData] = useState([]); // Ahora inicia vacío
+  const [loading, setLoading] = useState(false);
 
-  const [data, setData] = useState(initialData);
+  // ** Cargar facturas desde la API al montar el componente**
+  useEffect(() => {
+    const fetchFacturas = async () => {
+      setLoading(true);
+      try {
+        const response = await getAllFactura();
+        console.log("Facturas obtenidas:", response.data);
 
+        // ** Obtener detalles de ordenTrabajo para cada factura**
+        const facturasConOrdenTrabajo = await Promise.all(
+          response.data.map(async (factura) => {
+            if (factura.ordenTrabajo) {
+              try {
+                const ordenTrabajoResponse = await getOrdenTrabajoById(factura.ordenTrabajo);
+                return {
+                  ...factura,
+                  codigoOrdenTrabajo: ordenTrabajoResponse.data.codigo || "Sin código",
+                  servicio: ordenTrabajoResponse.data.servicio || "Sin servicio",
+                };
+              } catch (error) {
+                console.error(`Error obteniendo ordenTrabajo para factura ${factura.id}`, error);
+                return { ...factura, codigoOrdenTrabajo: "Error", servicio: "Error" };
+              }
+            }
+            return { ...factura, codigoOrdenTrabajo: "N/A", servicio: "N/A" };
+          })
+        );
+
+        // Formatear los datos para la tabla
+        const formattedData = facturasConOrdenTrabajo.map((factura, index) => ({
+          key: index.toString(),
+          fechaExpedicion: factura.fechaExpedicion ? new Date(factura.fechaExpedicion).toLocaleString() : "Desconocida",
+          codigoOrdenTrabajo: factura.codigoOrdenTrabajo,
+          notas: factura.notas || "Sin notas",
+        }));
+
+        setData(formattedData);
+      } catch (error) {
+        console.error("Error al obtener facturas:", error);
+        message.error("Error al cargar las facturas.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFacturas();
+  }, []);
+
+  // ** Filtrar facturas por código de ordenTrabajo**
   const handleSearch = () => {
-    const filteredData = initialData.filter((item) =>
-      item.factura.toLowerCase().includes(searchTerm.toLowerCase())
+    const filteredData = data.filter((item) =>
+      item.codigoOrdenTrabajo.toLowerCase().includes(searchTerm.toLowerCase())
     );
     setData(filteredData);
   };
 
+  // ** Columnas de la tabla**
   const columns = [
     {
-      title: "Factura",
-      dataIndex: "factura",
-      key: "factura",
-      render: (text) => (
-          <Button type="link" onClick={() => console.log(`Factura: ${text}`)}>
-            {text}
-          </Button>
-        ),
+      title: "Fecha de Expedición",
+      dataIndex: "fechaExpedicion",
+      key: "fechaExpedicion",
     },
     {
-      title: "Fecha",
-      dataIndex: "fecha",
-      key: "fecha",
+      title: "Código Orden de Trabajo",
+      dataIndex: "codigoOrdenTrabajo",
+      key: "codigoOrdenTrabajo",
     },
     {
-      title: "Cliente",
-      dataIndex: "cliente",
-      key: "cliente",
-    },
-    {
-      title: "Importe",
-      dataIndex: "importe",
-      key: "importe",
-    },
-    {
-      title: "Estado",
-      dataIndex: "estado",
-      key: "estado",
+      title: "Notas",
+      dataIndex: "notas",
+      key: "notas",
     },
     {
       title: "Opciones",
       key: "opciones",
-      render: () => (<Link to="/detallesfactura">
-        <Button type="primary" size="small">
-          Detalles
-        </Button></Link>
+      render: (_, record) => (
+        <Link to={`/detallesfactura/${record.key}`}>
+          <Button type="primary" size="small">
+            Detalles
+          </Button>
+        </Link>
       ),
     },
   ];
 
   return (
-    
     <div style={{ padding: "20px" }}>
       <center><h1>Facturas</h1></center>
-      <div style={{ marginBottom: "16px", display: "flex", gap: "10px",justifyContent: "center",alignItems: "center"}}>
+      <div style={{ marginBottom: "16px", display: "flex", gap: "10px", justifyContent: "center", alignItems: "center" }}>
         <Input
-          placeholder="Buscar cotizaciones..."
+          placeholder="Buscar por código de orden de trabajo..."
           style={{ maxWidth: "300px" }}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
@@ -133,6 +113,7 @@ const Factura = () => {
         columns={columns}
         bordered
         pagination={{ pageSize: 5 }}
+        loading={loading}
       />
     </div>
   );
