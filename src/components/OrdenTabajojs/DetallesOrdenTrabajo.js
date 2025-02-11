@@ -9,7 +9,7 @@ import { getEmpresaById } from "../../apis/EmpresaApi";
 import { getServicioById } from "../../apis/ServiciosApi";
 import { getCotizacionById } from "../../apis/CotizacionApi";
 import { getReceptorByI } from "../../apis/ResectorApi";
-import { getOrdenTrabajoServiciosByOrden } from "../../apis/OrdenTabajoServiciosApi";
+import {  getAllOrdenesTrabajoServicio } from "../../apis/OrdenTabajoServiciosApi";
 import { getMetodoById } from "../../apis/MetodoApi";
 import { Api_Host } from "../../apis/api";
 
@@ -53,8 +53,25 @@ const DetalleOrdenTrabajo = () => {
         setRecep(responseReceptor.data);
   
         // 6. Obtener la **tabla intermedia** "ordenTrabajoServicio" según el id de la orden:
-        const relationResponse = await getOrdenTrabajoServiciosByOrden(orderId);
-        let relationData = relationResponse.data;
+        //const relationResponse = await getOrdenTrabajoServiciosByOrden(orderId);
+        const relationResponseD = await getAllOrdenesTrabajoServicio();
+
+        //Verificar si la respuesta contiene datos válidos
+        if (!relationResponseD || !Array.isArray(relationResponseD.data)) {
+          console.error(" Error: La respuesta de la API no es un array:", relationResponseD);
+          return;
+        }
+
+        // Filtrar los registros que coincidan con el ID de la orden de trabajo
+        const dataRelati = relationResponseD.data.filter(orden => String(orden.ordenTrabajo) === String(orderId));
+
+        // Si no hay coincidencias, mostrar un mensaje de advertencia
+        if (dataRelati.length === 0) {
+          console.warn("⚠ No se encontraron registros en 'ordenTrabajoServicio' con el ID:", orderId);
+        }
+
+        // Asignar a `relationData` y continuar con el procesamiento
+        let relationData = dataRelati;
   
         // Asegurarse de que relationData sea un arreglo
         if (!Array.isArray(relationData)) {
@@ -63,22 +80,22 @@ const DetalleOrdenTrabajo = () => {
   
         // 7. Para cada elemento en "relationData", obtenemos el servicio y combinamos datos:
         const combinedPromises = relationData.map(async (rel) => {
+          // Obtén el servicio (tabla "servicio")
           const servResp = await getServicioById(rel.servicio);
           const servData = servResp.data;
-          //console.log(servData); // Verifica los datos del servicio
-          //console.log('Metodo ID:', servData.metodos);
 
+          // (Opcional) Si requieres el método, puedes obtenerlo:
           const metodoResp = await getMetodoById(servData.metodos);
-          const metodoData= metodoResp.data;
-          //console.log('Metodo ID:', metodoData.codigo);
-  
-          // Unificamos la info en un solo objeto para mostrar en la tabla
+          const metodoData = metodoResp.data;
+
+          // Unificamos la información en un solo objeto
           return {
-            nombreServicio: servData.nombreServicio,
-            metodo: metodoData.codigo,
-            precio: servData.precio,
-            cantidad: rel.cantidad,
-            notas: rel.descripcion,
+            idServicio: rel.servicio, // Agregamos el id del servicio proveniente de ordenTrabajoServicio
+            nombreServicio: servData.nombreServicio, // Datos de la tabla "servicio"
+            precio: servData.precio,                  // Datos de la tabla "servicio"
+            cantidad: rel.cantidad,                   // Datos de la tabla "ordenTrabajoServicio"
+            notas: rel.descripcion,                   // Datos de la tabla "ordenTrabajoServicio"
+            metodo: metodoData.codigo,                // Si deseas mostrar el método
           };
         });
   
@@ -101,11 +118,7 @@ const DetalleOrdenTrabajo = () => {
       dataIndex: "nombreServicio",
       key: "servicio",
     },
-    {
-      title: "Método",
-      dataIndex: "metodo",
-      key: "metodo",
-    },
+    
     {
       title: "Cantidad",
       dataIndex: "cantidad",
@@ -120,18 +133,19 @@ const DetalleOrdenTrabajo = () => {
       title: "Notas",
       dataIndex: "notas",
       key: "notas",
+    },{
+      title: "Método",
+      dataIndex: "metodo",
+      key: "metodo",
     },
   ];
   const handleDownloadPDF = async () => {
     //setLoading(true); // Activar el estado de carga
-  
+
     try {
-      // Obtener el user_id desde el localStorage
-      const user_id = localStorage.getItem("user_id");
-  
-      // Abrir el PDF en una nueva pestaña, incluyendo el user_id como parámetro
-      window.open(`${Api_Host.defaults.baseURL}/ordentrabajo/${orderId}/pdf?user_id=${user_id}`);
-  
+      // Abrir el PDF en una nueva pestaña
+      window.open(Api_Host.defaults.baseURL+`/ordentrabajo/${orderId}/pdf`);
+
       // Si la respuesta es exitosa, puedes procesarla
       message.success("PDF descargado correctamente");
       //setLoading(false); // Desactivar el estado de carga
@@ -141,7 +155,6 @@ const DetalleOrdenTrabajo = () => {
       //setLoading(false); // Desactivar el estado de carga
     }
   };
-  
 
   const menu = (
     <Menu>
@@ -163,7 +176,6 @@ const DetalleOrdenTrabajo = () => {
       </Menu.Item>
     </Menu>
   );
-
 
   return (
     <div className="container">
@@ -204,7 +216,7 @@ const DetalleOrdenTrabajo = () => {
         columns={columnasServicios}
         bordered
         pagination={false}
-        rowKey={(record, index) => index} // O si tu record tiene id
+        rowKey={(record) => record.idServicio}// O si tu record tiene id
       />
     </div>
   );
