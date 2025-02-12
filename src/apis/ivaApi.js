@@ -6,3 +6,5 @@ const Iva_Api= axios.create({
 })
 
 export const getAllIva=()=>Iva_Api.get('/');
+
+export const getIvaById = async (id) => Iva_Api.get(`/${id}/`);
