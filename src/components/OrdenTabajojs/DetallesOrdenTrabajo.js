@@ -118,26 +118,22 @@ const DetalleOrdenTrabajo = () => {
       dataIndex: "nombreServicio",
       key: "servicio",
     },
-    
+    {
+      title: "Método",
+      dataIndex: "metodo",
+      key: "metodo",
+    },
     {
       title: "Cantidad",
       dataIndex: "cantidad",
       key: "cantidad",
     },
     {
-      title: "Precio",
-      dataIndex: "precio",
-      key: "precio",
-    },
-    {
       title: "Notas",
       dataIndex: "notas",
       key: "notas",
-    },{
-      title: "Método",
-      dataIndex: "metodo",
-      key: "metodo",
     },
+
   ];
   const handleDownloadPDF = async () => {
     //setLoading(true); // Activar el estado de carga

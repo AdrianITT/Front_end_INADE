@@ -43,71 +43,113 @@ const GenerarOrdenTrabajo = () => {
 
     const fetchCotizacionServicios = async () => {
       try {
-        const cotizacionResponse = await getCotizacionById(cotizacionId);  // Obtener la cotización por ID
+        // Obtener los datos de la cotización
+        const cotizacionResponse = await getCotizacionById(cotizacionId);  
+        console.log("Cotización ID:", cotizacionResponse.data.id); // Ver el ID de la cotización
         const cotizacionServicios = cotizacionResponse.data.servicios; // Servicios de la cotización
-        //const servicioIds = cotizacionServicios.servicios;
-
-         // Paso 2: Obtener los registros de cotizacionServicio para esta cotización
+        console.log("Servicios de la cotización:", cotizacionServicios); // Ver los servicios de la cotización
+    
+        // Obtener todos los registros de cotizacionServicio
         const cotizacionServicioResponse = await getCotizacionServiciosByCotizacion(cotizacionId);
         const cotizacionServicioRecords = cotizacionServicioResponse.data;
-        
+        console.log("Registros de Cotización Servicio:", cotizacionServicioRecords); 
+    
+        // Verificar los valores de cotizacionId y los registros de cotizacion
+        console.log("Tipo de cotizacionId:", typeof cotizacionId);
+        cotizacionServicioRecords.forEach((record, index) => {
+          console.log(`Registro ${index}: cotizacion = ${record.cotizacion}, tipo = ${typeof record.cotizacion}`);
+        });
+    
+        // Filtrar solo los registros donde cotizacion sea igual al cotizacionId (asegurando que sean números)
+        const filteredCotizacionServicios = cotizacionServicioRecords.filter(
+          (record) => Number(record.cotizacion) === Number(cotizacionId)
+        );
+    
+        // Verificar los registros filtrados
+        console.log("Registros filtrados de Cotización Servicio:", filteredCotizacionServicios);
+    
+        // Obtener los servicios basados en los registros filtrados
         const servicios = await Promise.all(
           cotizacionServicios.map(async (servicioId) => {
-            const servicioResponse = await getServicioById(servicioId);  // Obtener servicio por ID
-            const record = cotizacionServicioRecords.find(
+            const servicioResponse = await getServicioById(servicioId); // Obtener servicio por ID
+            const record = filteredCotizacionServicios.find(
               (r) => r.servicio === servicioId
             );
             return {
-              ...servicioResponse.data,           // Datos del servicio (nombre, precio, etc.)
-              cantidad: record ? record.cantidad : 0 // Si no se encuentra, 0 o el valor que prefieras
+              ...servicioResponse.data,
+              cantidad: record ? record.cantidad : 0, // Si no se encuentra, asigna cantidad = 0
             };
           })
         );
+    
+        // Log de los servicios con la cantidad
+        console.log("Servicios con cantidad:", servicios);
+    
+        // Finalmente, guardar los servicios en el estado o hacer lo necesario
         setServicios(servicios);
-        
       } catch (error) {
         console.error("Error al obtener los servicios de la cotización", error);
       }
     };
+const fetchCliente = async () => {
+  try {
+    // Obtener los datos de la cotización por su ID
+    console.log("Este es el id de la cotización:", cotizacionId);
+    const cotizacionResponse = await getCotizacionById(cotizacionId); // Obtener los datos de la cotización por su ID
+    const clienteId = cotizacionResponse.data.cliente; // Obtener el ID del cliente de la cotización
+    console.log("ID del cliente de la cotización:", clienteId);
 
-    const fetchCliente = async () => {
-      try {
-        
-        console.log("estee es el id",id);
-        const response = await getAllCliente(id); // Obtener los datos del cliente por su ID
-        
-        setCliente(response.data[0]); // Guardar los datos del cliente en el estado
-        
-        // Revisar si empresa está dentro de un objeto, o si falta información
-        const empresaId = response.data[0].empresa;
-        console.log("ID de la empresa:", empresaId);
-  
-        if (empresaId) {
-          const empresasResponse = await getAllEmpresas();
-          console.log("Empresas:", empresasResponse.data); // Verifica las empresas
-  
-          const empresaRelacionada = empresasResponse.data.find(emp => emp.id === empresaId);
-          console.log("Empresa relacionada:", empresaRelacionada);
-  
-          if (empresaRelacionada) {
-            setEmpresa(empresaRelacionada); // Asegúrate de que empresaRelacionada es un objeto
-            // Actualiza los valores del formulario después de obtener los datos
-            form.setFieldsValue({
-              calle: empresaRelacionada.calle,
-              numero: empresaRelacionada.numero,
-              colonia: empresaRelacionada.colonia,
-              codigoPostal: empresaRelacionada.codigoPostal,
-              ciudad: empresaRelacionada.ciudad,
-              estado: empresaRelacionada.estado
-            });
-          } else {
-            console.error("Empresa no encontrada.");
-          }
+    // Obtener los datos del cliente por su ID
+    const clienteResponse = await getAllCliente(clienteId); // Obtener los datos del cliente
+    console.log("Datos del cliente obtenido:", clienteResponse.data);  // Log de los datos del cliente
+    
+    // Verificar que estamos accediendo al cliente correcto (clienteId = 5)
+    const cliente = clienteResponse.data.find(c => c.id === clienteId);
+    console.log("Cliente seleccionado:", cliente); // Verificar que estamos obteniendo al cliente correcto
+
+    if (cliente) {
+      // Revisar si la empresa está dentro de los datos del cliente
+      const empresaId = cliente.empresa;  // Obtener el ID de la empresa asociada al cliente
+      console.log("ID de la empresa asociado al cliente:", empresaId); // Mostrar el ID de la empresa
+      
+      // Buscar las empresas disponibles
+      if (empresaId) {
+        const empresasResponse = await getAllEmpresas();
+        console.log("Empresas disponibles:", empresasResponse.data); // Ver todas las empresas disponibles
+
+        // Encontramos la empresa que corresponde con el ID obtenido del cliente
+        const empresaRelacionada = empresasResponse.data.find(emp => emp.id === empresaId);
+        console.log("Empresa relacionada con el cliente:", empresaRelacionada);  // Imprimir la empresa asociada al cliente
+
+        // Verificar si encontramos la empresa y si es válida
+        if (empresaRelacionada) {
+          // Si la empresa fue encontrada, guardamos la empresa en el estado
+          setEmpresa(empresaRelacionada);
+          // Actualizar el formulario con los valores de la empresa relacionada
+          form.setFieldsValue({
+            calle: empresaRelacionada.calle,
+            numero: empresaRelacionada.numero,
+            colonia: empresaRelacionada.colonia,
+            codigoPostal: empresaRelacionada.codigoPostal,
+            ciudad: empresaRelacionada.ciudad,
+            estado: empresaRelacionada.estado
+          });
+        } else {
+          console.error("No se encontró la empresa asociada al cliente.");
         }
-      } catch (error) {
-        console.error("Error al cargar los datos del cliente", error);
+      } else {
+        console.error("El cliente no tiene una empresa asociada.");
       }
-    };
+    } else {
+      console.error("No se encontró el cliente con el ID especificado.");
+    }
+  } catch (error) {
+    console.error("Error al cargar los datos del cliente", error);
+  }
+};
+
+    
+
     fetchReceptor();
     fetchCliente();
     fetchCotizacionServicios();

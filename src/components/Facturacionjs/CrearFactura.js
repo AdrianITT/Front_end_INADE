@@ -87,7 +87,7 @@ const CrearFactura = () => {
   // Función para calcular Subtotal, IVA y Total
   const calcularTotales = () => {
     const nuevoSubtotal = ordenTrabajoServicios.reduce((acc, servicio) => acc + servicio.cantidad * servicio.precio, 0);
-    const nuevoIva = nuevoSubtotal * (tasaIva / 100);
+    const nuevoIva = nuevoSubtotal * (tasaIva);
     const nuevoTotal = nuevoSubtotal + nuevoIva;
 
     setSubtotal(nuevoSubtotal.toFixed(2));
