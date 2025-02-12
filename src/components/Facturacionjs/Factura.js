@@ -40,6 +40,7 @@ const Factura = () => {
         // Formatear los datos para la tabla
         const formattedData = facturasConOrdenTrabajo.map((factura, index) => ({
           key: index.toString(),
+          id: factura.id,
           fechaExpedicion: factura.fechaExpedicion ? new Date(factura.fechaExpedicion).toLocaleString() : "Desconocida",
           codigoOrdenTrabajo: factura.codigoOrdenTrabajo,
           notas: factura.notas || "Sin notas",
@@ -86,7 +87,7 @@ const Factura = () => {
       title: "Opciones",
       key: "opciones",
       render: (_, record) => (
-        <Link to={`/detallesfactura/${record.key}`}>
+        <Link to={`/detallesfactura/${record.id}`}>
           <Button type="primary" size="small">
             Detalles
           </Button>

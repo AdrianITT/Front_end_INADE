@@ -9,29 +9,18 @@ import { getCotizacionById } from "../../apis/CotizacionApi"; // Asegúrate de t
 import { getTipoMonedaById } from "../../apis/Moneda";
 import { getClienteById } from "../../apis/ClienteApi";
 import { getEmpresaById } from "../../apis/EmpresaApi";
+import {  getAllOrdenesTrabajoServicio } from "../../apis/OrdenTabajoServiciosApi";
+import {getServicioById} from "../../apis/ServiciosApi";
+import { createFacturaFacturama, getfacturafacturamaById } from "../../apis/FacturaFacturamaApi";
+import { getIvaById } from "../../apis/ivaApi";
 
 
-const dataConceptos = [
-  {
-    key: "1",
-    codigo: "A futuro a dispositi",
-    descripcion: "N/A",
-    cantidad: 765.0,
-    precioUnitario: 67.0,
-    total: 51255.0,
-  },
-];
 
 const columnsConceptos = [
   {
-    title: "Código",
-    dataIndex: "codigo",
-    key: "codigo",
-  },
-  {
-    title: "Descripción",
-    dataIndex: "descripcion",
-    key: "descripcion",
+    title: "Servicio",
+    dataIndex: "servicio",  // Debe coincidir con la clave del objeto en `setServicios`
+    key: "servicio",
   },
   {
     title: "Cantidad",
@@ -39,7 +28,7 @@ const columnsConceptos = [
     key: "cantidad",
   },
   {
-    title: "Precio U.",
+    title: "Precio Unitario",
     dataIndex: "precioUnitario",
     key: "precioUnitario",
     render: (text) => `$${text}`,
@@ -69,14 +58,24 @@ const DetallesFactura = () => {
   const [form] = Form.useForm();
   const [cliente, setCliente] = useState({});
   const [empresa, setEmpresa] = useState({}); // Estado para almacenar los datos de la empresa
+  const [servicios, setServicios] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [subtotal, setSubtotal] = useState(0);
+  const [descuento, setDescuento] = useState(0);
+  const [porcentajeIVA, setPorcentajeIVA] = useState(0);
+  const [importeTotal, setImporteTotal] = useState(0);
+  const [facturaExiste, setFacturaExiste] = useState(null);
 
   useEffect(() => {
     const fetchFactura = async () => {
       try {
         const response = await getFacturaById(id);
-        console.log("Respuesta de la API:", response.data);
+        //console.log("Respuesta de la API:", response.data);
         if (response.data && typeof response.data === 'object') {
           setFactura(response.data);
+          
+          // Llamar a fetchServicios con el ordenTrabajoId
+          fetchServicios(response.data.ordenTrabajo);
           
           fetchMonedaInfo(response.data.ordenTrabajo);
         } else {
@@ -86,6 +85,16 @@ const DetallesFactura = () => {
       } catch (error) {
         console.error("Error al obtener la factura:", error);
         setFactura(null);
+      }
+    };
+
+    const verificarFacturaFacturama = async () => {
+      try {
+        const response = await getfacturafacturamaById(id);
+        setFacturaExiste(response.data ? true : false);
+      } catch (error) {
+        setFacturaExiste(false); // Si hay error, asumir que no existe
+        console.warn("⚠ La factura no existe en FacturaFacturama.");
       }
     };
 
@@ -111,7 +120,7 @@ const DetallesFactura = () => {
         const response = await getClienteById(clienteId); // Asegúrate de tener esta función en tu API
         if (response.data) {
           setCliente(response.data); // Guardar los datos del cliente en el estado
-          console.log(response.data);
+          //console.log(response.data);
 
           // Obtener el ID de la empresa desde el cliente
           const empresaId = response.data.empresa;
@@ -129,7 +138,7 @@ const DetallesFactura = () => {
         const response = await getEmpresaById(empresaId); // Obtener los datos de la empresa
         if (response.data) {
           setEmpresa(response.data); // Guardar los datos de la empresa en el estado
-          console.log("Empresa",response.data);
+          //console.log("Empresa",response.data);
         }
       } catch (error) {
         console.error("Error al obtener la información de la empresa:", error);
@@ -154,10 +163,132 @@ const DetallesFactura = () => {
       }
     };
 
+    // Obtener los servicios relacionados con la orden de trabajo
+    const fetchServicios = async (ordenTrabajoId) => {
+      setLoading(true);
+      try {
+        if (!ordenTrabajoId) {
+          console.error("❌ Error: ordenTrabajoId es undefined o null.");
+          return;
+        }
+    
+        // Obtener todos los registros de OrdenTrabajoServicios
+        const ordenTrabajoServiciosResponse = await getAllOrdenesTrabajoServicio();
+        console.log("📌 Respuesta de la API (Todos los OrdenTrabajoServicios):", ordenTrabajoServiciosResponse);
+    
+        // Filtrar por ordenTrabajo
+        const ordenTrabajoServicios = ordenTrabajoServiciosResponse.data.filter(
+          (orden) => orden.ordenTrabajo === ordenTrabajoId
+        );
+    
+        console.log("📌 Servicios filtrados por ordenTrabajo:", ordenTrabajoServicios);
+    
+        if (ordenTrabajoServicios.length === 0) {
+          console.warn("⚠ No hay servicios asociados a esta orden de trabajo.");
+          setServicios([]);
+          return;
+        }
+    
+        // Obtener los detalles de cada servicio
+        const serviciosConDetalles = await Promise.all(
+          ordenTrabajoServicios.map(async (ordenServicio) => {
+            if (!ordenServicio.servicio) {
+              console.warn("⚠ ID de servicio no encontrado en:", ordenServicio);
+              return null;
+            }
+    
+            try {
+              const servicioResponse = await getServicioById(ordenServicio.servicio);
+              const servicioData = servicioResponse.data || {};
+    
+              return {
+                key: servicioData.id,
+                servicio: servicioData.nombreServicio || "Desconocido",
+                cantidad: ordenServicio.cantidad || 1,
+                precioUnitario: servicioData.precio || 0,
+                total: (servicioData.precio || 0) * (ordenServicio.cantidad || 1),
+              };
+            } catch (error) {
+              console.error(`❌ Error obteniendo servicio con ID ${ordenServicio.servicio}:`, error);
+              return null;
+            }
+          })
+        );
+    
+        console.log("✅ Servicios con detalles:", serviciosConDetalles.filter(Boolean));
+        setServicios(serviciosConDetalles.filter(Boolean));
+    
+      } catch (error) {
+        console.error("❌ Error al obtener los servicios:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    
+    
+    verificarFacturaFacturama()
+    fetchServicios();
     fetchFactura();
     fetchFormasPago();
     fetchMetodosPago();
   }, [id]);
+
+  useEffect(() => {
+    if (factura.ordenTrabajo) {
+      fetchCotizacionDetalles(factura.ordenTrabajo);
+    }
+  }, [factura]);
+  
+  useEffect(() => {
+    calcularTotales();
+  }, [subtotal, descuento, porcentajeIVA, servicios]);
+
+
+  const fetchCotizacionDetalles = async (ordenTrabajoId) => {
+    try {
+      if (!ordenTrabajoId) return;
+  
+      // Obtener la orden de trabajo
+      const ordenTrabajoResponse = await getOrdenTrabajoById(ordenTrabajoId);
+      const cotizacionId = ordenTrabajoResponse.data?.cotizacion;
+  
+      if (!cotizacionId) {
+        console.warn("⚠ No se encontró ID de cotización.");
+        return;
+      }
+  
+      // Obtener los detalles de la cotización
+      const cotizacionResponse = await getCotizacionById(cotizacionId);
+      const descuentoCotizacion = cotizacionResponse.data?.descuento || 0;
+      const ivaId = cotizacionResponse.data?.iva;
+  
+      setDescuento(descuentoCotizacion); // Guardamos el porcentaje de descuento
+  
+      if (!ivaId) {
+        console.warn("⚠ No se encontró ID de IVA en la cotización.");
+        return;
+      }
+  
+      // Obtener el porcentaje del IVA
+      const ivaResponse = await getIvaById(ivaId);
+      console.log("iva: ",ivaResponse);
+      const porcentajeIvaCotizacion = ivaResponse.data?.porcentaje || 0;
+  
+      setPorcentajeIVA(porcentajeIvaCotizacion); // Guardamos el porcentaje de IVA
+    } catch (error) {
+      console.error("❌ Error al obtener los detalles de la cotización:", error);
+    }
+  };
+  
+  const calcularTotales = () => {
+    const subtotalServicios = servicios.reduce((total, servicio) => total + servicio.total, 0);
+    setSubtotal(subtotalServicios);
+  
+    const subtotalConDescuento = subtotalServicios - (subtotalServicios * descuento / 100);
+    const ivaTotal = subtotalConDescuento * (porcentajeIVA / 100);
+    setImporteTotal(subtotalConDescuento + ivaTotal);
+  };
 
   const getDescripcionFormaPago = (id) => {
     const formaPago = formasPago.find((fp) => fp.id === id);
@@ -178,14 +309,14 @@ const DetallesFactura = () => {
   };
 
   const handleOkCorreo = () => {
-    console.log("Enviando factura...");
+    //console.log("Enviando factura...");
     setIsModalVisibleCorreo(false);
   };
 
   const handleOkPayment = () => {
     form.validateFields()
       .then((values) => {
-        console.log("Valores del comprobante de pago:", values);
+        //console.log("Valores del comprobante de pago:", values);
         setVisiblePaymentModal(false);
       })
       .catch((error) => {
@@ -206,6 +337,20 @@ const DetallesFactura = () => {
     setVisibleCancelModal(false);
   };
 
+  const handleCrearFactura = async () => {
+    setLoading(true);
+    try {
+      
+      const response =await createFacturaFacturama(id);
+      setFacturaExiste(true);
+      console.log("✅ Factura creada exitosamente en FacturaFacturama.", response.data);
+    } catch (error) {
+      console.error("❌ Error al crear la factura:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const menu = (
     <Menu>
       <Menu.Item key="1" onClick={() => showModalCorreo(true)}>📧 Enviar por correo</Menu.Item>
@@ -216,9 +361,6 @@ const DetallesFactura = () => {
     </Menu>
   );
 
-  const toggleButtons = () => {
-    setIsFirstButtonVisible(!isFirstButtonVisible);
-  };
 
   return (
     <div style={{ padding: "20px" }}>
@@ -233,7 +375,6 @@ const DetallesFactura = () => {
                     <>
                       <p><strong>Factura</strong></p>
                       <p>Fecha: {factura.fechaExpedicion}</p>
-                      <p>Estatus: </p>
                       <p>Forma de pago: {getDescripcionFormaPago(factura.formaPago)}</p>
                       <p>Método de pago: {getDescripcionMetodoPago(factura.metodoPago)}</p>
                       <p>Moneda: {moneda.codigo} - {moneda.descripcion}</p>
@@ -250,7 +391,7 @@ const DetallesFactura = () => {
               </Card>
             </Col>
             <Col span={8}>
-              {isFirstButtonVisible ? (
+              {facturaExiste === false ? (
                 <Flex gap="small" wrap>
                   <Alert
                     message="Informational Notes"
@@ -258,8 +399,7 @@ const DetallesFactura = () => {
                     type="info"
                     showIcon
                   />
-                  <Button color="danger" variant="solid"
-                    onClick={toggleButtons}
+                  <Button color="danger"onClick={handleCrearFactura} variant="solid"
                     style={{ marginTop: "20px" }}
                   >
                     Crear Factura
@@ -274,18 +414,21 @@ const DetallesFactura = () => {
                 </div>
               )}
               <Card title="Cuenta" bordered>
-                <p>Subtotal: $51255.0</p>
-                <p>IVA (16.0%): $8200.8</p>
-                <p>Importe: $59455.8</p>
+                <p>Subtotal: ${subtotal.toFixed(2)}</p>
+                <p>Descuento: {descuento}%</p>
+                <p>Subtotal - Descuento: ${(subtotal - (subtotal * descuento / 100)).toFixed(2)}</p>
+                <p>IVA ({porcentajeIVA}%): ${(subtotal * porcentajeIVA / 100).toFixed(2)}</p>
+                <p>Importe: ${importeTotal.toFixed(2)}</p>
               </Card>
             </Col>
           </Row>
           <h3 style={{ marginTop: "20px" }}>Conceptos</h3>
           <Table
-            dataSource={dataConceptos}
+            dataSource={servicios}
             columns={columnsConceptos}
             pagination={false}
             bordered
+            rowKey={(record) => record.key}
           />
         </Tabs.TabPane>
         <Tabs.TabPane tab="Pagos" key="2">
