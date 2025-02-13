@@ -5,6 +5,9 @@ import { Api_Host } from "./api";
 const CSD_Api= axios.create({
      baseURL: Api_Host.defaults.baseURL+'/certificadosellodigital/'
 })
+const cargarCSD_Api= axios.create({
+     baseURL: Api_Host.defaults.baseURL+'/carga-csd/'
+})
 
 export const getAllCSD=()=> CSD_Api.get('/');
 
@@ -16,4 +19,5 @@ export const updateCSD = async (id, data) => CSD_Api.put(`/${id}/`,data)
 
 export const getCSDById = async (id) => CSD_Api.get(`/${id}/`);
 
-
+//
+export const FacturamaCSD= async(id) => cargarCSD_Api.get(`/${id}/`)

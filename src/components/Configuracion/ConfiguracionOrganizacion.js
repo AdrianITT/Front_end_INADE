@@ -35,7 +35,7 @@ const ConfiguraciónOrganizacion=()=>{
   const [iva, setIva] = useState([]);
 
   // Obtener el id de la organización del usuario autenticado
-  const userOrganizationId = ObtenerOrganizacion();// O la forma en la que almacenas el ID de la organización
+  const userOrganizationId = ObtenerOrganizacion("organizacion_id" );// O la forma en la que almacenas el ID de la organización
 
   const fetchOrganizacion = useCallback(async () => {
     try {
@@ -157,15 +157,17 @@ useEffect(() => {
 
   const onFinish = async (values) => {
     console.log("Datos enviados:", values);
-
-    
     
     setLoading(true);
   try {
-    await updateOrganizacion(5, {
+    console.log("Datos enviados:", values);
+    console.log("🚀 Enviando actualización de organización ID:", userOrganizationId);
+
+    const datosAEnviar = {
+      ...organizaciones, // Mantener los datos actuales
       nombre: values.nombre,
       slogan: values.slogan,
-      regimenFiscal: values.regimenFiscal, // Asegúrate de que el nombre sea correcto
+      RegimenFiscal: values.regimenFiscal,
       telefono: values.telefono,
       pagina: values.pagina,
       calle: values.calle,
@@ -174,10 +176,46 @@ useEffect(() => {
       ciudad: values.ciudad,
       codigoPostal: values.codigoPostal,
       estado: values.estado,
-      logo: values.logo,
-    });
+      infoCotizacion: organizaciones?.infoCotizacion || null,
+      infoOrdenTrabajo: organizaciones?.infoOrdenTrabajo || null,
+      infoSistema: organizaciones?.infoSistema || null,
+    };
+
+    let formData = null;
+
+    // 🛑 Si el usuario seleccionó un nuevo logo, creamos un FormData
+    if (values.logo?.file) {
+      console.log("📂 Nuevo logo seleccionado:", values.logo.file.originFileObj);
+
+      formData = new FormData();
+      formData.append("logo", values.logo.file.originFileObj);
+      
+      // Agregar otros datos en FormData si es necesario
+      Object.entries(datosAEnviar).forEach(([key, value]) => {
+        if (value !== null && value !== undefined) {
+          formData.append(key, value);
+        }
+      });
+    }
+
+    console.log("📤 Enviando datos a la API:", formData || datosAEnviar);
+    
+    // 📌 Enviar como FormData si hay un archivo, de lo contrario JSON
+    if (formData) {
+      await updateOrganizacion(userOrganizationId, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+    } else {
+      console.log("HW");
+      await updateOrganizacion(userOrganizationId, datosAEnviar);
+    }
+
+    
+    console.log("Datos enviados:", values);
     setLoading(false);
+    
     message.success("Datos de organización actualizados correctamente");
+    fetchOrganizacion();
   } catch (error) {
     setLoading(false);
     message.error("Error al actualizar los datos");
@@ -330,44 +368,49 @@ useEffect(() => {
 };
 
 
-  const handleGuardarConfiguracionSistema = async (values) => {
-    try {
-      setLoading(true);
-  
-      // Si la organización no tiene una infoConfiguracionSistema, la creamos
-      if (!organizaciones?.infoConfiguracionSistema) {
-        const nuevaConfiguracion = await updateInfoSistema(values);
-  
-        // Asociamos la nueva configuración a la organización
-        await updateOrganizacion(organizaciones.id, {
-          ...organizaciones,
-          infoConfiguracionSistema: nuevaConfiguracion.id,
-        });
-  
-        // Actualizamos el estado de la organización con la nueva configuración
-        setOrganizaciones({
-          ...organizaciones,
-          infoConfiguracionSistema: nuevaConfiguracion.id,
-        });
-  
-        message.success("Configuración del sistema creada y asociada correctamente");
-      } else {
-        // Si ya existe una infoConfiguracionSistema, la actualizamos
-        await updateInfoSistema(organizaciones.infoConfiguracionSistema, values);
-        message.success("Configuración del sistema actualizada correctamente");
-      }
-  
-      // Recargamos la información actualizada
-      const responseConfiguracion = await getInfoSistema(organizaciones.infoConfiguracionSistema);
-      setInfConfiguracion(responseConfiguracion.data);
-      formConfiguracion.setFieldsValue(responseConfiguracion.data);
-    } catch (error) {
-      console.error("Error al actualizar la configuración del sistema", error);
-      message.error("Error al actualizar la configuración del sistema.");
-    } finally {
-      setLoading(false);
+const handleGuardarConfiguracionSistema = async (values) => {
+  try {
+    setLoading(true);
+    let nuevaConfiguracion;
+
+    // Si la organización no tiene una infoConfiguracionSistema, la creamos
+    if (!organizaciones?.infoSistema) {
+      nuevaConfiguracion = await updateInfoSistema(values);
+
+      // Asociamos la nueva configuración a la organización
+      await updateOrganizacion(organizaciones.id, {
+        ...organizaciones,
+        infoConfiguracionSistema: nuevaConfiguracion.id,
+      });
+      console.log("📌 Respuesta de updateOrganizacion:", updateOrganizacion);
+
+      // Actualizamos el estado de la organización con la nueva configuración
+      setOrganizaciones((prev)=>({
+        ...prev,
+        infoConfiguracionSistema: nuevaConfiguracion.id,
+      }));
+
+      message.success("Configuración del sistema creada y asociada correctamente");
+    } else {
+      // Si ya existe una infoConfiguracionSistema, la actualizamos
+      await updateInfoSistema(organizaciones.infoSistema, values);
+      message.success("Configuración del sistema actualizada correctamente");
     }
-  };
+    
+
+    // Recargamos la información actualizada
+    const responseConfiguracion = await getInfoSistemaById(organizaciones.infoSistema);
+    setInfConfiguracion(responseConfiguracion.data);
+    console.log(responseConfiguracion.data);
+    formConfiguracion.setFieldsValue(responseConfiguracion.data);
+    console.log(formConfiguracion);
+  } catch (error) {
+    console.error("Error al actualizar la configuración del sistema", error);
+    message.error("Error al actualizar la configuración del sistema.");
+  } finally {
+    setLoading(false);
+  }
+};
   
   
 
@@ -397,7 +440,7 @@ useEffect(() => {
          <Form.Item label="Slogan:" name="slogan">
            <Input placeholder="Ingrese el slogan de la organización." />
          </Form.Item>
-         <Form.Item label="Régimen Fiscal:" name="regimenFiscal" required>
+         <Form.Item label="Régimen Fiscal:" name="regimenFiscal" required rules={[{ required: true, message: "Ingrese su Regimen Fiscal." }]}>
            <Select placeholder="Seleccione el régimen fiscal de la organización.">
              {regimenfiscal.map((regimen)=>(
                 <Select.Option key={regimen.id}
@@ -607,9 +650,9 @@ useEffect(() => {
        <Form layout="vertical" 
       form={formConfiguracion} 
       onFinish={handleGuardarConfiguracionSistema}
-      initialValues={infConfiguracion || {}}>
+      initialValues={infConfiguracion}>
          <Form.Item label="Moneda Predeterminada:" name="tipoMoneda" required>
-          <Select placeholder="Seleccione la moneda predeterminada.">
+          <Select placeholder="Seleccione la moneda predeterminada." >
             {tipoMoneda.map((moneda) => (
               <Select.Option key={moneda.id} value={moneda.id}>
                 {moneda.codigo}{moneda.descripcion}
@@ -626,10 +669,11 @@ useEffect(() => {
             ))}
           </Select>
         </Form.Item>
-         <Form.Item label="Tipo de cambio dólar:" name="tipoCambioDolar">
+         <Form.Item label="Tipo de cambio dólar:" name="tipoCambioDolar"
+         rules={[{ required: true, message: "Ingrese el tipo de cambio del dólar." }]}>
            <Input placeholder="Ingrese el tipo de cambio del dólar." />
          </Form.Item>
-         <Button type="primary" loading={loading} style={{ width: "100%" }}>
+         <Button type="primary" htmlType="submit" loading={loading} style={{ width: "100%" }}>
            Guardar configuración de sistema
          </Button>
        </Form>
