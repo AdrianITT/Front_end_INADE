@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { Card, Row, Col, Button, Table, Tabs, Dropdown, Menu, Modal, Select, Input, Form, DatePicker, Flex, Alert, Checkbox } from "antd";
+import { Card, Row, Col, Button, Table, Tabs, Dropdown, Menu, Modal, Select, Input, Form, DatePicker, Flex, Alert, Checkbox,message } from "antd";
 import { useParams } from "react-router-dom";
-import { getFacturaById } from "../../apis/FacturaApi";
+import { getFacturaById, createPDFfactura, getFacturPDFaById } from "../../apis/FacturaApi";
 import { getAllFormaPago } from "../../apis/FormaPagoApi";
 import { getAllMetodopago } from "../../apis/MetodoPagoApi";
 import { getOrdenTrabajoById } from "../../apis/OrdenTrabajoApi"; // Asegúrate de tener esta función
@@ -9,10 +9,13 @@ import { getCotizacionById } from "../../apis/CotizacionApi"; // Asegúrate de t
 import { getTipoMonedaById } from "../../apis/Moneda";
 import { getClienteById } from "../../apis/ClienteApi";
 import { getEmpresaById } from "../../apis/EmpresaApi";
-import {  getAllOrdenesTrabajoServicio } from "../../apis/OrdenTabajoServiciosApi";
+import { Api_Host } from "../../apis/api";
+//import axios from "axios";
+import { getAllOrdenesTrabajoServicio } from "../../apis/OrdenTabajoServiciosApi";
 import {getServicioById} from "../../apis/ServiciosApi";
-import { createFacturaFacturama, getfacturafacturamaById } from "../../apis/FacturaFacturamaApi";
+import {  getAllfacturafacturama } from "../../apis/FacturaFacturamaApi";
 import { getIvaById } from "../../apis/ivaApi";
+
 
 
 
@@ -47,12 +50,9 @@ const DetallesFactura = () => {
   const { id } = useParams();
   const [metodosPago, setMetodosPago] = useState([]);
   const [formasPago, setFormasPago] = useState([]);
-  const [motivo, setMotivo] = useState("01");
-  const [showUuid, setShowUuid] = useState(true);
   const [factura, setFactura] = useState([]);
   const [visibleCancelModal, setVisibleCancelModal] = useState(false);
   const [visiblePaymentModal, setVisiblePaymentModal] = useState(false);
-  const [isFirstButtonVisible, setIsFirstButtonVisible] = useState(true);
   const [isModalVisibleCorreo, setIsModalVisibleCorreo] = useState(false);
   const [moneda, setMoneda] = useState({ codigo: "", descripcion: "" });
   const [form] = Form.useForm();
@@ -65,6 +65,7 @@ const DetallesFactura = () => {
   const [porcentajeIVA, setPorcentajeIVA] = useState(0);
   const [importeTotal, setImporteTotal] = useState(0);
   const [facturaExiste, setFacturaExiste] = useState(null);
+  const [extraEmails, setExtraEmails] = useState("");
 
   useEffect(() => {
     const fetchFactura = async () => {
@@ -90,8 +91,26 @@ const DetallesFactura = () => {
 
     const verificarFacturaFacturama = async () => {
       try {
-        const response = await getfacturafacturamaById(id);
-        setFacturaExiste(response.data ? true : false);
+        const response = await getAllfacturafacturama();
+
+    console.log("📄 Datos recibidos:", response.data);
+    console.log("🔍 ID a buscar:", id);
+
+    if (!id) {
+      console.warn("⚠ El ID es inválido.");
+      return;
+    }
+
+    if (!response.data || !Array.isArray(response.data)) {
+      console.warn("⚠ No hay datos en la respuesta.");
+      return;
+    }
+
+    const facturasFiltradas = response.data.filter(factura => factura.factura === parseInt(id, 10));
+
+    console.log("📝 Facturas filtradas:", facturasFiltradas);
+
+    setFacturaExiste(facturasFiltradas.length > 0);
       } catch (error) {
         setFacturaExiste(false); // Si hay error, asumir que no existe
         console.warn("⚠ La factura no existe en FacturaFacturama.");
@@ -286,7 +305,7 @@ const DetallesFactura = () => {
     setSubtotal(subtotalServicios);
   
     const subtotalConDescuento = subtotalServicios - (subtotalServicios * descuento / 100);
-    const ivaTotal = subtotalConDescuento * (porcentajeIVA / 100);
+    const ivaTotal = subtotalConDescuento * (porcentajeIVA );
     setImporteTotal(subtotalConDescuento + ivaTotal);
   };
 
@@ -304,14 +323,6 @@ const DetallesFactura = () => {
     setIsModalVisibleCorreo(true);
   };
 
-  const handleCancelCorreo = () => {
-    setIsModalVisibleCorreo(false);
-  };
-
-  const handleOkCorreo = () => {
-    //console.log("Enviando factura...");
-    setIsModalVisibleCorreo(false);
-  };
 
   const handleOkPayment = () => {
     form.validateFields()
@@ -324,24 +335,13 @@ const DetallesFactura = () => {
       });
   };
 
-  const handleMotivoChange = (value) => {
-    setMotivo(value);
-    setShowUuid(value === "01");
-  };
 
-  const handleOk = () => {
-    console.log("Motivo seleccionado:", motivo);
-    if (showUuid) {
-      console.log("UUID ingresado:", document.getElementById("uuidInput").value);
-    }
-    setVisibleCancelModal(false);
-  };
 
   const handleCrearFactura = async () => {
     setLoading(true);
     try {
-      
-      const response =await createFacturaFacturama(id);
+      console.log(id);
+      const response =await createPDFfactura(id);
       setFacturaExiste(true);
       console.log("✅ Factura creada exitosamente en FacturaFacturama.", response.data);
     } catch (error) {
@@ -351,13 +351,153 @@ const DetallesFactura = () => {
     }
   };
 
+  const handleDownloadPDF = async (id) => {
+    try {
+      const pdfUrl = `${Api_Host.defaults.baseURL}/factura-pdf/${id}/`;
+      console.log("📌 URL generada:", pdfUrl);
+      //window.open(pdfUrl);
+  
+      // Realizar la solicitud para obtener el archivo PDF
+      const response = await fetch(pdfUrl, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/pdf",
+        },
+      });
+  
+      if (!response.ok) {
+        throw new Error("No se pudo descargar el PDF.");
+      }
+  
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+  
+      // Crear enlace para la descarga
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `Factura_${id}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+  
+      // Liberar memoria
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error al descargar el PDF:", error);
+      message.error("No se pudo descargar el PDF.");
+    }
+  };
+  
+  const handleDownloadXML = async (id) => {
+    try {
+      const xmlUrl = `${Api_Host.defaults.baseURL}/factura-xml/${id}/`;
+      console.log("📌 URL generada para XML:", xmlUrl);
+  
+      // Realizar la solicitud para obtener el archivo XML
+      const response = await fetch(xmlUrl, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/xml",
+        },
+      });
+  
+      if (!response.ok) {
+        throw new Error("No se pudo descargar el XML.");
+      }
+  
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+  
+      // Crear enlace para la descarga
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `Factura_${id}.xml`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+  
+      // Liberar memoria
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error al descargar el XML:", error);
+      message.error("No se pudo descargar el XML.");
+    }
+  };
+  //ENVIAR CORREO
+  const handleSendEmail = async () => {
+    setLoading(true);
+    try {
+        const user_id = localStorage.getItem("user_id");
+        if (!user_id) {
+            message.error("No se encontró el ID del usuario.");
+            setLoading(false);
+            return;
+        }
+
+        // Validar que los correos ingresados sean correctos
+        const emailList = extraEmails.split(",").map(email => email.trim()).filter(email => email);
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const invalidEmails = emailList.filter(email => !emailRegex.test(email));
+
+        if (invalidEmails.length > 0) {
+            message.error(`Correos inválidos: ${invalidEmails.join(", ")}`);
+            setLoading(false);
+            return;
+        }
+
+        const emailQuery = emailList.length > 0 ? `&emails=${encodeURIComponent(emailList.join(","))}` : "";
+
+        // 📌 Nueva URL para facturación
+        const response = await fetch(`${Api_Host.defaults.baseURL}/factura-pdf/${id}/enviar?${emailQuery}`, {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+        });
+
+        if (response.ok) {
+            const result = await response.text();
+            message.success(result);
+        } else {
+            message.error("Error al enviar el correo");
+        }
+    } catch (error) {
+        console.error("Error al enviar el correo:", error);
+        message.error("Hubo un error al enviar el correo");
+    } finally {
+        setLoading(false);
+    }
+};
+  
+
+const handleCancelFactura = async () => {
+  setLoading(true);
+  try {
+      const response = await fetch(`${Api_Host.defaults.baseURL}/factura-delete/${id}/`, {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+      });
+
+      if (response.ok) {
+          message.success("Factura cancelada exitosamente.");
+          setVisibleCancelModal(false); // Cierra el modal tras la cancelación
+      } else {
+          const result = await response.json();
+          message.error(`Error al cancelar la factura: ${result.message || "Desconocido"}`);
+      }
+  } catch (error) {
+      console.error("Error al cancelar la factura:", error);
+      message.error("Hubo un error al cancelar la factura.");
+  } finally {
+      setLoading(false);
+  }
+};
+
   const menu = (
     <Menu>
       <Menu.Item key="1" onClick={() => showModalCorreo(true)}>📧 Enviar por correo</Menu.Item>
       <Menu.Item key="2" onClick={() => setVisibleCancelModal(true)}>❌ Cancelar factura</Menu.Item>
       <Menu.Item key="3" onClick={() => setVisiblePaymentModal(true)}>➕ Generar comprobante de pago</Menu.Item>
-      <Menu.Item key="4">⬇ Descargar PDF</Menu.Item>
-      <Menu.Item key="5">⬇ Descargar XML</Menu.Item>
+      <Menu.Item key="4" onClick={() => handleDownloadPDF(id)}>⬇ Descargar PDF</Menu.Item>
+      <Menu.Item key="5" onClick={() => handleDownloadXML(id)}>⬇ Descargar XML</Menu.Item>
     </Menu>
   );
 
@@ -437,33 +577,19 @@ const DetallesFactura = () => {
       </Tabs>
 
       <Modal
-        title="Cancelando Factura"
-        visible={visibleCancelModal}
-        onCancel={() => setVisibleCancelModal(false)}
-        footer={[
-          <Button key="cancelar" onClick={() => setVisibleCancelModal(false)}>
+    title="Cancelando Factura"
+    visible={visibleCancelModal}
+    onCancel={() => setVisibleCancelModal(false)}
+    footer={[
+        <Button key="cerrar" onClick={() => setVisibleCancelModal(false)}>
             Cerrar
-          </Button>,
-          <Button key="ok" type="primary" onClick={handleOk}>
-            Cancelar
-          </Button>,
-        ]}
+        </Button>,
+        <Button key="cancelar" type="primary" danger onClick={handleCancelFactura}>
+            Cancelar Factura
+        </Button>,
+          ]}
       >
-        <Form layout="vertical">
-          <Form.Item label="Selecciona el motivo por la que se realizará la cancelación.">
-            <Select defaultValue="01" onChange={handleMotivoChange}>
-              <Option value="01">01 - Comprobante emitido con errores con relación.</Option>
-              <Option value="02">02 - Comprobante emitido con errores sin relación.</Option>
-              <Option value="03">03 - No se llevó a cabo la operación.</Option>
-              <Option value="04">04 - Operación nominativa relacionada en una global.</Option>
-            </Select>
-          </Form.Item>
-          {showUuid && (
-            <Form.Item label="UUID que va a reemplazar">
-              <Input id="uuidInput" placeholder="Ingrese el UUID a reemplazar" />
-            </Form.Item>
-          )}
-        </Form>
+          <p>¿Estás seguro de que deseas cancelar esta factura? Esta acción no se puede deshacer.</p>
       </Modal>
 
       <Modal
@@ -523,47 +649,31 @@ const DetallesFactura = () => {
         </Form>
       </Modal>
 
-      <Modal
-        title="Enviando Factura"
-        visible={isModalVisibleCorreo}
-        onOk={handleOk}
-        onCancel={handleCancelCorreo}
-        footer={[
-          <Button key="close" onClick={handleCancelCorreo}>
-            Cerrar
-          </Button>,
-          <Button key="submit" type="primary" onClick={handleOkCorreo}>
-            Enviar
-          </Button>,
-        ]}
-      >
-        <Form layout="vertical">
-          <Form.Item
-            label="Correos destinatarios (separados por comas):"
-            name="correosDestinatarios"
-            rules={[{ required: true, message: "Por favor ingresa los correos." }]}
-          >
-            <Input placeholder="correo1@example.com, correo2@example.com" />
-          </Form.Item>
-
-          <Form.Item label="Correos CCO (opcional):" name="correosCCO">
-            <Input placeholder="correo3@example.com, correo4@example.com" />
-          </Form.Item>
-
-          <Form.Item name="factura" valuePropName="checked">
-            <Checkbox>Necesito Factura</Checkbox>
-          </Form.Item>
-
-          <Form.Item name="comprobante" valuePropName="checked">
-            <Checkbox>Necesito Comprobante</Checkbox>
-          </Form.Item>
-
-          <Form.Item label="Mensaje" name="mensaje">
-            <Input.TextArea placeholder="Escribe tu mensaje aquí..." rows={4} />
-          </Form.Item>
-        </Form>
-      </Modal>
+      {/* Modal para enviar cotización por correo 
+      // Modal para enviar factura por correo*/}
+        <Modal
+            title="Enviar Factura por Correo"
+            visible={isModalVisibleCorreo}
+            onCancel={() => setIsModalVisibleCorreo(false)}
+            footer={[
+                <Button key="cancel" onClick={() => setIsModalVisibleCorreo(false)}>Cerrar</Button>,
+                <Button key="send" type="primary" onClick={handleSendEmail}>Enviar</Button>,
+            ]}
+        >
+            <h4>Selecciona los correos a los que deseas enviar la factura:</h4>
+            <Form layout="vertical">
+                <Checkbox defaultChecked>{factura?.correo || "N/A"}</Checkbox>
+                <Form.Item label="Correos adicionales (separados por coma):">
+                    <Input 
+                        placeholder="ejemplo@correo.com, otro@correo.com"
+                        value={extraEmails}
+                        onChange={(e) => setExtraEmails(e.target.value)}
+                    />
+                </Form.Item>
+            </Form>
+        </Modal>
     </div>
+    
   );
 };
 
