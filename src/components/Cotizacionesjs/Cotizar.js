@@ -151,7 +151,6 @@ const Cotizar = () => {
         setIsLoading(false);
       }
     };
-
     fetchData();
   }, [organizationId]);
 
@@ -190,9 +189,6 @@ const Cotizar = () => {
       </center>
 
       <div className="cotizar-buttons">
-        <Link to="/CotizacionEstadisticas">
-          <Button className="estadisticas-button">Estadísticas</Button>
-        </Link>
         <Link to="/cliente">
           <Button className="nueva-cotizacion-button" type="primary">
             Nueva Cotización

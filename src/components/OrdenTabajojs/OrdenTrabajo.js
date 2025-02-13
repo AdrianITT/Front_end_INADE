@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo, useCallback } from "react";
-import { Table, Input, Button, Spin } from "antd"; // Importar Spin
+import { Table, Input, Button, Spin, Menu } from "antd";
 import { Link } from "react-router-dom";
 import "./cssOrdenTrabajo/Generarorden.css";
 import { getAllOrdenesTrabajo } from "../../apis/OrdenTrabajoApi";
@@ -7,17 +7,27 @@ import { getCotizacionById } from "../../apis/CotizacionApi";
 import { getClienteById } from "../../apis/ClienteApi";
 import { getEstadoById } from "../../apis/EstadoApi";
 import { getReceptorByI } from "../../apis/ResectorApi";
+import { getAllEmpresas } from "../../apis/EmpresaApi";
 
 const Generarorden = () => {
   const [ordentrabajo, setOrdenTrabajo] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [searchText, setSearchText] = useState("");
-  const [isLoading, setIsLoading] = useState(true); // Estado de carga
+  const [isLoading, setIsLoading] = useState(true);
+
+  const organizationId = parseInt(localStorage.getItem("organizacion_id"), 10);
 
   useEffect(() => {
     const fetchOrdenTrabajo = async () => {
       try {
-        setIsLoading(true); // Activar el estado de carga
+        setIsLoading(true);
+        
+        // Obtener todas las empresas y filtrar por organización
+        const empresasResponse = await getAllEmpresas();
+        const empresasFiltradas = empresasResponse.data.filter(
+          (empresa) => empresa.organizacion === organizationId
+        );
+
         const response = await getAllOrdenesTrabajo();
         const ordenes = response.data;
 
@@ -40,73 +50,154 @@ const Generarorden = () => {
           })
         );
 
-        setOrdenTrabajo(ordenesConCotizacion);
-        setFilteredData(ordenesConCotizacion);
+        // Filtrar órdenes de trabajo basadas en la organización
+        const ordenesFiltradas = ordenesConCotizacion.filter((orden) =>
+          empresasFiltradas.some(
+            (empresa) => empresa.id === orden.cotizacionData.clienteData.empresa
+          )
+        );
+
+        setOrdenTrabajo(ordenesFiltradas);
+        setFilteredData(ordenesFiltradas);
       } catch (error) {
-        console.error('Error al cargar las ordenes: ', error);
+        console.error("Error al cargar las órdenes de trabajo:", error);
       } finally {
-        setIsLoading(false); // Desactivar el estado de carga
+        setIsLoading(false);
       }
     };
 
     fetchOrdenTrabajo();
-  }, []);
+  }, [organizationId]);
 
-  const handleSearch = useCallback((value) => {
-    setSearchText(value);
-    const filtered = ordentrabajo.filter((item) =>
-      Object.values(item).some((field) =>
-        String(field).toLowerCase().includes(value.toLowerCase())
-      )
-    );
-    setFilteredData(filtered);
-  }, [ordentrabajo]);
+  const handleSearch = useCallback(
+    (value) => {
+      setSearchText(value);
+      const filtered = ordentrabajo.filter((item) =>
+        Object.values(item).some(
+          (field) =>
+            field !== null &&
+            field !== undefined &&
+            String(field).toLowerCase().includes(value.toLowerCase())
+        )
+      );
+      setFilteredData(filtered);
+    },
+    [ordentrabajo]
+  );
 
-  const columns = useMemo(() => [
-    { title: "ID", dataIndex: "id", key: "id" },
-    { title: "Cotización", dataIndex: "codigo", key: "codigo" },
-    {
-      title: "Cliente",
-      key: "cliente",
-      render: (_, record) => {
-        if (record.cotizacionData && record.cotizacionData.clienteData) {
-          const { nombrePila, apPaterno, apMaterno } = record.cotizacionData.clienteData;
-          return `${nombrePila} ${apPaterno} ${apMaterno}`;
-        }
-        return "";
-      }
-    },
-    {
-      title: "Recibe",
-      key: "receptor",
-      render: (_, record) => {
-        if (record.receptorData) {
-          const { nombrePila, apPaterno, apMaterno } = record.receptorData;
-          return `${nombrePila} ${apPaterno} ${apMaterno}`;
-        }
-        return "";
-      }
-    },
-    {
-      title: "Estado",
-      key: "estado",
-      render: (_, record) => record.estadoData ? record.estadoData.nombre : ""
-    },
-    {
-      title: "Vigencia",
-      key: "vigencia",
-      render: (_, record) => record.cotizacionData ? record.cotizacionData.fechaCaducidad : ""
-    },
-    {
-      title: "Opciones",
-      key: "opciones",
-      render: (_, record) => (
-        <Link to={`/DetalleOrdenTrabajo/${record.id}`}>
-          <Button className="detalles-button">Detalles</Button>
-        </Link>
-      ),
-    },
-  ], []);
+  const columns = useMemo(
+    () => [
+      { title: "ID", dataIndex: "id", key: "id" },
+      {
+        title: "Cotización",
+        key: "cotizacion",
+        filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
+          <div style={{ padding: 8 }}>
+            <Input
+              placeholder="Buscar cotización"
+              value={selectedKeys[0]}
+              onChange={(e) =>
+                setSelectedKeys(e.target.value ? [e.target.value] : [])
+              }
+              onPressEnter={() => confirm()}
+              style={{ marginBottom: 8, display: "block" }}
+            />
+            <Button
+              onClick={() => confirm()}
+              type="primary"
+              size="small"
+              style={{ width: 90, marginRight: 8 }}
+            >
+              Buscar
+            </Button>
+            <Button
+              onClick={() => clearFilters && clearFilters()}
+              size="small"
+              style={{ width: 90 }}
+            >
+              Resetear
+            </Button>
+          </div>
+        ),
+        onFilter: (value, record) => {
+          const cotizacionValor =
+            record.codigo ||
+            (record.cotizacionData ? record.cotizacionData.id.toString() : "");
+          return cotizacionValor
+            .toString()
+            .toLowerCase()
+            .includes(value.toLowerCase());
+        },
+        render: (_, record) => (
+          <span className="cotizacion-text">
+            {record.codigo || (record.cotizacionData ? record.cotizacionData.id : "")}
+          </span>
+        ),
+      },
+      {
+        title: "Cliente",
+        key: "cliente",
+        render: (_, record) => {
+          if (record.cotizacionData && record.cotizacionData.clienteData) {
+            const { nombrePila, apPaterno, apMaterno } = record.cotizacionData.clienteData;
+            return `${nombrePila} ${apPaterno} ${apMaterno}`;
+          }
+          return "";
+        },
+      },
+      {
+        title: "Recibe",
+        key: "receptor",
+        render: (_, record) => {
+          if (record.receptorData) {
+            const { nombrePila, apPaterno, apMaterno } = record.receptorData;
+            return `${nombrePila} ${apPaterno} ${apMaterno}`;
+          }
+          return "";
+        },
+      },
+      {
+        title: "Estado",
+        key: "estado",
+        filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
+          <div style={{ padding: 8 }}>
+            <Menu
+              onClick={({ key }) => {
+                setSelectedKeys(key === "all" ? [] : [key]);
+                confirm();
+              }}
+              selectedKeys={selectedKeys}
+            >
+              <Menu.Item key="all">Todos</Menu.Item>
+              <Menu.Item key="Pendiente">Pendiente</Menu.Item>
+              <Menu.Item key="En proceso">En proceso</Menu.Item>
+              <Menu.Item key="Completado">Completado</Menu.Item>
+            </Menu>
+          </div>
+        ),
+        onFilter: (value, record) =>
+          value === "all" || (record.estadoData && record.estadoData.nombre === value),
+        render: (_, record) => (record.estadoData ? record.estadoData.nombre : ""),
+      },
+      {
+        title: "Vigencia",
+        key: "vigencia",
+        // Eliminamos el filtro por rango de fechas en la columna Vigencia
+        render: (_, record) =>
+          record.cotizacionData ? record.cotizacionData.fechaCaducidad : "",
+      },
+      {
+        title: "Opciones",
+        key: "opciones",
+        render: (_, record) => (
+          <Link to={`/DetalleOrdenTrabajo/${record.id}`}>
+            <Button className="detalles-button">Detalles</Button>
+          </Link>
+        ),
+      },
+    ],
+    []
+  );
 
   return (
     <div className="generarorden-container">
@@ -126,7 +217,7 @@ const Generarorden = () => {
           <Button className="nueva-orden-button">Nueva Orden de Trabajo</Button>
         </Link>
       </div>
-      {isLoading ? ( // Mostrar spinner si isLoading es true
+      {isLoading ? (
         <div style={{ textAlign: "center", marginTop: "20px" }}>
           <Spin size="large" tip="Cargando órdenes de trabajo..." />
         </div>
