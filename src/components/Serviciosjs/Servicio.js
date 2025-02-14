@@ -475,7 +475,7 @@ const Servicio = () => {
                   {metodos.map((metodo)=>(
                     <Select.Option key={metodo.id}
                     value={metodo.id}>
-                      {metodo.codigo}-{metodo.nombre}
+                      {metodo.codigo}
                     </Select.Option>
                   ))}
                   </Select>
@@ -590,7 +590,7 @@ const Servicio = () => {
                   {metodos.map((metodo)=>(
                     <Select.Option key={metodo.id}
                     value={metodo.id}>
-                      {metodo.codigo}-{metodo.nombre}
+                      {metodo.codigo}
                     </Select.Option>
                   ))}
                   </Select>
