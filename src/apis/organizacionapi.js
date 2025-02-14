@@ -32,3 +32,5 @@ export const updateOrganizacion = async (id, data) => {
        }
      }
    };
+
+   export const getOrganizacionById = async (id) => Organizacion_Api.get(`/${id}/`);
