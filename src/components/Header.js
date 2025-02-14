@@ -3,6 +3,7 @@ import { AppstoreOutlined } from '@ant-design/icons';
 import { Menu, Button, Drawer } from 'antd';
 import { Link } from "react-router-dom";
 import Logout_Api from '../apis/LogoutApi';
+import imglogo from '../img/logo.png';
 import '../Header.css';
 
 const items = [
@@ -170,7 +171,7 @@ const Header = () => {
     <>
       <div className="header-container">
         <Link to="/home">
-          <div className='header-logo' ><img src="/img/logo.png" alt="INADE" style={{ height: '40px', marginRight: '8px' }} /> <span></span> </div>
+          <div className='header-logo' ><img alt="INADE" src={imglogo} style={{ height: '40px', marginRight: '8px' }} /> <span></span> </div>
         </Link>
 
         <div class="header-button">
