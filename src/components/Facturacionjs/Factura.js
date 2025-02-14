@@ -82,8 +82,12 @@ const Factura = () => {
             id: factura.id,
             // Fecha de expedición
             fechaExpedicion: factura.fechaExpedicion
-              ? new Date(factura.fechaExpedicion).toLocaleString()
-              : "Desconocida",
+            ? new Date(factura.fechaExpedicion).toLocaleDateString("es-ES", {
+              year: "numeric",
+              month: "2-digit",
+              day: "2-digit",
+            })
+            : "Desconocida",
             // Código de la orden
             codigoOrdenTrabajo: ordenData.codigo || "N/A",
             // Nombre del cliente (ajusta según tus campos reales)
@@ -174,6 +178,7 @@ const Factura = () => {
       title: "Fecha de Expedición",
       dataIndex: "fechaExpedicion",
       key: "fechaExpedicion",
+      sorter: (a, b) => new Date(a.fechaExpedicion) - new Date(b.fechaExpedicion),
       render: (text) => <Tag color="cyan">{text}</Tag>,
     },
     {
