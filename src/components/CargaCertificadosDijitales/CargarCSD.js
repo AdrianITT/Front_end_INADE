@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import axios from "axios";
 import { Api_Host } from "../../apis/api";
 import { createCSD } from "../../apis/csdApi";
+import Button1 from "../ComponetButton/Button-1";
 import "./CargarCSD.css";
 
 const { Title } = Typography;
@@ -109,11 +110,7 @@ const CargarCSD = () => {
 
   return (
     <div className="csd-container">
-      <Link to="/">
-        <Button type="text" className="back-button">
-          ←
-        </Button>
-      </Link>
+      <Button1 />
 
       <Title level={3} className="csd-title">
         Cargar Certificado de Sello Digital (CSD)

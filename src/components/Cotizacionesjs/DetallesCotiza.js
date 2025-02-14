@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Input, Tabs, Card, Table, Row, Col, Typography, Button, Menu, Dropdown, Checkbox, Form, Alert, Modal, message, Spin, Select } from "antd";
+import { Input, Tabs, Card, Table, Row, Col, Typography, Button, Menu, Dropdown, Checkbox, Form, Alert, Modal, message, Spin, Select,Result } from "antd";
 import { MailTwoTone, CopyTwoTone, EditTwoTone, CheckCircleTwoTone, FilePdfTwoTone } from "@ant-design/icons";
 import { getAllCotizacion, updateCotizacion } from "../../apis/CotizacionApi";
 import { getAllCliente } from "../../apis/ClienteApi";
@@ -35,6 +35,9 @@ const CotizacionDetalles = () => {
   const [form] = Form.useForm();
   const [tipoMonedaOptions, setTipoMonedaOptions] = useState([]);
   const [ivaOptions, setIvaOptions] = useState([]);
+  const [isResultModalVisible, setIsResultModalVisible] = useState(false);
+  const [resultMessage, setResultMessage] = useState("");
+  const [resultStatus, setResultStatus] = useState("success"); // "success" o "error"
 
   useEffect(() => {
     const fetchTipoMoneda = async () => {
@@ -204,6 +207,10 @@ const CotizacionDetalles = () => {
   const handleCancel = () => {
     setIsModalVisible(false);
   };
+  const handDuoModal=()=>{    
+    setIsModalVisible(false);
+    setIsResultModalVisible(false)
+  }
 
   const [extraEmails, setExtraEmails] = useState("");
 
@@ -214,7 +221,9 @@ const CotizacionDetalles = () => {
       try {
           const user_id = localStorage.getItem("user_id");
           if (!user_id) {
-              message.error("No se encontró el ID del usuario.");
+              setResultStatus("error");
+              setResultMessage("No se encontró el ID del usuario.");
+              setIsResultModalVisible(true);
               setLoading(false);
               return;
           }
@@ -225,7 +234,9 @@ const CotizacionDetalles = () => {
           const invalidEmails = emailList.filter(email => !emailRegex.test(email));
   
           if (invalidEmails.length > 0) {
-              message.error(`Correos inválidos: ${invalidEmails.join(", ")}`);
+              setResultStatus("error");
+              setResultMessage(`Correos inválidos: ${invalidEmails.join(", ")}`);
+              setIsResultModalVisible(true);
               setLoading(false);
               return;
           }
@@ -239,16 +250,20 @@ const CotizacionDetalles = () => {
   
           if (response.ok) {
               const result = await response.text();
-              message.success(result);
+              setResultStatus("success");
+              setResultMessage(result || "Correo enviado exitosamente.");
           } else {
-              message.error("Error al enviar el correo");
+              setResultStatus("error");
+              setResultMessage("Error al enviar el correo.");
           }
       } catch (error) {
-          console.error("Error al enviar el correo:", error);
-          message.error("Hubo un error al enviar el correo");
-      } finally {
-          setLoading(false);
-      }
+        console.error("Error al enviar el correo:", error);
+        setResultStatus("error");
+        setResultMessage("Hubo un error al enviar el correo.");
+    } finally {
+        setIsResultModalVisible(true);
+        setLoading(false);
+    }
   };
   
 
@@ -267,6 +282,8 @@ const CotizacionDetalles = () => {
       message.error("Error al actualizar el estado de la cotización");
     }
   }
+
+  
 
   const menu = (
     <Menu>
@@ -462,6 +479,23 @@ const CotizacionDetalles = () => {
           </Form.Item>
         </Form>
       </Modal>
+
+            {/* Modal para mostrar el resultado del envío*/}
+        <Modal
+            title={resultStatus === "success" ? "Éxito" : "Error"}
+            open={isResultModalVisible}
+            onCancel={handDuoModal}
+            footer={[
+                <Button key="close" onClick={handDuoModal}>
+                    Cerrar
+                </Button>
+            ]}
+        >
+            <Result
+            title={<p style={{ color: resultStatus === "success" ? "green" : "red" }}>{resultMessage}</p>}
+            />
+            
+        </Modal>
       </div>
     </Spin>
   );

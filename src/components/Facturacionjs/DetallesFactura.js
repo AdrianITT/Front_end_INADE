@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Card, Row, Col, Button, Table, Tabs, Dropdown, Menu, Modal, Select, Input, Form, DatePicker, Flex, Alert, Checkbox,message,Descriptions } from "antd";
+import { Card, Row, Col, Button, Table, Tabs, Dropdown, Menu, Modal, Select, Input, Form, DatePicker, Flex, Alert, Checkbox,message,Descriptions, Result, Spin  } from "antd";
 import { useParams } from "react-router-dom";
 import{FileTextTwoTone,MailTwoTone,FilePdfTwoTone,CloseCircleTwoTone} from "@ant-design/icons";
 import { getFacturaById, createPDFfactura } from "../../apis/FacturaApi";
@@ -43,6 +43,9 @@ const DetallesFactura = () => {
   const [extraEmails, setExtraEmails] = useState("");
   const [tipoCambioDolar, setTipoCambioDolar] = useState(0);
   const [ordenCodigo, setOrdenCodigo] = useState("");
+  const [isResultModalVisible, setIsResultModalVisible] = useState(false);
+  const [resultMessage, setResultMessage] = useState("");
+  const [resultStatus, setResultStatus] = useState("success"); // Puede ser "success" o "error"
 
   const esUSD = moneda.codigo === "USD";
   const factorConversion = esUSD ? tipoCambioDolar : 1;
@@ -450,6 +453,7 @@ const DetallesFactura = () => {
       message.error("No se pudo descargar el XML.");
     }
   };
+
   //ENVIAR CORREO
   const handleSendEmail = async () => {
     setLoading(true);
@@ -457,6 +461,7 @@ const DetallesFactura = () => {
         const user_id = localStorage.getItem("user_id");
         if (!user_id) {
             message.error("No se encontró el ID del usuario.");
+            setIsResultModalVisible(true);
             setLoading(false);
             return;
         }
@@ -467,7 +472,9 @@ const DetallesFactura = () => {
         const invalidEmails = emailList.filter(email => !emailRegex.test(email));
 
         if (invalidEmails.length > 0) {
-            message.error(`Correos inválidos: ${invalidEmails.join(", ")}`);
+            setResultStatus("error");
+            setResultMessage(`Correos inválidos: ${invalidEmails.join(", ")}`);
+            setIsResultModalVisible(true);
             setLoading(false);
             return;
         }
@@ -481,17 +488,21 @@ const DetallesFactura = () => {
         });
 
         if (response.ok) {
-            const result = await response.text();
-            message.success(result);
+          const result = await response.text();
+          setResultStatus("success");
+          setResultMessage(result || "Factura enviada exitosamente.");
         } else {
-            message.error("Error al enviar el correo");
+          setResultStatus("error");
+          setResultMessage("Error al enviar la factura.");
         }
     } catch (error) {
-        console.error("Error al enviar el correo:", error);
-        message.error("Hubo un error al enviar el correo");
-    } finally {
-        setLoading(false);
-    }
+      console.error("Error al enviar la factura:", error);
+      setResultStatus("error");
+      setResultMessage("Hubo un error al enviar la factura.");
+  } finally {
+      setIsResultModalVisible(true);
+      setLoading(false);
+  }
 };
   
 
@@ -518,6 +529,11 @@ const handleCancelFactura = async () => {
   }
 };
 
+const handDuoModal=()=>{    
+  setIsModalVisibleCorreo(false);
+  setIsResultModalVisible(false)
+}
+
   const menu = (
     <Menu>
       <Menu.Item key="1" onClick={() => showModalCorreo(true)} icon={<MailTwoTone />}>Enviar por correo</Menu.Item>
@@ -531,6 +547,7 @@ const handleCancelFactura = async () => {
 
 
   return (
+    <Spin spinning={loading}>
     <div style={{ padding: "20px" }}>
       <h2><center>Factura {ordenCodigo}</center></h2>
       <Tabs defaultActiveKey="1">
@@ -713,8 +730,24 @@ const handleCancelFactura = async () => {
                 </Form.Item>
             </Form>
         </Modal>
+
+        {/* Modal para mostrar el resultado del envío*/}
+        <Modal
+            title={resultStatus === "success" ? "Éxito" : "Error"}
+            open={isResultModalVisible}
+            onCancel={handDuoModal}
+            footer={[
+                <Button key="close" onClick={handDuoModal}>
+                    Cerrar
+                </Button>
+            ]}
+        >
+          <Result
+            title={<p style={{ color: resultStatus === "success" ? "green" : "red" }}>{resultMessage}</p>}
+            />
+        </Modal>
     </div>
-    
+    </Spin>
   );
 };
 
