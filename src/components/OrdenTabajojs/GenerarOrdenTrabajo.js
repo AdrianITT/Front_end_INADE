@@ -153,6 +153,11 @@ const GenerarOrdenTrabajo = () => {
 
   const onFinish = async (values) => {
     try {
+
+      if (!values.notas || !values.cantidad || !values.servicio || !values.receptor) {
+        message.error("Por favor, complete todos los campos antes de guardar.");
+        return;
+      }
       // 1. Crear la orden de trabajo  
       // Se asume que el receptor seleccionado está en values.receptor
       const ordenData = {

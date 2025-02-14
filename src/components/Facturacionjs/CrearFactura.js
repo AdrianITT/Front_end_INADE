@@ -2,7 +2,7 @@ import React, {useState, useEffect} from "react";
 import { Form, Input, Button, Select, Row, Col,DatePicker, message, Table } from "antd";
 import { useParams, useNavigate } from "react-router-dom";
 import "./crearfactura.css";
-import { getAllUsoCDFI } from "../../apis/UsocfdiApi";
+import { getAllTipoCDFI } from "../../apis/TipoCFDIApi";
 import { getAllFormaPago } from "../../apis/FormaPagoApi";
 import { getAllMetodopago } from "../../apis/MetodoPagoApi";
 import { getAllServicio } from "../../apis/ServiciosApi";
@@ -14,6 +14,10 @@ import { getAllOrdenesTrabajo } from "../../apis/OrdenTrabajoApi";
 import { getAllCotizacion } from "../../apis/CotizacionApi";
 import { getAllIva } from "../../apis/ivaApi";
 import { createFactura } from "../../apis/FacturaApi";
+import { getInfoSistema } from "../../apis/InfoSistemaApi";
+import { getOrdenTrabajoById } from "../../apis/OrdenTrabajoApi";
+import { getCotizacionById } from "../../apis/CotizacionApi";
+import { getTipoMonedaById } from "../../apis/Moneda";
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -21,6 +25,7 @@ const { Option } = Select;
 const CrearFactura = () => {
     const [form] = Form.useForm();
     const { id } = useParams();
+    const [tipoCambioDolar, setTipoCambioDolar] = useState(0);
     const userOrganizationId = localStorage.getItem("organizacion_id"); // 
 
     // Estados para almacenar los datos de las APIs
@@ -36,12 +41,16 @@ const CrearFactura = () => {
     const [codigoOrden, setCodigoOrden] = useState(null);
     const [ivaId, setIvaId] = useState(1);
     const navigate = useNavigate();
+    const [moneda, setMoneda] = useState({ codigo: "", descripcion: "" });
 
     // Estados
     const [tasaIva, setTasaIva] = useState(8);
     const [subtotal, setSubtotal] = useState(0);
     const [iva, setIva] = useState(0);
     const [total, setTotal] = useState(0);
+
+    const esUSD =moneda.codigo === "USD";
+    const factorConversion = esUSD ? tipoCambioDolar : 1;
 
     // Cargar datos al montar el componente
     useEffect(() => {
@@ -54,7 +63,9 @@ const CrearFactura = () => {
         obtenerOrganizacion();
         obtenerRFCEmisor();
         obtenerCodigoOrdenTrabajo();
-    }, []);
+        fetchTipoCambio();
+        fetchMonedaInfo(id);
+    }, [id]);
 
     useEffect(() => {
       if (ordenTrabajoServicios.length > 0) {
@@ -62,15 +73,41 @@ const CrearFactura = () => {
       }
   }, [ordenTrabajoServicios, tasaIva]);
 
+  const fetchMonedaInfo = async (ordenTrabajoId) => {
+        try {
+          const ordenTrabajo = await getOrdenTrabajoById(ordenTrabajoId);
+          console.log("Orden de trabajo:", ordenTrabajo.data);
+          const cotizacion = await getCotizacionById(ordenTrabajo.data.cotizacion);
+          console.log("Cotización:", cotizacion.data);
+          const tipoMoneda = await getTipoMonedaById(cotizacion.data.tipoMoneda);
+          console.log("Tipo de moneda:", tipoMoneda.data);
+          setMoneda({ codigo: tipoMoneda.data.codigo, descripcion: tipoMoneda.data.descripcion });
+      
+        } catch (error) {
+          console.error("Error al obtener la información de la moneda:", error);
+        }
+      };
+  
+  const fetchTipoCambio = async () => {
+        try {
+          const response = await getInfoSistema();
+          const tipoCambio = parseFloat(response.data[0].tipoCambioDolar);
+          setTipoCambioDolar(tipoCambio);
+        } catch (error) {
+          console.error("Error al obtener el tipo de cambio del dólar", error);
+        }
+      };
+
 
     const obtenerCodigoOrdenTrabajo = async () => {
       try {
           const response = await getAllOrdenesTrabajo();
           // Buscar la orden con el ID recibido en la URL
-          const ordenEncontrada = response.data.find(orden => orden.id === parseInt(id));
+          const ordenEncontrada = response.data.find((orden) => orden.id === parseInt(id));
 
           if (ordenEncontrada) {
             setCodigoOrden(ordenEncontrada.codigo);
+            fetchMonedaInfo(ordenEncontrada.id);
             if (ordenEncontrada.cotizacion) {
                 obtenerCotizacion(ordenEncontrada.cotizacion); // Obtener la cotización asociada
             }
@@ -96,9 +133,9 @@ const CrearFactura = () => {
     
     // Actualizar valores en el formulario
     form.setFieldsValue({
-      subtotal: `$${nuevoSubtotal.toFixed(2)}`,
-      iva: `$${nuevoIva.toFixed(2)}`,
-      total: `$${nuevoTotal.toFixed(2)}`,
+      subtotal: `$${(nuevoSubtotal/ factorConversion).toFixed(2)}${esUSD ? "USD" : "MXN"}`,
+      iva: `$${(nuevoIva / factorConversion).toFixed(2)} ${esUSD ? "USD" : "MXN"}`,
+      total: `$${(nuevoTotal/ factorConversion).toFixed(2)}${esUSD ? "USD" : "MXN"}`,
   });
     
 };
@@ -121,11 +158,11 @@ const CrearFactura = () => {
     // Función para obtener Uso CFDI
     const obtenerUsoCfdi = async () => {
       try {
-          const response = await getAllUsoCDFI();
+          const response = await getAllTipoCDFI();
           setUsoCfdiList(response.data);
       } catch (error) {
-          console.error("Error al obtener Uso CFDI", error);
-          message.error("Error al obtener Uso CFDI.");
+          console.error("Error al obtener Tipo CFDI", error);
+          message.error("Error al obtener Tipo CFDI.");
       }
   };
 
@@ -244,8 +281,18 @@ const obtenerIva = async (ivaIdParam = 1) => {
       { title: "Código", dataIndex: "id", key: "id" },
       { title: "Nombre del Servicio", dataIndex: "nombreServicio", key: "nombreServicio" },
       { title: "Cantidad", dataIndex: "cantidad", key: "cantidad" },
-      { title: "Precio", dataIndex: "precio", key: "precio", render: (text) => `$${text}` },
-      { title: "Importe", key: "importe", render: (_, record) => `$${(record.cantidad * record.precio).toFixed(2)}` },
+      { title: "Precio", dataIndex: "precio", key: "precio", render: (precioMXN) => {
+        // Si es USD, dividir entre factorConversion
+        const precioConvertido = (precioMXN / factorConversion).toFixed(2);
+        return `$${precioConvertido} ${esUSD ? "USD" : "MXN"}`;
+      },},
+      { title: "Importe", key: "importe", render: (_, record) => {
+        // Calcula el importe en MXN primero
+        const importeMXN = record.cantidad * record.precio;
+        // Lo convierte si la moneda es USD
+        const importeConvertido = (importeMXN / factorConversion).toFixed(2);
+        return `$${importeConvertido} ${esUSD ? "USD" : "MXN"}`;
+      },},
   ];
 
   const handlecrearFactura=async(values)=>{
@@ -318,7 +365,7 @@ const obtenerIva = async (ivaIdParam = 1) => {
             </Form.Item>
           </div>
           <div className="horizontal-group">
-          <Form.Item label="Uso CFDI" name="tipoCfdi" rules={[{ required: true, message: "Selecciona el Uso CFDI" }]}>
+          <Form.Item label="Tipo CFDI" name="tipoCfdi" rules={[{ required: true, message: "Selecciona el Uso CFDI" }]}>
                 <Select placeholder="Selecciona uso CFDI">
                     {usoCfdiList?.map((uso) => (
                         <Option key={uso.id} value={uso.id}>
@@ -369,16 +416,19 @@ const obtenerIva = async (ivaIdParam = 1) => {
           <Col span={10}>
             <div className="factura-summary">
             <Form.Item label="Subtotal:" name="subtotal">
-            <Input value={`$${subtotal}`}  disabled />
+            <Input value={`$${(subtotal / factorConversion).toFixed(2)} ${esUSD ? "USD" : "MXN"}`}
+              disabled  />
             </Form.Item>
             <Form.Item label="tasa IVA:">
-              <Input value={`${tasaIva }%`} disabled />
+              <Input value={`${tasaIva}%`} disabled />
             </Form.Item>
             <Form.Item label="IVA:" name="iva">
-              <Input value={`$${iva}`} disabled />
+              <Input value={`$${(iva / factorConversion).toFixed(2)} ${esUSD ? "USD" : "MXN"}`}
+              disabled />
             </Form.Item>
             <Form.Item label="Total:" name="total">
-              <Input value={`$${total}`} disabled />
+              <Input value={`$${(total / factorConversion).toFixed(2)} ${esUSD ? "USD" : "MXN"}`}
+              disabled />
             </Form.Item>
           </div>
           </Col>
