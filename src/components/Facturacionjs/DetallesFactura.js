@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { Card, Row, Col, Button, Table, Tabs, Dropdown, Menu, Modal, Select, Input, Form, DatePicker, Flex, Alert, Checkbox,message } from "antd";
+import { Card, Row, Col, Button, Table, Tabs, Dropdown, Menu, Modal, Select, Input, Form, DatePicker, Flex, Alert, Checkbox,message,Descriptions } from "antd";
 import { useParams } from "react-router-dom";
-import { getFacturaById, createPDFfactura, getFacturPDFaById } from "../../apis/FacturaApi";
+import{FileTextTwoTone,MailTwoTone,FilePdfTwoTone,CloseCircleTwoTone} from "@ant-design/icons";
+import { getFacturaById, createPDFfactura } from "../../apis/FacturaApi";
 import { getAllFormaPago } from "../../apis/FormaPagoApi";
 import { getAllMetodopago } from "../../apis/MetodoPagoApi";
 import { getOrdenTrabajoById } from "../../apis/OrdenTrabajoApi"; // Asegúrate de tener esta función
@@ -15,34 +16,8 @@ import { getAllOrdenesTrabajoServicio } from "../../apis/OrdenTabajoServiciosApi
 import {getServicioById} from "../../apis/ServiciosApi";
 import {  getAllfacturafacturama } from "../../apis/FacturaFacturamaApi";
 import { getIvaById } from "../../apis/ivaApi";
+import { getInfoSistema } from "../../apis/InfoSistemaApi";
 
-
-
-
-const columnsConceptos = [
-  {
-    title: "Servicio",
-    dataIndex: "servicio",  // Debe coincidir con la clave del objeto en `setServicios`
-    key: "servicio",
-  },
-  {
-    title: "Cantidad",
-    dataIndex: "cantidad",
-    key: "cantidad",
-  },
-  {
-    title: "Precio Unitario",
-    dataIndex: "precioUnitario",
-    key: "precioUnitario",
-    render: (text) => `$${text}`,
-  },
-  {
-    title: "Total",
-    dataIndex: "total",
-    key: "total",
-    render: (text) => `$${text}`,
-  },
-];
 
 const { Option } = Select;
 
@@ -66,13 +41,61 @@ const DetallesFactura = () => {
   const [importeTotal, setImporteTotal] = useState(0);
   const [facturaExiste, setFacturaExiste] = useState(null);
   const [extraEmails, setExtraEmails] = useState("");
+  const [tipoCambioDolar, setTipoCambioDolar] = useState(0);
+  const [ordenCodigo, setOrdenCodigo] = useState("");
+
+  const esUSD = moneda.codigo === "USD";
+  const factorConversion = esUSD ? tipoCambioDolar : 1;
+
+  const columnsConceptos = [
+    {
+      title: "Servicio",
+      dataIndex: "servicio",  // Debe coincidir con la clave del objeto en `setServicios`
+      key: "servicio",
+    },
+    {
+      title: "Cantidad",
+      dataIndex: "cantidad",
+      key: "cantidad",
+    },
+    {
+      title: "Precio Unitario",
+      dataIndex: "precioUnitario",
+      key: "precioUnitario",
+      render: (valorEnMXN) => {
+        // Convertimos al vuelo si es USD
+        const convertido = (valorEnMXN / factorConversion).toFixed(2);
+        return `$${convertido} ${esUSD ? "USD" : "MXN"}`;
+      },
+    },
+    {
+      title: "Total",
+      dataIndex: "total",
+      key: "total",
+      render: (valorEnMXN) => {
+        // Convertimos al vuelo si es USD
+        const convertido = (valorEnMXN / factorConversion).toFixed(2);
+        return `$${convertido} ${esUSD ? "USD" : "MXN"}`;
+      },
+    },
+  ];
 
   useEffect(() => {
+    const fetchTipoCambio = async () => {
+      try {
+        const response = await getInfoSistema();
+        const tipoCambio = parseFloat(response.data[0].tipoCambioDolar);
+        setTipoCambioDolar(tipoCambio);
+      } catch (error) {
+        console.error("Error al obtener el tipo de cambio del dólar", error);
+      }
+    };
     const fetchFactura = async () => {
       try {
         const response = await getFacturaById(id);
         //console.log("Respuesta de la API:", response.data);
         if (response.data && typeof response.data === 'object') {
+          console.log("📄 Datos recibidos:", response.data);
           setFactura(response.data);
           
           // Llamar a fetchServicios con el ordenTrabajoId
@@ -125,6 +148,7 @@ const DetallesFactura = () => {
         setMoneda({ codigo: tipoMoneda.data.codigo, descripcion: tipoMoneda.data.descripcion });
     
         // Obtener el ID del cliente desde la cotización
+        setOrdenCodigo(ordenTrabajo.data.codigo);
         const clienteId = cotizacion.data.cliente;
         if (clienteId) {
           fetchClienteInfo(clienteId); // Llamar a una función para obtener los datos del cliente
@@ -219,6 +243,7 @@ const DetallesFactura = () => {
             try {
               const servicioResponse = await getServicioById(ordenServicio.servicio);
               const servicioData = servicioResponse.data || {};
+              
     
               return {
                 key: servicioData.id,
@@ -251,6 +276,7 @@ const DetallesFactura = () => {
     fetchFactura();
     fetchFormasPago();
     fetchMetodosPago();
+    fetchTipoCambio();
   }, [id]);
 
   useEffect(() => {
@@ -301,6 +327,7 @@ const DetallesFactura = () => {
   };
   
   const calcularTotales = () => {
+    
     const subtotalServicios = servicios.reduce((total, servicio) => total + servicio.total, 0);
     setSubtotal(subtotalServicios);
   
@@ -493,18 +520,19 @@ const handleCancelFactura = async () => {
 
   const menu = (
     <Menu>
-      <Menu.Item key="1" onClick={() => showModalCorreo(true)}>📧 Enviar por correo</Menu.Item>
-      <Menu.Item key="2" onClick={() => setVisibleCancelModal(true)}>❌ Cancelar factura</Menu.Item>
-      <Menu.Item key="3" onClick={() => setVisiblePaymentModal(true)}>➕ Generar comprobante de pago</Menu.Item>
-      <Menu.Item key="4" onClick={() => handleDownloadPDF(id)}>⬇ Descargar PDF</Menu.Item>
-      <Menu.Item key="5" onClick={() => handleDownloadXML(id)}>⬇ Descargar XML</Menu.Item>
+      <Menu.Item key="1" onClick={() => showModalCorreo(true)} icon={<MailTwoTone />}>Enviar por correo</Menu.Item>
+      <Menu.Item key="2" onClick={() => setVisibleCancelModal(true)} icon={<CloseCircleTwoTone />}>Cancelar factura</Menu.Item>
+      <Menu.Item key="4" onClick={() => handleDownloadPDF(id)} icon={<FilePdfTwoTone />}>Descargar PDF</Menu.Item>
+      <Menu.Item key="5" onClick={() => handleDownloadXML(id)}icon={<FileTextTwoTone />}>Descargar XML</Menu.Item>
     </Menu>
   );
 
 
+
+
   return (
     <div style={{ padding: "20px" }}>
-      <h2>Factura 1000</h2>
+      <h2><center>Factura {ordenCodigo}</center></h2>
       <Tabs defaultActiveKey="1">
         <Tabs.TabPane tab="Información" key="1">
           <Row gutter={16}>
@@ -513,19 +541,23 @@ const handleCancelFactura = async () => {
                 <Row>
                   <Col span={12}>
                     <>
-                      <p><strong>Factura</strong></p>
-                      <p>Fecha: {factura.fechaExpedicion}</p>
-                      <p>Forma de pago: {getDescripcionFormaPago(factura.formaPago)}</p>
-                      <p>Método de pago: {getDescripcionMetodoPago(factura.metodoPago)}</p>
-                      <p>Moneda: {moneda.codigo} - {moneda.descripcion}</p>
-                      <p>Tipo de cambio: </p>
-                      <p>Comentarios: {factura?.notas}</p>
+                    <Descriptions column={1}>
+                    <Descriptions.Item label="Fecha">{factura.fechaExpedicion}</Descriptions.Item>
+                    <Descriptions.Item label="Forma de Pago">Tarjeta</Descriptions.Item>
+                    <Descriptions.Item label="Método de Pago">Transferencia</Descriptions.Item>
+                    <Descriptions.Item label="Moneda">
+                      {moneda.codigo} - {moneda.descripcion}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Orden de Compra">{factura.ordenCompra}</Descriptions.Item>
+                  </Descriptions>
                     </>
                   </Col>
                   <Col span={12}>
-                    <p><strong>Cliente</strong></p>
-                    <p>Empresa: {empresa?.nombre}</p> {/* Mostrar el nombre de la empresa */}
-                    <p>RFC: {empresa?.rfc}</p> {/* Mostrar el RFC */}
+                  <Descriptions column={1}>
+                    <Descriptions.Item label="Empresa">{empresa.nombre}</Descriptions.Item>
+                    <Descriptions.Item label="RFC">{empresa.rfc}</Descriptions.Item>
+                    <Descriptions.Item label="Contacto">{cliente.nombrePila}</Descriptions.Item>
+                  </Descriptions>
                   </Col>
                 </Row>
               </Card>
@@ -545,20 +577,32 @@ const handleCancelFactura = async () => {
                     Crear Factura
                   </Button></Flex>
               ) : (
-                <div>
+                <div >
                   <Dropdown overlay={menu} trigger={["click"]}>
-                    <Button type="primary" style={{ marginTop: "20px" }}>
+                    <Button type="primary" style={{ marginTop: "5px"}}>
                       Acciones para factura
                     </Button>
                   </Dropdown>
                 </div>
               )}
-              <Card title="Cuenta" bordered>
-                <p>Subtotal: ${subtotal.toFixed(2)}</p>
-                <p>Descuento: {descuento}%</p>
-                <p>Subtotal - Descuento: ${(subtotal - (subtotal * descuento / 100)).toFixed(2)}</p>
-                <p>IVA ({porcentajeIVA}%): ${(subtotal * porcentajeIVA / 100).toFixed(2)}</p>
-                <p>Importe: ${importeTotal.toFixed(2)}</p>
+              <Card title="Cuenta" bordered style={{ marginTop: "20px" , padding:"40px"}}>
+                <p><strong>Subtotal: </strong>{" "}
+                { (subtotal / factorConversion).toFixed(2) }
+                {" "}
+                { esUSD ? "USD" : "MXN" }</p>
+                <p><strong>Descuento:</strong> {descuento}%</p>
+                <p><strong>Subtotal - Descuento:</strong>{" "}
+                { ((subtotal - (subtotal * descuento / 100)) / factorConversion).toFixed(2) }
+                {" "}
+                { esUSD ? "USD" : "MXN" }</p>
+                <p><strong>IVA ({porcentajeIVA}%):</strong>{" "}
+                { ((subtotal - (subtotal * descuento / 100) * (porcentajeIVA)) / factorConversion).toFixed(2) }
+                {" "}
+                { esUSD ? "USD" : "MXN" }</p>
+                <p><strong>Importe:</strong>{" "}
+                { (importeTotal / factorConversion).toFixed(2) }
+                {" "}
+                { esUSD ? "USD" : "MXN" }</p>
               </Card>
             </Col>
           </Row>
@@ -662,7 +706,7 @@ const handleCancelFactura = async () => {
         >
             <h4>Selecciona los correos a los que deseas enviar la factura:</h4>
             <Form layout="vertical">
-                <Checkbox defaultChecked>{factura?.correo || "N/A"}</Checkbox>
+                <Checkbox defaultChecked>{cliente?.correo || "N/A"}</Checkbox>
                 <Form.Item label="Correos adicionales (separados por coma):">
                     <Input 
                         placeholder="ejemplo@correo.com, otro@correo.com"
