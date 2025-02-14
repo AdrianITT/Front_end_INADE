@@ -153,11 +153,14 @@ const GenerarOrdenTrabajo = () => {
 
   const onFinish = async (values) => {
     try {
-
-      if (!values.notas || !values.cantidad || !values.servicio || !values.receptor) {
-        message.error("Por favor, complete todos los campos antes de guardar.");
-        return;
+      // Validar que todos los conceptos tengan una nota
+      for (const concepto of servicios) {
+        if (!concepto.nota || concepto.nota.trim() === "") {
+          message.error("Todos los conceptos deben tener una nota");
+          return;
+        }
       }
+  
       // 1. Crear la orden de trabajo  
       // Se asume que el receptor seleccionado está en values.receptor
       const ordenData = {
@@ -166,27 +169,23 @@ const GenerarOrdenTrabajo = () => {
         estado: 2  // valor por defecto 2
       };
       const ordenResponse = await createOrdenTrabajo(ordenData);
-      // Suponemos que el backend retorna el registro creado con su ID (por ejemplo, ordenResponse.data.id)
       const ordenTrabajoId = ordenResponse.data.id;
-
+  
       // 2. Insertar los conceptos en la tabla cotizacionServicio  
       // Por cada concepto, insertar: cantidad, descripción, ordenTrabajoId, y el id del servicio
       for (const concepto of servicios) {
         const dataServicio = {
           cantidad: concepto.cantidad,
-          descripcion: concepto.nota, // Puedes obtener este valor desde el formulario o dejarlo vacío si lo deseas
-          ordenTrabajo: ordenTrabajoId, // ID de la orden creada
-          servicio: concepto.id   // Suponemos que el id del servicio es el mismo que concepto.id
+          descripcion: concepto.nota, // Se requiere que haya una nota
+          ordenTrabajo: ordenTrabajoId,
+          servicio: concepto.id
         };
         await createOrdenTrabajoServico(dataServicio);
       }
-
+  
       setNewOrderId(ordenTrabajoId);
-
       message.success("Orden de trabajo y servicios creados correctamente");
-      // Opcional: redirigir o limpiar el formulario
       setIsSuccessModalOpen(true);
-
     } catch (error) {
       console.error("Error al crear la orden de trabajo o los servicios", error);
       message.error("Error al crear la orden de trabajo o los servicios");
@@ -362,7 +361,7 @@ const GenerarOrdenTrabajo = () => {
                   </Form.Item>
                 </Col>
                 <Col span={12}>
-                  <Form.Item label="cantiadad de servicio" rules={[{ required: true, message: 'Por favor ingresa el precio' }]}>
+                  <Form.Item label="cantidad de servicio" rules={[{ required: true, message: 'Por favor ingresa el precio' }]}>
                     <Input
                       type="number"
                       min="0"
