@@ -574,6 +574,7 @@ const handDuoModal=()=>{
                     <Descriptions.Item label="Empresa">{empresa.nombre}</Descriptions.Item>
                     <Descriptions.Item label="RFC">{empresa.rfc}</Descriptions.Item>
                     <Descriptions.Item label="Contacto">{cliente.nombrePila} {cliente.apPaterno} {cliente.apMaterno}</Descriptions.Item>
+                    <Descriptions.Item label="Contacto">{cliente.correo} </Descriptions.Item>
                   </Descriptions>
                   </Col>
                 </Row>
