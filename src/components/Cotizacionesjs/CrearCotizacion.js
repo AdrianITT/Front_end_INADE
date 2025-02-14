@@ -345,7 +345,7 @@ const RegistroCotizacion = () => {
             <p>Total: {total.toFixed(2)} {tipoMonedaSeleccionada === 2 ? "USD" : "MXN"}</p>
           </div>
           <div className="cotizacion-action-buttons">
-            <div className="margin-button"><Button type="default" danger>Cancelar</Button></div>
+            <div className="margin-button"><Button type="default" onClick={() => navigate(-1)} danger>Cancelar</Button></div> 
             <div className="margin-button">
               <Button type="primary" onClick={handleSubmit}>Crear</Button>
             </div>

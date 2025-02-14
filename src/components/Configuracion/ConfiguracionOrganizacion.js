@@ -655,7 +655,7 @@ const handleGuardarConfiguracionSistema = async (values) => {
           <Select placeholder="Seleccione la moneda predeterminada." >
             {tipoMoneda.map((moneda) => (
               <Select.Option key={moneda.id} value={moneda.id}>
-                {moneda.codigo}{moneda.descripcion}
+                {moneda.codigo} {moneda.descripcion}
               </Select.Option>
             ))}
           </Select>

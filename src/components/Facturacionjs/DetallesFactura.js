@@ -556,7 +556,7 @@ const handleCancelFactura = async () => {
                   <Descriptions column={1}>
                     <Descriptions.Item label="Empresa">{empresa.nombre}</Descriptions.Item>
                     <Descriptions.Item label="RFC">{empresa.rfc}</Descriptions.Item>
-                    <Descriptions.Item label="Contacto">{cliente.nombrePila}</Descriptions.Item>
+                    <Descriptions.Item label="Contacto">{cliente.nombrePila} {cliente.apPaterno} {cliente.apMaterno}</Descriptions.Item>
                   </Descriptions>
                   </Col>
                 </Row>
@@ -614,9 +614,6 @@ const handleCancelFactura = async () => {
             bordered
             rowKey={(record) => record.key}
           />
-        </Tabs.TabPane>
-        <Tabs.TabPane tab="Pagos" key="2">
-          <p>No hay pagos registrados.</p>
         </Tabs.TabPane>
       </Tabs>
 

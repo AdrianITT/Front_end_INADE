@@ -69,11 +69,6 @@ const Login = () => {
               Iniciar Sesión
             </Button>
           </Form.Item>
-          <Link to="/RegistroUsuarios">
-            <Button type="link" htmlType="button">
-              Registrate
-            </Button>
-          </Link>
         </Form>
       </Card>
     </div>
