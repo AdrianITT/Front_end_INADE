@@ -7,11 +7,14 @@ import { getOrdenTrabajoById } from "../../apis/OrdenTrabajoApi";
 import { Table, Input, Button, message, Tag, theme, Space } from "antd";
 import { Link } from "react-router-dom";
 
+
 const Factura = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [filteredData, setFilteredData] = useState([]);
   const { token } = theme.useToken();
+  const [selectedDates, setSelectedDates] = useState([]);
 
   // ID de la organización actual
   const organizationId = parseInt(localStorage.getItem("organizacion_id"), 10);
@@ -102,48 +105,77 @@ const Factura = () => {
     fetchFacturas();
   }, [organizationId]);
 
-  // Búsqueda por código de ordenTrabajo
-  const handleSearch = () => {
-    const filteredData = data.filter((item) =>
-      item.codigoOrdenTrabajo
-        .toString()
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase())
+  // Función para manejar la búsqueda en tiempo real
+  const handleSearch = (value) => {
+    setSearchTerm(value);
+
+    if (!value) {
+      setFilteredData(data);
+      return;
+    }
+
+    const filtered = data.filter((item) =>
+      Object.values(item).some(
+        (field) =>
+          field &&
+          field.toString().toLowerCase().includes(value.toLowerCase())
+      )
     );
-    setData(filteredData);
+    setFilteredData(filtered);
+  };
+  const handleDateFilter = (dates) => {
+    setSelectedDates(dates);
+
+    if (!dates || dates.length === 0) {
+      setFilteredData(data);
+      return;
+    }
   };
 
-  // Columnas de la tabla
+  const uniqueEmpresaFilters = [...new Set(data.map((item) => item.nombreEmpresa))].map((empresa) => ({
+    text: empresa,
+    value: empresa,
+  }));
+  
+
+  // Columnas de la tabla con filtros
   const columns = [
     {
       title: "Código Orden de Trabajo",
       dataIndex: "codigoOrdenTrabajo",
       key: "codigoOrdenTrabajo",
+      filters: [...new Set(data.map((item) => item.codigoOrdenTrabajo))].map((codigo) => ({
+        text: codigo,
+        value: codigo,
+      })),
+      onFilter: (value, record) => record.codigoOrdenTrabajo.includes(value),
       render: (text) => <Tag color="geekblue">{text}</Tag>,
     },
     {
       title: "Cliente",
       dataIndex: "nombreCliente",
       key: "nombreCliente",
+      filters: [...new Set(data.map((item) => item.nombreCliente))].map((cliente) => ({
+        text: cliente,
+        value: cliente,
+      })),
+      onFilter: (value, record) => record.nombreCliente.includes(value),
       render: (text) => <strong>{text}</strong>,
     },
     {
       title: "Empresa",
       dataIndex: "nombreEmpresa",
       key: "nombreEmpresa",
-      filters: [...new Set(data.map((item) => item.nombreEmpresa))].map((empresa) => ({
-        text: empresa,
-        value: empresa,
-      })),
+      filters: uniqueEmpresaFilters,
       onFilter: (value, record) => record.nombreEmpresa === value,
-      render: (text) => <Tag color="purple">{text}</Tag>
+      render: (text) => <Tag color="purple">{text}</Tag>,
     },
     {
       title: "Fecha de Expedición",
       dataIndex: "fechaExpedicion",
       key: "fechaExpedicion",
       render: (text) => <Tag color="cyan">{text}</Tag>,
-    },    
+    },
     {
       title: "Opciones",
       key: "opciones",
