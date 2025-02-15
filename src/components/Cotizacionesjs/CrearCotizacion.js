@@ -276,15 +276,6 @@ const RegistroCotizacion = () => {
           />
         </Form.Item>
 
-        <Form.Item label="Notas" name="nota">
-          <TextArea
-            rows={2}
-            value={nota}
-            onChange={(e) => setNota(e.target.value)}
-            placeholder="Notas que aparecerán al final de la cotización (Opcional)"
-          />
-        </Form.Item>
-
         <Divider>Agregar Conceptos</Divider>
         {conceptos.map((concepto) => (
           <div key={concepto.id}><Card>
@@ -325,6 +316,16 @@ const RegistroCotizacion = () => {
                     onChange={(e) => handleInputChange(concepto.id, "precio", parseFloat(e.target.value))}
                   />
                 </Form.Item>
+              </Col>
+              <Col span={12}>
+              <Form.Item label="Notas" name="nota">
+                <TextArea
+                  rows={2}
+                  value={nota}
+                  onChange={(e) => setNota(e.target.value)}
+                  placeholder="Notas que aparecerán al final de la cotización (Opcional)"
+                />
+            </Form.Item>
               </Col>
             </Row>
             <Checkbox onChange={() => handleRemoveConcepto(concepto.id)}>
