@@ -13,6 +13,7 @@ import { getEmpresaById } from "../../apis/EmpresaApi";
 import { Api_Host } from "../../apis/api";
 //import axios from "axios";
 import { getAllOrdenesTrabajoServicio } from "../../apis/OrdenTabajoServiciosApi";
+import { getAllCotizacionServicio } from "../../apis/CotizacionServicioApi";
 import {getServicioById} from "../../apis/ServiciosApi";
 import {  getAllfacturafacturama } from "../../apis/FacturaFacturamaApi";
 import { getIvaById } from "../../apis/ivaApi";
@@ -96,12 +97,11 @@ const DetallesFactura = () => {
     const fetchFactura = async () => {
       try {
         const response = await getFacturaById(id);
-        //console.log("Respuesta de la API:", response.data);
-        if (response.data && typeof response.data === 'object') {
+        if (response.data && typeof response.data === "object") {
           console.log("📄 Datos recibidos:", response.data);
           setFactura(response.data);
           
-          // Llamar a fetchServicios con el ordenTrabajoId
+          // Llamamos a fetchServicios pasando el ID de la orden de trabajo
           fetchServicios(response.data.ordenTrabajo);
           
           fetchMonedaInfo(response.data.ordenTrabajo);
@@ -114,6 +114,7 @@ const DetallesFactura = () => {
         setFactura(null);
       }
     };
+    
 
     const verificarFacturaFacturama = async () => {
       try {
@@ -218,16 +219,11 @@ const DetallesFactura = () => {
           return;
         }
     
-        // Obtener todos los registros de OrdenTrabajoServicios
+        // Obtener los registros de OrdenTrabajoServicios asociados a la orden
         const ordenTrabajoServiciosResponse = await getAllOrdenesTrabajoServicio();
-        console.log("📌 Respuesta de la API (Todos los OrdenTrabajoServicios):", ordenTrabajoServiciosResponse);
-    
-        // Filtrar por ordenTrabajo
         const ordenTrabajoServicios = ordenTrabajoServiciosResponse.data.filter(
           (orden) => orden.ordenTrabajo === ordenTrabajoId
         );
-    
-        console.log("📌 Servicios filtrados por ordenTrabajo:", ordenTrabajoServicios);
     
         if (ordenTrabajoServicios.length === 0) {
           console.warn("⚠ No hay servicios asociados a esta orden de trabajo.");
@@ -235,28 +231,51 @@ const DetallesFactura = () => {
           return;
         }
     
-        // Obtener los detalles de cada servicio
+        // Obtener la orden de trabajo para extraer el ID de la cotización
+        const ordenResponse = await getOrdenTrabajoById(ordenTrabajoId);
+        const cotizacionId = ordenResponse.data?.cotizacion;
+    
+        // Obtener los registros de cotización de servicios (core_cotizacionservicio)
+        let cotizacionServiciosFiltrados = [];
+        if (cotizacionId) {
+          const cotizacionServicioResponse = await getAllCotizacionServicio();
+          cotizacionServiciosFiltrados = cotizacionServicioResponse.data.filter(
+            (cotiServ) => cotiServ.cotizacion === cotizacionId
+          );
+        }
+    
+        // Combinar la información: obtener detalles del servicio y sobrescribir el precio
         const serviciosConDetalles = await Promise.all(
           ordenTrabajoServicios.map(async (ordenServicio) => {
             if (!ordenServicio.servicio) {
               console.warn("⚠ ID de servicio no encontrado en:", ordenServicio);
               return null;
             }
-    
             try {
+              // Obtener detalles del servicio desde core_servicio (para el nombre, etc.)
               const servicioResponse = await getServicioById(ordenServicio.servicio);
               const servicioData = servicioResponse.data || {};
-              
+    
+              // Buscar el precio definido en la cotización para este servicio
+              const cotizacionServicio = cotizacionServiciosFiltrados.find(
+                (cotiServ) => cotiServ.servicio === ordenServicio.servicio
+              );
+              const precioCotizacion = cotizacionServicio
+                ? cotizacionServicio.precio
+                : servicioData.precio || 0;
     
               return {
                 key: servicioData.id,
                 servicio: servicioData.nombreServicio || "Desconocido",
                 cantidad: ordenServicio.cantidad || 1,
-                precioUnitario: servicioData.precio || 0,
-                total: (servicioData.precio || 0) * (ordenServicio.cantidad || 1),
+                precioUnitario: precioCotizacion,
+                total: precioCotizacion * (ordenServicio.cantidad || 1),
               };
             } catch (error) {
-              console.error(`❌ Error obteniendo servicio con ID ${ordenServicio.servicio}:`, error);
+              console.error(
+                `❌ Error obteniendo servicio con ID ${ordenServicio.servicio}:`,
+                error
+              );
               return null;
             }
           })
@@ -264,13 +283,13 @@ const DetallesFactura = () => {
     
         console.log("✅ Servicios con detalles:", serviciosConDetalles.filter(Boolean));
         setServicios(serviciosConDetalles.filter(Boolean));
-    
       } catch (error) {
         console.error("❌ Error al obtener los servicios:", error);
       } finally {
         setLoading(false);
       }
     };
+    
     
     
     
@@ -339,15 +358,6 @@ const DetallesFactura = () => {
     setImporteTotal(subtotalConDescuento + ivaTotal);
   };
 
-  const getDescripcionFormaPago = (id) => {
-    const formaPago = formasPago.find((fp) => fp.id === id);
-    return formaPago ? formaPago.descripcion : "Desconocido";
-  };
-
-  const getDescripcionMetodoPago = (id) => {
-    const metodoPago = metodosPago.find((mp) => mp.id === id);
-    return metodoPago ? metodoPago.descripcion : "Desconocido";
-  };
 
   const showModalCorreo = () => {
     setIsModalVisibleCorreo(true);
@@ -622,8 +632,8 @@ const handDuoModal=()=>{
                 { ((subtotal - (subtotal * descuento / 100)) / factorConversion).toFixed(2) }
                 {" "}
                 { esUSD ? "USD" : "MXN" }</p>
-                <p><strong>IVA ({porcentajeIVA}%):</strong>{" "}
-                { ((subtotal - (subtotal * descuento / 100) * (porcentajeIVA)) / factorConversion).toFixed(2) }
+                <p><strong>IVA :</strong>{" "}
+                { (((subtotal - (subtotal * descuento / 100)) * (porcentajeIVA)) / factorConversion).toFixed(2) }
                 {" "}
                 { esUSD ? "USD" : "MXN" }</p>
                 <p><strong>Importe:</strong>{" "}

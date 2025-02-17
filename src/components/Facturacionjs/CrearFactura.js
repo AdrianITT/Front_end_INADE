@@ -7,6 +7,7 @@ import { getAllFormaPago } from "../../apis/FormaPagoApi";
 import { getAllMetodopago } from "../../apis/MetodoPagoApi";
 import { getAllServicio } from "../../apis/ServiciosApi";
 import { getAllOrdenesTrabajoServicio } from "../../apis/OrdenTabajoServiciosApi";
+import { getAllCotizacionServicio } from "../../apis/CotizacionServicioApi";
 import { getAllEmpresas } from "../../apis/EmpresaApi";
 import { getAllOrganizacion } from "../../apis/organizacionapi";
 import { getAllCSD } from "../../apis/csdApi";
@@ -42,6 +43,8 @@ const CrearFactura = () => {
     const [ivaId, setIvaId] = useState(1);
     const navigate = useNavigate();
     const [moneda, setMoneda] = useState({ codigo: "", descripcion: "" });
+    const [cotizacionId, setCotizacionId] = useState(null);
+
 
     // Estados
     const [tasaIva, setTasaIva] = useState(8);
@@ -99,46 +102,53 @@ const CrearFactura = () => {
       };
 
 
-    const obtenerCodigoOrdenTrabajo = async () => {
-      try {
+      const obtenerCodigoOrdenTrabajo = async () => {
+        try {
           const response = await getAllOrdenesTrabajo();
           // Buscar la orden con el ID recibido en la URL
           const ordenEncontrada = response.data.find((orden) => orden.id === parseInt(id));
-
+      
           if (ordenEncontrada) {
             setCodigoOrden(ordenEncontrada.codigo);
             fetchMonedaInfo(ordenEncontrada.id);
             if (ordenEncontrada.cotizacion) {
-                obtenerCotizacion(ordenEncontrada.cotizacion); // Obtener la cotización asociada
+              setCotizacionId(ordenEncontrada.cotizacion);
+              obtenerCotizacion(ordenEncontrada.cotizacion); // Para obtener IVA, etc.
+              // Llamar a la función que obtiene los servicios usando cotizacionId
+              obtenerOrdenTrabajoServicios(ordenEncontrada.cotizacion);
             }
-        } else {
+          } else {
             console.error("Orden de trabajo no encontrada");
+          }
+        } catch (error) {
+          console.error("Error al obtener la orden de trabajo:", error);
+        } finally {
+          setLoading(false);
         }
-    } catch (error) {
-        console.error("Error al obtener la orden de trabajo:", error);
-    } finally {
-        setLoading(false);
-    }
-  };
+      };
+      
 
   // Función para calcular Subtotal, IVA y Total
   const calcularTotales = () => {
-    const nuevoSubtotal = ordenTrabajoServicios.reduce((acc, servicio) => acc + servicio.cantidad * servicio.precio, 0);
-    const nuevoIva = nuevoSubtotal * (tasaIva);
+    const nuevoSubtotal = ordenTrabajoServicios.reduce(
+      (acc, servicio) => acc + servicio.cantidad * servicio.precio,
+      0
+    );
+    const nuevoIva = nuevoSubtotal * tasaIva;
     const nuevoTotal = nuevoSubtotal + nuevoIva;
-
+  
     setSubtotal(nuevoSubtotal.toFixed(2));
     setIva(nuevoIva.toFixed(2));
     setTotal(nuevoTotal.toFixed(2));
-    
+  
     // Actualizar valores en el formulario
     form.setFieldsValue({
-      subtotal: `$${(nuevoSubtotal/ factorConversion).toFixed(2)}${esUSD ? "USD" : "MXN"}`,
+      subtotal: `$${(nuevoSubtotal / factorConversion).toFixed(2)} ${esUSD ? "USD" : "MXN"}`,
       iva: `$${(nuevoIva / factorConversion).toFixed(2)} ${esUSD ? "USD" : "MXN"}`,
-      total: `$${(nuevoTotal/ factorConversion).toFixed(2)}${esUSD ? "USD" : "MXN"}`,
-  });
-    
-};
+      total: `$${(nuevoTotal / factorConversion).toFixed(2)} ${esUSD ? "USD" : "MXN"}`,
+    });
+  };
+  
 
     // Función para obtener la organización (Emisor)
     const obtenerOrganizacion = async () => {
@@ -229,23 +239,39 @@ const CrearFactura = () => {
   };
 
   // Función para obtener los Servicios de la Orden de Trabajo
-  const obtenerOrdenTrabajoServicios = async () => {
+  const obtenerOrdenTrabajoServicios = async (cotizacionId) => {
     try {
-        const responseOrdenTrabajo = await getAllOrdenesTrabajoServicio();
-        const ordenServicios = responseOrdenTrabajo.data.filter(serv => serv.ordenTrabajo === parseInt(id));
-
-        const responseServicios = await getAllServicio();
-        const serviciosRelacionados = ordenServicios.map(servicio => ({
-            ...servicio,
-            ...responseServicios.data.find(s => s.id === servicio.servicio)
-        }));
-
-        setOrdenTrabajoServicios(serviciosRelacionados);
+      // Obtener los servicios asociados a la orden de trabajo (tabla core_ordenestrabajosservicios)
+      const responseOrdenTrabajo = await getAllOrdenesTrabajoServicio();
+      const ordenServicios = responseOrdenTrabajo.data.filter(
+        (serv) => serv.ordenTrabajo === parseInt(id)
+      );
+      
+      // Obtener los servicios de la cotización (tabla core_cotizacionservicio)
+      const responseCotizacionServicio = await getAllCotizacionServicio();
+      const cotizacionServiciosFiltrados = responseCotizacionServicio.data.filter(
+        (cotiServ) => cotiServ.cotizacion === cotizacionId
+      );
+      
+      // Combinar la información: por cada servicio de la orden, se busca el registro correspondiente en la cotización
+      const serviciosRelacionados = ordenServicios.map((servicio) => {
+        const cotizacionServicio = cotizacionServiciosFiltrados.find(
+          (cotiServ) => cotiServ.servicio === servicio.servicio
+        );
+        return {
+          ...servicio,
+          // Se utiliza el precio de la cotización; si no se encuentra, se mantiene el que ya estaba (como fallback)
+          precio: cotizacionServicio ? cotizacionServicio.precio : servicio.precio,
+        };
+      });
+      
+      setOrdenTrabajoServicios(serviciosRelacionados);
     } catch (error) {
-        console.error("Error al obtener los servicios de la orden de trabajo", error);
-        message.error("Error al obtener los servicios.");
+      console.error("Error al obtener los servicios de la orden de trabajo", error);
+      message.error("Error al obtener los servicios.");
     }
-};
+  };
+  
 
 // **Obtener el ID del IVA desde la cotización**
 const obtenerCotizacion = async (cotizacionId) => {
