@@ -74,6 +74,7 @@ const GenerarOrdenTrabajo = () => {
             return {
               ...servicioResponse.data,
               cantidad: record ? record.cantidad : 0, // Si no se encuentra, asigna cantidad = 0
+              descripcion: record ? record.descripcion : "",
             };
           })
         );
@@ -170,7 +171,7 @@ const GenerarOrdenTrabajo = () => {
       for (const concepto of servicios) {
         const dataServicio = {
           cantidad: concepto.cantidad,
-          descripcion: concepto.nota, // Puedes obtener este valor desde el formulario o dejarlo vacío si lo deseas
+          descripcion: concepto.descripcion, // Puedes obtener este valor desde el formulario o dejarlo vacío si lo deseas
           ordenTrabajo: ordenTrabajoId, // ID de la orden creada
           servicio: concepto.id   // Suponemos que el id del servicio es el mismo que concepto.id
         };
@@ -246,9 +247,19 @@ const GenerarOrdenTrabajo = () => {
     formModal.resetFields(); // Limpia el formulario del modal
   };
 
+  const handleRemoveConcepto = (id) => {
+      if (servicios.length > 1) {
+        setServicios(servicios.filter((concepto) => concepto.id !== id));
+      } else {
+        message.warning("Debe haber al menos un concepto.");
+      }
+    };
+
+
+
   return (
     <div className="orden-trabajo-container">
-      <h1 className="orden-trabajo-title">Generar Orden de Trabajo para Cotización 0001</h1>
+      <h1 className="orden-trabajo-title">Generar Orden de Trabajo para Cotización </h1>
 
       <div className="orden-trabajo-info">
         <p>
@@ -321,6 +332,13 @@ const GenerarOrdenTrabajo = () => {
           <div key={concepto.id}>
             <Card>
               <h3>Concepto {concepto.id}</h3>
+              <div>            
+              <Row justify="end">
+                <Checkbox onChange={() => handleRemoveConcepto(concepto.id)}>
+                  Eliminar
+                </Checkbox>
+              </Row>
+                          </div>
               <Row gutter={16}>
                 <Col span={12}>
                   <Form.Item
@@ -331,7 +349,7 @@ const GenerarOrdenTrabajo = () => {
                   >
                     <Select
                       placeholder="Selecciona un servicio"
-                      onChange={(value) => handleServicioChange(concepto.id, value)}
+                      disabled={true}
                     >
                       {servicios.map((servicio) => (
                         <Select.Option key={servicio.id} value={servicio.id}>
@@ -358,16 +376,18 @@ const GenerarOrdenTrabajo = () => {
               </Row>
               <Row gutter={16}>
                 <Col span={24}>
-                  <Form.Item
-                    name={['servicios', index, 'nota']}
-                    label="Notas"
-                    rules={[{ required: true, message: "Por favor ingresa la nota." }]}
-                    initialValue={concepto.nota}
+                <Form.Item
+                    name={['servicios', index, 'descripcion']}
+                    label="Descripción"
+                    rules={[{ required: true, message: "Por favor ingresa la descripción." }]}
+                    initialValue={concepto.descripcion} 
                   >
                     <TextArea
-                      placeholder="Escribe aquí la nota para este servicio"
-                      onChange={(e) => handleInputChange(concepto.id, "nota", e.target.value)}
+                      placeholder="Escribe aquí la descripción del servicio"
+                      autoSize={{ minRows: 2, maxRows: 6 }}
                       rows={2}
+                      value={concepto.descripcion} //Muestra la descripción correcta
+                      readOnly={true}
                     />
                   </Form.Item>
                 </Col>

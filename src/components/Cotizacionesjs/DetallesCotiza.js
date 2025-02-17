@@ -112,13 +112,12 @@ const CotizacionDetalles = () => {
 
             const serviciosConCantidad = serviciosFiltrados.map(servicio => {
               const cotizacionServicio = cotizacionServicioData.data.find(cotServ => cotServ.servicio === servicio.id && cotServ.cotizacion === cotizacionData.id);
-              const cantidad = cotizacionServicio ? cotizacionServicio.cantidad : 0;
-              const precio = servicio.precio || 0;
-              const subtotal = cantidad * precio;
               return {
                 ...servicio,
-                cantidad,
-                subtotal,
+                cantidad: cotizacionServicio ? cotizacionServicio.cantidad : 0,
+                precio: cotizacionServicio ? cotizacionServicio.precio : 0,  // ✅ Ahora el precio se extrae correctamente
+                subtotal: cotizacionServicio ? cotizacionServicio.cantidad * cotizacionServicio.precio : 0,
+                descripcion: cotizacionServicio ? cotizacionServicio.descripcion : "Sin descripción",
               };
             });
 
@@ -333,7 +332,6 @@ const CotizacionDetalles = () => {
                   <p><Text strong>Fecha de caducidad:</Text> {cotizacionInfo?.fechaCaducidad || "N/A"}</p>
                   <p><Text strong>Denominación:</Text> {cotizacionInfo?.denominacion || "N/A"}</p>
                   <p><Text strong>Tasa IVA:</Text> {cotizacionInfo?.tasaIVA * 100 || 0}%</p>
-                  <p><Text strong>Notas:</Text> {cotizacionInfo?.notas || "N/A"}</p>
                 </Card>
               </Col>
               <Col span={8}>
