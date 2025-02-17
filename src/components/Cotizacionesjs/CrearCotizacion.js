@@ -26,7 +26,6 @@ const RegistroCotizacion = () => {
   const [ivasData, setIvasData] = useState([]); // Datos completos de IVA
   const [ivaSeleccionado, setIvaSeleccionado] = useState(null); // Valor seleccionado
   const [fechaCaducidad, setFechaCaducidad] = useState(null);
-  const [nota, setNota] = useState("");
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [descuento, setDescuento] = useState(0);
   const [tipoCambioDolar, setTipoCambioDolar] = useState(1);
@@ -103,7 +102,7 @@ const RegistroCotizacion = () => {
   }, [clienteId]);
 
   const [conceptos, setConceptos] = useState([
-    { id: 1, servicio: "", cantidad: 1, precio: 0, notas: "" },
+    { id: 1, servicio: "", cantidad: 1, precio: 0,precioFinal: 0, descripcion: "" },
   ]);
 
   if (!clienteData || !empresas) {
@@ -111,7 +110,7 @@ const RegistroCotizacion = () => {
   }
 
   const handleAddConcepto = () => {
-    setConceptos([...conceptos, { id: conceptos.length + 1, servicio: "", cantidad: 1, precio: 0, notas: "" }]);
+    setConceptos([...conceptos, { id: conceptos.length + 1, servicio: "", cantidad: 1, precio: 0, descripcion: "" }]);
   };
 
   const handleRemoveConcepto = (id) => {
@@ -137,6 +136,7 @@ const RegistroCotizacion = () => {
           ...concepto,
           servicio: servicioSeleccionado.id,
           precio: servicioSeleccionado.precio || 0,
+          precioFinal: concepto.precioFinal || servicioSeleccionado.precio || 0, // ✅ Si no hay un precio final, usa el sugerido
         } : concepto
       );
       setConceptos(updatedConceptos);
@@ -144,10 +144,10 @@ const RegistroCotizacion = () => {
   };
 
   const calcularTotales = () => {
-    const subtotal = conceptos.reduce((acc, curr) => acc + curr.cantidad * curr.precio, 0);
+    const subtotal = conceptos.reduce((acc, curr) => acc + curr.cantidad * curr.precioFinal, 0);
     const descuentoValor = subtotal * (descuento / 100);
     const subtotalConDescuento = subtotal - descuentoValor;
-    const ivaPorcentaje = ivasData.find(iva => iva.id === ivaSeleccionado)?.porcentaje || 16;
+    const ivaPorcentaje = (ivasData.find(iva => iva.id === ivaSeleccionado)?.porcentaje || 16);
     const iva = subtotalConDescuento * (ivaPorcentaje);
     const total = subtotalConDescuento + iva;
 
@@ -175,7 +175,6 @@ const RegistroCotizacion = () => {
         iva: ivaSeleccionado,
         cliente: clienteData.id,
         estado: 1,
-        notas: nota,
         descuento: descuento,
         tipoMoneda: tipoMonedaSeleccionada,
       };
@@ -186,6 +185,8 @@ const RegistroCotizacion = () => {
       const cotizacionId = cotizacionResponse.data.id;
       const conceptosPromises = conceptos.map((concepto) => {
         const conceptoData = {
+          descripcion: concepto.descripcion,
+          precio: concepto.precioFinal,
           cantidad: concepto.cantidad,
           cotizacion: cotizacionId,
           servicio: concepto.servicio,
@@ -271,6 +272,7 @@ const RegistroCotizacion = () => {
             type="number"
             min="0"
             max="100"
+            defaultValue={0}
             value={descuento}
             onChange={(e) => setDescuento(parseFloat(e.target.value))}
           />
@@ -280,6 +282,13 @@ const RegistroCotizacion = () => {
         {conceptos.map((concepto) => (
           <div key={concepto.id}><Card>
             <h3>Concepto {concepto.id}</h3>
+            <Row justify="end">
+              <div >
+                <Checkbox onChange={() => handleRemoveConcepto(concepto.id)}>
+                  Eliminar
+                </Checkbox>
+              </div>
+            </Row>
             <Row gutter={16}>
               <Col span={12}>
                 <Form.Item label="Servicio" rules={[{ required: true, message: 'Por favor selecciona el servicio.' }]}>
@@ -308,29 +317,38 @@ const RegistroCotizacion = () => {
             </Row>
             <Row gutter={16}>
               <Col span={12}>
-                <Form.Item label="Precio de servicio" rules={[{ required: true, message: 'Por favor ingresa el precio.' }]}>
+                <Form.Item label="Precio sugerido" rules={[{ required: true, message: 'Por favor ingresa el precio.' }]}>
                   <Input
+                    disabled={true}
                     type="number"
                     min="0"
                     value={concepto.precio}
-                    onChange={(e) => handleInputChange(concepto.id, "precio", parseFloat(e.target.value))}
                   />
                 </Form.Item>
               </Col>
               <Col span={12}>
-              <Form.Item label="Notas" name="nota">
+              <Form.Item label="Notas" name={['servicios', concepto.id, 'descripcion']}>
                 <TextArea
                   rows={2}
-                  value={nota}
-                  onChange={(e) => setNota(e.target.value)}
+                  value={concepto.descripcion}
+                  onChange={(e) => handleInputChange(concepto.id, "descripcion", e.target.value)}
                   placeholder="Notas que aparecerán al final de la cotización (Opcional)"
                 />
             </Form.Item>
               </Col>
             </Row>
-            <Checkbox onChange={() => handleRemoveConcepto(concepto.id)}>
-              Eliminar
-            </Checkbox>
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item label="Precio final" rules={[{ required: true, message: 'Por favor ingresa el precio.' }]}>
+                  <Input
+                    type="number"
+                    min="0"
+                    value={concepto.precioFinal}
+                    onChange={(e) => handleInputChange(concepto.id, "precioFinal", parseFloat(e.target.value))}
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
           </Card></div>
         ))}
         <Button type="primary" onClick={handleAddConcepto} style={{ marginBottom: "16px" }}>
@@ -346,7 +364,7 @@ const RegistroCotizacion = () => {
             <p>Total: {total.toFixed(2)} {tipoMonedaSeleccionada === 2 ? "USD" : "MXN"}</p>
           </div>
           <div className="cotizacion-action-buttons">
-            <div className="margin-button"><Button type="default" onClick={() => navigate(-1)} danger>Cancelar</Button></div> 
+            <div className="margin-button"><Button type="default" danger>Cancelar</Button></div>
             <div className="margin-button">
               <Button type="primary" onClick={handleSubmit}>Crear</Button>
             </div>
