@@ -153,14 +153,7 @@ const GenerarOrdenTrabajo = () => {
 
   const onFinish = async (values) => {
     try {
-      // Validar que todos los conceptos tengan una nota
-      for (const concepto of servicios) {
-        if (!concepto.nota || concepto.nota.trim() === "") {
-          message.error("Todos los conceptos deben tener una nota");
-          return;
-        }
-      }
-  
+    
       // 1. Crear la orden de trabajo  
       // Se asume que el receptor seleccionado está en values.receptor
       const ordenData = {
@@ -169,23 +162,27 @@ const GenerarOrdenTrabajo = () => {
         estado: 2  // valor por defecto 2
       };
       const ordenResponse = await createOrdenTrabajo(ordenData);
+      // Suponemos que el backend retorna el registro creado con su ID (por ejemplo, ordenResponse.data.id)
       const ordenTrabajoId = ordenResponse.data.id;
-  
+
       // 2. Insertar los conceptos en la tabla cotizacionServicio  
       // Por cada concepto, insertar: cantidad, descripción, ordenTrabajoId, y el id del servicio
       for (const concepto of servicios) {
         const dataServicio = {
           cantidad: concepto.cantidad,
-          descripcion: concepto.nota, // Se requiere que haya una nota
-          ordenTrabajo: ordenTrabajoId,
-          servicio: concepto.id
+          descripcion: concepto.nota, // Puedes obtener este valor desde el formulario o dejarlo vacío si lo deseas
+          ordenTrabajo: ordenTrabajoId, // ID de la orden creada
+          servicio: concepto.id   // Suponemos que el id del servicio es el mismo que concepto.id
         };
         await createOrdenTrabajoServico(dataServicio);
       }
-  
+
       setNewOrderId(ordenTrabajoId);
+
       message.success("Orden de trabajo y servicios creados correctamente");
+      // Opcional: redirigir o limpiar el formulario
       setIsSuccessModalOpen(true);
+
     } catch (error) {
       console.error("Error al crear la orden de trabajo o los servicios", error);
       message.error("Error al crear la orden de trabajo o los servicios");
@@ -212,17 +209,12 @@ const GenerarOrdenTrabajo = () => {
   };
 
 
-  // Función para eliminar un concepto
-  const handleRemoveConcepto = (conceptoId) => {
-    setServicios((prevConceptos) => prevConceptos.filter((concepto) => concepto.id !== conceptoId));
-  };
-
-
   const handleCreateReceptor = async (values) => {
     try {
+      
       const receptorData = {
         ...values, // Campos del formulario
-        organizacion: cliente.empresa, // Agregar el ID de la empresa manualmente
+        organizacion: cliente.empresa, 
       };
 
       // Crear el receptor
@@ -243,10 +235,6 @@ const GenerarOrdenTrabajo = () => {
     }
   };
 
-
-  const showModal = () => {
-    setIsModalOpen(true);
-  };
 
   const handleOk = () => {
     formModal.submit(); // Envía el formulario del modal
@@ -300,7 +288,7 @@ const GenerarOrdenTrabajo = () => {
         onFinish={onFinish}
         className="orden-trabajo-form"
         initialValues={{
-          receptor: '',  // Aquí podrías colocar un valor inicial si tienes un receptor predeterminado
+          receptor: '',
           calle: empresas ? empresas.calle : '',
           numero: empresas ? empresas.numero : '',
           colonia: empresas ? empresas.colonia : '',
@@ -318,39 +306,32 @@ const GenerarOrdenTrabajo = () => {
               rules={[{ required: true, message: "Seleccione un receptor" }]}
             >
               <Select placeholder="Seleccione un receptor" className="form-select">
-                {receptor.map((recep)=>(
-                  <Option key={recep.id} 
-                  value={recep.id}>
-                  {recep.nombrePila} {recep.apPaterno} {recep.apMaterno}
+                {receptor.map((recep) => (
+                  <Option key={recep.id} value={recep.id}>
+                    {recep.nombrePila} {recep.apPaterno} {recep.apMaterno}
                   </Option>
                 ))}
               </Select>
             </Form.Item>
           </Col>
-          <Col span={4}>
-          <Button
-            type="primary"
-            icon={<i className="fas fa-user-plus"></i>}
-            style={{ backgroundColor: "#52c41a", borderColor: "#52c41a" }}
-            onClick={showModal}
-          >
-            Agregar Receptor
-          </Button>
-          </Col>
         </Row>
-                {/* Servicios */}
+
         <Divider>Agregar Conceptos</Divider>
-        {servicios.map((concepto) => (
+        {servicios.map((concepto, index) => (
           <div key={concepto.id}>
             <Card>
               <h3>Concepto {concepto.id}</h3>
               <Row gutter={16}>
                 <Col span={12}>
-                  <Form.Item label="Servicio" rules={[{ required: true, message: 'Por favor ingresa el servicio.' }]}>
+                  <Form.Item
+                    name={['servicios', index, 'servicio']}
+                    label="Servicio"
+                    rules={[{ required: true, message: "Por favor, seleccione un servicio." }]}
+                    initialValue={concepto.id}
+                  >
                     <Select
                       placeholder="Selecciona un servicio"
-                      value={concepto.id}
-                      onChange={(value) => handleServicioChange(concepto.id, "nombreServicio",value)}
+                      onChange={(value) => handleServicioChange(concepto.id, value)}
                     >
                       {servicios.map((servicio) => (
                         <Select.Option key={servicio.id} value={servicio.id}>
@@ -361,35 +342,40 @@ const GenerarOrdenTrabajo = () => {
                   </Form.Item>
                 </Col>
                 <Col span={12}>
-                  <Form.Item label="cantidad de servicio" rules={[{ required: true, message: 'Por favor ingresa el precio' }]}>
+                  <Form.Item
+                    name={['servicios', index, 'cantidad']}
+                    label="Cantidad"
+                    rules={[{ required: true, message: "Por favor ingresa la cantidad." }]}
+                    initialValue={concepto.cantidad}
+                  >
                     <Input
                       type="number"
-                      min="0"
-                      value={concepto.cantidad}
+                      min="1"
                       onChange={(e) => handleInputChange(concepto.id, "cantidad", parseFloat(e.target.value))}
                     />
                   </Form.Item>
                 </Col>
               </Row>
               <Row gutter={16}>
-              <Col span={24}>
-                <Form.Item label="Notas">
-                  <TextArea
-                  rules={[{ required: true, message: 'Por favor ingresa la nota.' }]}
-                    placeholder="Escribe aquí la nota para este servicio"
-                    value={concepto.nota}
-                    onChange={(e) => handleInputChange(concepto.id, "nota", e.target.value)}
-                    rows={2}
-                  />
-                </Form.Item>
-              </Col>
-            </Row>
-              <Checkbox onChange={() => handleRemoveConcepto(concepto.id)}>
-              Eliminar
-              </Checkbox>
+                <Col span={24}>
+                  <Form.Item
+                    name={['servicios', index, 'nota']}
+                    label="Notas"
+                    rules={[{ required: true, message: "Por favor ingresa la nota." }]}
+                    initialValue={concepto.nota}
+                  >
+                    <TextArea
+                      placeholder="Escribe aquí la nota para este servicio"
+                      onChange={(e) => handleInputChange(concepto.id, "nota", e.target.value)}
+                      rows={2}
+                    />
+                  </Form.Item>
+                </Col>
+              </Row>
             </Card>
           </div>
         ))}
+
         <div className="form-buttons">
           <Button type="primary" htmlType="submit" className="register-button">
             Registrar
@@ -399,6 +385,7 @@ const GenerarOrdenTrabajo = () => {
           </Button>
         </div>
       </Form>
+
 
 
       <div>

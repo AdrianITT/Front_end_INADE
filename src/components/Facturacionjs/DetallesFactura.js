@@ -371,15 +371,24 @@ const DetallesFactura = () => {
     setLoading(true);
     try {
       console.log(id);
-      const response =await createPDFfactura(id);
-      setFacturaExiste(true);
-      console.log("✅ Factura creada exitosamente en FacturaFacturama.", response.data);
+      const response = await createPDFfactura(id);
+      console.log("📄 Respuesta de la API:", response);
+
+      // Verificar si la respuesta tiene la propiedad `success`
+      if (response && response.success) {
+        setFacturaExiste(true);
+        console.log("✅ Factura creada exitosamente en FacturaFacturama.", response);
+        message.success("Factura creada con éxito.");
+      } else {
+        throw new Error("Error en la creación de factura: Respuesta no válida.");
+      }
     } catch (error) {
       console.error("❌ Error al crear la factura:", error);
+      message.error("Hubo un error al crear la factura. Inténtalo nuevamente.");
     } finally {
       setLoading(false);
     }
-  };
+};
 
   const handleDownloadPDF = async (id) => {
     try {
