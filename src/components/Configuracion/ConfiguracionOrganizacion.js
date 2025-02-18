@@ -39,25 +39,29 @@ const ConfiguraciónOrganizacion=()=>{
 
   const fetchOrganizacion = useCallback(async () => {
     try {
-        const response = await getAllOrganizacion();
-        const org = response.data.find(item => item.id === userOrganizationId);
-        setOrganizaciones(org);
-        form.setFieldsValue(org);
-
-        if (org?.infoOrdenTrabajo) {
-            await fetchInfOrdenTrabajo(org.infoOrdenTrabajo);
-        }
-        if (org?.infoCotizacion) {
-            await fetchInfoCotizacion(org.infoCotizacion);
-        }
-        if (org?.infoSistema) {
-            await fetchInfoConfiguracionSistema(org.infoSistema);
-        }
+      const response = await getAllOrganizacion();
+      const org = response.data.find(item => item.id === userOrganizationId);
+      setOrganizaciones(org);
+      form.setFieldsValue({
+        ...org,
+        regimenFiscal: org.RegimenFiscal,
+      });
+  
+      if (org?.infoOrdenTrabajo) {
+        await fetchInfOrdenTrabajo(org.infoOrdenTrabajo);
+      }
+      if (org?.infoCotizacion) {
+        await fetchInfoCotizacion(org.infoCotizacion);
+      }
+      if (org?.infoSistema) {
+        await fetchInfoConfiguracionSistema(org.infoSistema);
+      }
     } catch (error) {
-        console.error("Error al obtener las organizaciones", error);
-        message.error("Error al obtener la organización.");
+      console.error("Error al obtener las organizaciones", error);
+      message.error("Error al obtener la organización.");
     }
-}, [userOrganizationId, form]);
+  }, [userOrganizationId, form]);
+  
 
 const fetchRegimenFiscal = useCallback(async () => {
     try {
@@ -159,121 +163,134 @@ useEffect(() => {
     console.log("Datos enviados:", values);
     
     setLoading(true);
-  try {
-    console.log("Datos enviados:", values);
-    console.log("🚀 Enviando actualización de organización ID:", userOrganizationId);
-
-    const datosAEnviar = {
-      ...organizaciones, // Mantener los datos actuales
-      nombre: values.nombre,
-      slogan: values.slogan,
-      RegimenFiscal: values.regimenFiscal,
-      telefono: values.telefono,
-      pagina: values.pagina,
-      calle: values.calle,
-      numero: values.numero,
-      colonia: values.colonia,
-      ciudad: values.ciudad,
-      codigoPostal: values.codigoPostal,
-      estado: values.estado,
-      infoCotizacion: organizaciones?.infoCotizacion || null,
-      infoOrdenTrabajo: organizaciones?.infoOrdenTrabajo || null,
-      infoSistema: organizaciones?.infoSistema || null,
-    };
-
-    let formData = null;
-
-    // 🛑 Si el usuario seleccionó un nuevo logo, creamos un FormData
-    if (values.logo?.file) {
-      console.log("📂 Nuevo logo seleccionado:", values.logo.file.originFileObj);
-
-      formData = new FormData();
-      formData.append("logo", values.logo.file.originFileObj);
+    try {
+      console.log("Datos enviados:", values);
+      console.log("🚀 Enviando actualización de organización ID:", userOrganizationId);
+  
+      const datosAEnviar = {
+        ...organizaciones, // Mantener los datos actuales
+        nombre: values.nombre,
+        slogan: values.slogan,
+        RegimenFiscal: values.regimenFiscal,
+        telefono: values.telefono,
+        pagina: values.pagina,
+        calle: values.calle,
+        numero: values.numero,
+        colonia: values.colonia,
+        ciudad: values.ciudad,
+        codigoPostal: values.codigoPostal,
+        estado: values.estado,
+        infoCotizacion: organizaciones?.infoCotizacion || null,
+        infoOrdenTrabajo: organizaciones?.infoOrdenTrabajo || null,
+        infoSistema: organizaciones?.infoSistema || null,
+      };
+  
+      let formData = null;
+  
+      // 🛑 Si el usuario seleccionó un nuevo logo, creamos un FormData
+      if (values.logo && values.logo.file) {
+        console.log("📂 Nuevo logo seleccionado:", values.logo.file.originFileObj);
+  
+        formData = new FormData();
+        formData.append("logo", values.logo.file.originFileObj);
+        
+        // Agregar otros datos en FormData si es necesario
+        Object.entries(datosAEnviar).forEach(([key, value]) => {
+          if (value !== null && value !== undefined) {
+            formData.append(key, value);
+          }
+        });
+      } else {
+        delete datosAEnviar.logo;
+      }
+  
+      console.log("📤 Enviando datos a la API:", formData || datosAEnviar);
       
-      // Agregar otros datos en FormData si es necesario
-      Object.entries(datosAEnviar).forEach(([key, value]) => {
-        if (value !== null && value !== undefined) {
-          formData.append(key, value);
-        }
-      });
+      // 📌 Enviar como FormData si hay un archivo, de lo contrario JSON
+      if (formData) {
+        await updateOrganizacion(userOrganizationId, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+      } else {
+        console.log("HW");
+        await updateOrganizacion(userOrganizationId, datosAEnviar);
+      }
+  
+      console.log("Datos enviados:", values);
+      setLoading(false);
+      
+      message.success("Datos de organización actualizados correctamente");
+      fetchOrganizacion();
+    } catch (error) {
+      setLoading(false);
+      message.error("Error al actualizar los datos");
     }
-
-    console.log("📤 Enviando datos a la API:", formData || datosAEnviar);
-    
-    // 📌 Enviar como FormData si hay un archivo, de lo contrario JSON
-    if (formData) {
-      await updateOrganizacion(userOrganizationId, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-    } else {
-      console.log("HW");
-      await updateOrganizacion(userOrganizationId, datosAEnviar);
-    }
-
-    
-    console.log("Datos enviados:", values);
-    setLoading(false);
-    
-    message.success("Datos de organización actualizados correctamente");
-    fetchOrganizacion();
-  } catch (error) {
-    setLoading(false);
-    message.error("Error al actualizar los datos");
-  }
   };
 
   const handleGuardarOrdenTrabajo = async (values) => {
     try {
       setLoading(true);
   
-      let marcaDeAguaId = values.marcaDeAgua; // Si ya hay un ID de marca de agua
+      let marcaDeAguaId = null;
   
-      // Si el usuario subió una nueva marca de agua, primero la subimos y obtenemos su ID
-      if (values.marcaDeAgua instanceof File) {
-        const formData = new FormData();
-        formData.append("file", values.marcaDeAgua);
-  
-        const response = await updateMarcaAgua(formData); // Llamada a la API para subir la imagen
-        marcaDeAguaId = response.data.id; // Obtener el ID de la imagen guardada
+      // Obtener la orden de trabajo actual si existe
+      if (organizaciones?.infoOrdenTrabajo) {
+        const responseOrdenTrabajo = await getInfoOrdenTrabajoById(organizaciones.infoOrdenTrabajo);
+        marcaDeAguaId = responseOrdenTrabajo.data.imagenMarcaAgua || null;
       }
   
-      // Si la organización no tiene una infoOrdenTrabajo, la creamos
-      if (!organizaciones?.infoOrdenTrabajo) {
-        const nuevaOrdenTrabajo = await crearInfoOrdenTrabajo({
-          ...values,
-          marcaDeAgua: marcaDeAguaId,
-        });
+      // Si el usuario subió una nueva imagen de marca de agua
+      if (values.marcaDeAgua && values.marcaDeAgua.length > 0) {
+        const fileObj = values.marcaDeAgua[0].originFileObj || values.marcaDeAgua[0];
   
-        // Asociamos la nueva orden de trabajo a la organización
+        if (fileObj instanceof File) {
+          const formData = new FormData();
+          formData.append("imagen", fileObj);
+  
+          if (marcaDeAguaId) {
+            // Si ya hay una imagen, actualizarla
+            await updateMarcaAgua(marcaDeAguaId, formData);
+          } else {
+            // Si no hay imagen, crear una nueva
+            const response = await createMaraAgua(formData);
+            marcaDeAguaId = response.data.id;
+          }
+        }
+      }
+  
+      // Construir el payload con la imagen de marca de agua
+      const payload = {
+        nombreFormato: values.nombreFormato,
+        version: values.version,
+        fechaEmision: values.fechaEmision,
+        tituloDocumento: values.tituloDocumento,
+        imagenMarcaAgua: marcaDeAguaId,
+      };
+  
+      if (!organizaciones?.infoOrdenTrabajo) {
+        // Crear nueva orden de trabajo
+        const nuevaOrdenTrabajo = await crearInfoOrdenTrabajo(payload);
         await updateOrganizacion(organizaciones.id, {
           ...organizaciones,
           infoOrdenTrabajo: nuevaOrdenTrabajo.id,
         });
   
-        // Actualizamos el estado de la organización con la nueva orden de trabajo
         setOrganizaciones({
           ...organizaciones,
           infoOrdenTrabajo: nuevaOrdenTrabajo.id,
         });
   
-        message.success("Orden de trabajo creada y asociada correctamente");
+        message.success("Orden de trabajo creada correctamente");
       } else {
-        console.log("updateInfoOrdenTrabajo:", updateInfoOrdenTrabajo);
-        console.log(organizaciones.infoOrdenTrabajo);
-        // Si ya existe una infoOrdenTrabajo, la actualizamos
-        await updateInfoOrdenTrabajo(organizaciones.infoOrdenTrabajo, {
-          ...values,
-          imagenMarcaAgua: values.imagenMarcaAgua,
-        });
-
-  
+        // Actualizar orden de trabajo existente
+        await updateInfoOrdenTrabajo(organizaciones.infoOrdenTrabajo, payload);
         message.success("Orden de trabajo actualizada correctamente");
       }
   
-      // Recargamos la información actualizada
-      const responseOrden = await getInfoOrdenTrabajoById(organizaciones.infoOrdenTrabajo);
-      setinfOrdenTrabajo(responseOrden.data);
-      fromOrdenTrabajo.setFieldsValue(responseOrden.data);
+      // Recargar la información actualizada
+      const responseOrdenTrabajo = await getInfoOrdenTrabajoById(organizaciones.infoOrdenTrabajo);
+      setinfOrdenTrabajo(responseOrdenTrabajo.data);
+      fromOrdenTrabajo.setFieldsValue(responseOrdenTrabajo.data);
     } catch (error) {
       console.error("Error al actualizar la orden de trabajo", error);
       message.error("Error al actualizar la orden de trabajo.");
@@ -630,8 +647,13 @@ const handleGuardarConfiguracionSistema = async (values) => {
         <Form.Item label="Título documento:" name="tituloDocumento">
           <Input placeholder="Ingrese el título del documento." />
         </Form.Item>
-        <Form.Item label="Imagen marca de agua:" name="imagenMarcaAgua">
-          <Upload beforeUpload={() => false}>
+        <Form.Item
+          label="Imagen marca de agua:"
+          name="marcaDeAgua"
+          valuePropName="fileList"
+          getValueFromEvent={(e) => e?.fileList}
+        >
+          <Upload beforeUpload={() => false} maxCount={1}>
             <Button icon={<UploadOutlined />}>Seleccionar archivo</Button>
           </Upload>
         </Form.Item>
