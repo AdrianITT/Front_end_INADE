@@ -47,6 +47,7 @@ const DetallesFactura = () => {
   const [isResultModalVisible, setIsResultModalVisible] = useState(false);
   const [resultMessage, setResultMessage] = useState("");
   const [resultStatus, setResultStatus] = useState("success"); // Puede ser "success" o "error"
+  
 
   const esUSD = moneda.codigo === "USD";
   const factorConversion = esUSD ? tipoCambioDolar : 1;
@@ -383,22 +384,25 @@ const DetallesFactura = () => {
       console.log(id);
       const response = await createPDFfactura(id);
       console.log("📄 Respuesta de la API:", response);
-
+  
       // Verificar si la respuesta tiene la propiedad `success`
       if (response && response.success) {
         setFacturaExiste(true);
         console.log("✅ Factura creada exitosamente en FacturaFacturama.", response);
-        message.success("Factura creada con éxito.");
+        setResultMessage("Factura creada con éxito.");
+        setResultStatus("success");
       } else {
         throw new Error("Error en la creación de factura: Respuesta no válida.");
       }
     } catch (error) {
       console.error("❌ Error al crear la factura:", error);
-      message.error("Hubo un error al crear la factura. Inténtalo nuevamente.");
+      setResultMessage("Hubo un error al crear la factura. Inténtalo nuevamente.");
+      setResultStatus("error");
     } finally {
       setLoading(false);
+      setIsResultModalVisible(true); // Mostrar el modal con el resultado
     }
-};
+  };
 
   const handleDownloadPDF = async (id) => {
     try {
@@ -529,7 +533,7 @@ const handleCancelFactura = async () => {
   setLoading(true);
   try {
       const response = await fetch(`${Api_Host.defaults.baseURL}/factura-delete/${id}/`, {
-          method: "DELETE",
+          method: "GET",
           headers: { "Content-Type": "application/json" },
       });
 
@@ -765,6 +769,22 @@ const handDuoModal=()=>{
           <Result
             title={<p style={{ color: resultStatus === "success" ? "green" : "red" }}>{resultMessage}</p>}
             />
+        </Modal>
+
+        <Modal
+          title={resultStatus === "success" ? "Éxito" : "Error"}
+          visible={isResultModalVisible}
+          onCancel={() => setIsResultModalVisible(false)}
+          footer={[
+            <Button key="close" onClick={() => setIsResultModalVisible(false)}>
+              Cerrar
+            </Button>
+          ]}
+        >
+          <Result
+            status={resultStatus}
+            title={resultMessage}
+          />
         </Modal>
     </div>
     </Spin>
