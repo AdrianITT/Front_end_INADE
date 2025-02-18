@@ -1,0 +1,31 @@
+/* Estilos generales */
+.container {
+     max-width: 80%;
+     margin: 40px auto;
+     padding: 20px;
+     background: #fff;
+     border-radius: 10px;
+     box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+   }
+   
+   /* Título */
+   .title {
+     text-align: center;
+     font-size: 28px;
+     font-weight: bold;
+     margin-bottom: 20px;
+   }
+   
+   /* Contenedor del botón */
+   .button-container {
+     display: flex;
+     justify-content: flex-end;
+     margin-bottom: 20px;
+   }
+   
+   /* Tabla */
+   .custom-table {
+     border-radius: 10px;
+     overflow: hidden;
+   }
+   

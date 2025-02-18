@@ -14,6 +14,7 @@ import {
   ShopFilled,
   UsergroupAddOutlined,
   EditOutlined,
+  ThunderboltTwoTone,
 } from "@ant-design/icons";
 import { Link } from "react-router-dom";
 
@@ -26,6 +27,7 @@ const App = () => {
   useEffect(() => {
     const fetchCount = async () => {
       try {
+        console.log("Obteniendo cotizaciones...");
         // Obtén el ID de la organización del usuario desde localStorage
         const organizationId = parseInt(localStorage.getItem("organizacion_id"), 10);
 
@@ -195,6 +197,17 @@ const App = () => {
                   <Card className="card-custom" title="Facturas" bordered={false}>
                     <div className="icon-container">
                       <AuditOutlined />
+                    </div>
+                  </Card>
+                </Link>
+              </div>
+            </Col>
+            <Col xs={24} sm={12} md={8} lg={6} xl={4} className="col-style">
+              <div>
+                <Link to="/preCotizacion">
+                  <Card className="card-custom" title="Pre-Cotizacion" bordered={false}>
+                    <div className="icon-container">
+                    <ThunderboltTwoTone />
                     </div>
                   </Card>
                 </Link>

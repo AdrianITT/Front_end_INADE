@@ -30,6 +30,10 @@ import CargarCSD from "./components/CargaCertificadosDijitales/CargarCSD";
 import HomeAdmin from "./components/VentanasAdmin/AdminHome";
 import RegistroUsuarios from "./components/RegistroUsuario/RegistroUsuarios";
 import ProtectedRoute from "./components/ProtectedRoute"; // Importa el componente de Ruta Protegida
+import PreCotizacion from "./components/preCotizacion/PreCotizacion";
+import CrearPreCotizacion from "./components/preCotizacion/CrearpreCotizacion";
+import PreCotizacionDetalles from "./components/preCotizacion/preCotizacionDetalles";
+
 
 // Hook para cambiar el título de la pestaña
 const usePageTitle = () => {
@@ -114,6 +118,9 @@ const AppRouter = () => {
           <Route path="/EditarUsuario/:id" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><EditarUsuario /></ProtectedRoute>} />
           <Route path="/CrearFactura/:id" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><CrearFactura /></ProtectedRoute>} />
           <Route path="/CargaCSD" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><CargarCSD /></ProtectedRoute>} />
+          <Route path="/CrearPreCotizacion" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><CrearPreCotizacion /></ProtectedRoute>} />
+          <Route path="/PreCotizacion" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><PreCotizacion/></ProtectedRoute>} />
+          <Route path="/PreCotizacionDetalles/:id" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><PreCotizacionDetalles/></ProtectedRoute>} />
         </Route>
       </Routes>
     </Router>
