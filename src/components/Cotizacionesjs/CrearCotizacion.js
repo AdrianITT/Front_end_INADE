@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./Crearcotizacion.css";
-import { Form, Input, Button, Row, Col, Select, Checkbox, Divider, message, DatePicker, Card, Modal } from "antd";
+import { Form, Input, Button, Row, Col, Select, Checkbox, Divider, message, DatePicker, Card, Modal,Result } from "antd";
 import dayjs from "dayjs";
 import { useParams, useNavigate } from "react-router-dom";
 import { getClienteById } from "../../apis/ClienteApi";
@@ -29,6 +29,8 @@ const RegistroCotizacion = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [descuento, setDescuento] = useState(0);
   const [tipoCambioDolar, setTipoCambioDolar] = useState(1);
+  const [isSuccessModalVisible, setIsSuccessModalVisible] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
   // Obtener el tipo de cambio del dólar
   useEffect(() => {
@@ -143,6 +145,15 @@ const RegistroCotizacion = () => {
     }
   };
 
+    // Obtener los servicios que no han sido seleccionados
+    const obtenerServiciosDisponibles = (conceptoId) => {
+      const serviciosSeleccionados = conceptos
+        .filter((c) => c.id !== conceptoId) // Excluye el concepto actual para permitir cambiarlo
+        .map((c) => c.servicio); // Obtiene los servicios ya seleccionados
+    
+      return servicios.filter((servicio) => !serviciosSeleccionados.includes(servicio.id));
+    };
+
   const calcularTotales = () => {
     const subtotal = conceptos.reduce((acc, curr) => acc + curr.cantidad * curr.precioFinal, 0);
     const descuentoValor = subtotal * (descuento / 100);
@@ -194,6 +205,9 @@ const RegistroCotizacion = () => {
         return createCotizacionServicio(conceptoData);
       });
       await Promise.all(conceptosPromises);
+      // Mostrar modal de éxito
+    //setSuccessMessage("¡La cotización se ha creado exitosamente!");
+    //setIsSuccessModalVisible(true);
     } catch (error) {
       console.error("Error al crear la cotización", error);
       message.error("Error al crear la cotización");
@@ -292,11 +306,12 @@ const RegistroCotizacion = () => {
             <Row gutter={16}>
               <Col span={12}>
                 <Form.Item label="Servicio" rules={[{ required: true, message: 'Por favor selecciona el servicio.' }]}>
-                  <Select
+                <Select
                     placeholder="Selecciona un servicio"
+                    value={concepto.servicio || undefined}
                     onChange={(value) => handleServicioChange(concepto.id, value)}
                   >
-                    {servicios.map((servicio) => (
+                    {obtenerServiciosDisponibles(concepto.id).map((servicio) => (
                       <Select.Option key={servicio.id} value={servicio.id}>
                         {servicio.nombreServicio}
                       </Select.Option>
@@ -382,8 +397,10 @@ const RegistroCotizacion = () => {
         onCancel={() => { setIsModalVisible(false); navigate("/cotizar"); }}
         okText="Cerrar"
       >
-        <p>¡Se creó exitosamente!</p>
+        <Result status="success"
+        title="¡Se creó exitosamente!"></Result>
       </Modal>
+
     </div>
   );
 };
