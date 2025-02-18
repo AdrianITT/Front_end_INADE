@@ -166,6 +166,10 @@ const Cliente = () => {
         loadClientes();
         setIsModalOpen(false);
         form.resetFields();
+        setIsSuccessModalOpen(true);
+        setTimeout(() => {
+          setIsSuccessModalOpen(false);
+        }, 3000);
       }
     } catch (error) {
       console.error("Error al crear cliente", error);
@@ -180,7 +184,13 @@ const Cliente = () => {
         loadClientes();
         setIsModalOpen(false);
         form.resetFields();
-        navigate(`/crear_cotizacion/${newClientId}`);
+        setIsSuccessModalOpen(true); // ✅ Mostrar modal de éxito
+      
+        // ✅ Esperar 3 segundos antes de redirigir
+        setTimeout(() => {
+          setIsSuccessModalOpen(false);
+          navigate(`/crear_cotizacion/${newClientId}`);
+        }, 1500);
       }
     } catch (error) {
       console.error("Error al crear y cotizar", error);

@@ -29,6 +29,9 @@ const Servicio = () => {
   const [currentServiceId, setCurrentServiceId] = useState(null);
   const [isModalOpenServiciosEdit, setIsModalOpenServiciosEdit] = useState(false); // Modal de edición
   const [currentMethodId, setCurrentMethodId] = useState(null);
+  const [isServiceDeleteModalVisible, setIsServiceDeleteModalVisible] = useState(false); 
+  const [isSuccessModalVisible, setIsSuccessModalVisible] = useState(false);
+  const [successMessage, setSuccessMessage] = useState(""); // Mensaje dinámico
   //const [searchServicios, setSearchServicios] = useState("");
 
   // Usar useEffect para obtener los servicios cuando el componente se monte
@@ -136,6 +139,10 @@ const Servicio = () => {
         setServicios(prevServicios => [...prevServicios, response]);
         message.success("Servicio creado con éxito.");
         refreshServicios(); // Refresh the table after updating
+
+        // 🔹 Establecer mensaje de éxito y abrir el modal
+        setSuccessMessage("¡El servicio ha sido creado exitosamente!");
+        setIsSuccessModalVisible(true);
     
       setIsModalOpenServicios(false);
     } catch (error) {
@@ -172,9 +179,12 @@ const Servicio = () => {
       
       // Actualizar servicio
       const response = await updateServicio(serviceToEdit.id, dataToSend);
-      //console.log(response);  
-      // Verifica la respuesta
-      // Asegúrate de que el servicio actualizado sea el correcto
+
+      setSuccessMessage("¡El servicio ha sido creado exitosamente!");
+
+      setIsSuccessModalVisible(true);
+        
+      setIsModalOpenServicios(false); // Cerrar modal de creación
       if (response) {
         refreshServicios(); // Refresh the table after updating
         // Actualizar la lista local de servicios
@@ -215,6 +225,36 @@ const Servicio = () => {
   const handleCancelAlertMetodo = () => {
     setIsModalVisible(false); // Cerrar el modal sin hacer nada
   };
+
+  // Mostrar el modal de confirmación antes de eliminar un servicio
+const showServiceDeleteModal = (id) => {
+  setCurrentServiceId(id); 
+  setIsServiceDeleteModalVisible(true);
+};
+// Cancelar la eliminación del servicio
+const handleCancelDeleteService = () => {
+  setIsServiceDeleteModalVisible(false);
+};
+
+// Confirmar eliminación del servicio
+const handleConfirmDeleteService = async () => {
+  if (!currentServiceId) return;
+
+  try {
+      await deleteServicio(currentServiceId); // Llamada a la API para eliminar el servicio
+      message.success("Servicio eliminado con éxito.");
+
+      // Refrescar la lista después de eliminar
+      await refreshServicios();
+      
+  } catch (error) {
+      console.error("Error al eliminar el servicio:", error);
+      message.error("Hubo un error al eliminar el servicio.");
+  } finally {
+      setIsServiceDeleteModalVisible(false); // Cerrar modal
+  }
+};
+
   
   const handleCancelServicios = () => {
     setIsModalOpenServicios(false);
@@ -238,7 +278,12 @@ const Servicio = () => {
       setMetodos(prevMetodos => [...prevMetodos, response]);
       
       // Cerrar el modal
-      setIsModalOpenMetodos(false);
+      //setIsModalOpenMetodos(false);
+      // 🔹 Mostrar modal de éxito
+      setSuccessMessage("¡El método ha sido creado exitosamente!");
+      setIsSuccessModalVisible(true);
+
+      setIsModalOpenMetodos(false); // Cerrar modal de creación
       message.success("Método creado con éxito.");
     } catch (error) {
       message.error("Error al crear el método.");
@@ -289,7 +334,7 @@ const Servicio = () => {
           <EditOutlined />
           </Button>
           <Button type="danger" 
-          onClick={() => showModalAlert(record.id)} 
+          onClick={() =>showServiceDeleteModal(record.id)} 
           className="action-button-delete">
             <CloseOutlined /></Button>
         </>
@@ -407,22 +452,6 @@ const Servicio = () => {
         <Form form={form} className="modal-form" layout="vertical">
           <Row gutter={16}>
             <Col span={12}>
-            {/**<Form.Item label="Código:" name="codigo" rules={[{ required: true, message: "Por favor ingrese un código" }]}>
-                <Input placeholder="Ingresa código" />
-              </Form.Item>
-              <Form.Item name="subcontrato" valuePropName="checked">
-                <Checkbox>Subcontrato</Checkbox>
-              </Form.Item>
-              <Form.Item name="acreditado" valuePropName="checked" initialValue={true}>
-                <Checkbox>Acreditado</Checkbox>
-              </Form.Item> 
-              <Form.Item label="Unidad:" name="unidad" rules={[{ required: true, message: "Por favor ingrese la unidad" }]}>
-                <Input placeholder="Ingresa unidad" />
-              </Form.Item>
-              <Form.Item label="Descripción:" name="descripcion">
-                <Input.TextArea placeholder="Descripción del servicio o concepto" />
-              </Form.Item>*/}
-              
               <Form.Item label="Nombre servicio:" name="nombreServicio" rules={[{ required: true, message: "Por favor ingrese un nombre" }]}>
                 <Input placeholder="Nombre del servicio o concepto" />
               </Form.Item>
@@ -509,32 +538,28 @@ const Servicio = () => {
 
       {/* Modal de alerta */}
       <Modal
-        title={
-          <div style={{ textAlign: "center" }}>
-            <ExclamationCircleOutlined style={{ fontSize: "24px", color: "#faad14" }} />
-            <p style={{ marginTop: "8px" }}>¿Estás seguro?</p>
-          </div>
-        }
-        visible={isModalVisible}
-        onOk={handleOkAlert}
-        onCancel={handleCancelAlert}
-        okText="Sí, eliminar"
-        cancelText="No, cancelar"
-        centered
-        footer={[
-          <Button
-            key="cancel"
-            onClick={handleCancelAlert}
-            style={{ backgroundColor: "#f5222d", color: "#fff" }}
-          >
-            No, cancelar
-          </Button>,
-          <Button key="submit" type="primary" onClick={handleOkAlert}>
-            Sí, eliminar
-          </Button>,
-        ]}
+          title={
+              <div style={{ textAlign: "center" }}>
+                  <ExclamationCircleOutlined style={{ fontSize: "24px", color: "#faad14" }} />
+                  <p style={{ marginTop: "8px" }}>¿Estás seguro?</p>
+              </div>
+          }
+          open={isServiceDeleteModalVisible}
+          onOk={handleConfirmDeleteService}
+          onCancel={handleCancelDeleteService}
+          okText="Sí, eliminar"
+          cancelText="No, cancelar"
+          centered
+          footer={[
+              <Button key="cancel" onClick={handleCancelDeleteService} style={{ backgroundColor: "#f5222d", color: "#fff" }}>
+                  No, cancelar
+              </Button>,
+              <Button key="submit" type="primary" onClick={handleConfirmDeleteService}>
+                  Sí, eliminar
+              </Button>,
+          ]}
       >
-        <p style={{ textAlign: "center", marginBottom: 0 }}>¡No podrás revertir esto!</p>
+          <p style={{ textAlign: "center", marginBottom: 0 }}>¡No podrás revertir esta acción!</p>
       </Modal>
 
       {/* Modal de Editar Servicio */}
@@ -625,6 +650,21 @@ const Servicio = () => {
       >
         <p style={{ textAlign: "center", marginBottom: 0 }}>¡No podrás revertir esta acción!</p>
       </Modal>
+
+      {/* Modal de éxito */}
+      <Modal
+          title="Éxito"
+          open={isSuccessModalVisible}
+          onCancel={() => setIsSuccessModalVisible(false)}
+          footer={[
+              <Button key="close" type="primary" onClick={() => setIsSuccessModalVisible(false)}>
+                  Cerrar
+              </Button>
+          ]}
+      >
+          <p style={{ textAlign: "center", fontSize: "16px" }}>{successMessage}</p>
+      </Modal>
+
     </div>
   );
 };

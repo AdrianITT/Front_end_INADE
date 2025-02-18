@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Form, Input, Button, Row, Col, Select, message } from "antd";
+import { Form, Input, Button, Row, Col, Select, message, Modal, Result } from "antd";
 import { useNavigate, useParams } from "react-router-dom"; // Importa useNavigate
 import "./Cliente.css";
 import { updateCliente, getClienteById } from "../../apis/ClienteApi";
@@ -14,6 +14,7 @@ const EditarCliente = () => {
   const [form] = Form.useForm();
   const [titulos, setTitulos] = useState([]);
   const [usoCfdiOptions, setUsoCfdiOptions] = useState([]);  // Opciones de UsoCfdi
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false); // Estado del modal de éxito
 
   // Obtén los datos del cliente cuando el componente se monta
   useEffect(() => {
@@ -76,8 +77,15 @@ const EditarCliente = () => {
       console.log("Datos enviados a la API:", updatedValues);  // Depuración para verificar el formato
 
       await updateCliente(clienteId, updatedValues);  // Llama a la API para actualizar los datos
-      message.success("Cliente actualizado correctamente");
-      navigate("/cliente");  // Redirige a la lista de clientes
+      
+      // Mostrar modal de éxito
+      setIsSuccessModalOpen(true);
+
+      // Esperar 3 segundos antes de cerrar el modal y redirigir
+      setTimeout(() => {
+        setIsSuccessModalOpen(false);
+        navigate("/cliente");  // Redirige a la lista de clientes
+      }, 1500);
     } catch (error) {
       console.error("Error al actualizar el cliente", error);
       message.error("Error al actualizar el cliente");
@@ -203,6 +211,19 @@ const EditarCliente = () => {
           </Button>
         </div>
       </Form>
+
+      {/* ✅ Modal de éxito al actualizar */}
+      <Modal
+        title="Actualización Exitosa"
+        open={isSuccessModalOpen}
+        footer={null}
+        closable={false}
+      >
+        <Result
+          status="success"
+          title="¡El cliente ha sido actualizado correctamente!"
+        />
+      </Modal>
     </div>
   );
 };

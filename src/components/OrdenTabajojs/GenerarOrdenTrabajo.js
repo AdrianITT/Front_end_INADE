@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { Form, Input, Select, Button, Row, Col,Checkbox, Modal, message, Divider, Card} from "antd";
+import React, { useState, useEffect, useMemo } from "react";
+import { Form, Input, Select, Button, Row, Col,Checkbox, Modal, message, Divider, Card, Result} from "antd";
 //import { CloseCircleOutlined  } from "@ant-design/icons";
 import { useParams, useNavigate } from "react-router-dom";
 import "./cssOrdenTrabajo/GenerarOrdenTrabajo.css";
@@ -28,7 +28,8 @@ const GenerarOrdenTrabajo = () => {
   const [newOrderId, setNewOrderId] = useState(null);
   const navigate=useNavigate();
   
-
+    // Obtener el ID de la organización una sola vez
+    const organizationId = useMemo(() => parseInt(localStorage.getItem("organizacion_id"), 10), []);
   //const [selectedServicios, setSelectedServicios] = useState([]); // Servicios seleccionados por el usuario
 
 
@@ -215,7 +216,7 @@ const GenerarOrdenTrabajo = () => {
       
       const receptorData = {
         ...values, // Campos del formulario
-        organizacion: cliente.empresa, 
+        organizacion: organizationId, 
       };
 
       // Crear el receptor
@@ -236,6 +237,9 @@ const GenerarOrdenTrabajo = () => {
     }
   };
 
+  const showModal = () => {
+    setIsModalOpen(true);
+  };
 
   const handleOk = () => {
     formModal.submit(); // Envía el formulario del modal
@@ -324,6 +328,16 @@ const GenerarOrdenTrabajo = () => {
                 ))}
               </Select>
             </Form.Item>
+          </Col>
+          <Col span={4}>
+          <Button
+            type="primary"
+            icon={<i className="fas fa-user-plus"></i>}
+            style={{ backgroundColor: "#52c41a", borderColor: "#52c41a" }}
+            onClick={showModal}
+          >
+            Agregar Receptor
+          </Button>
           </Col>
         </Row>
 
@@ -468,7 +482,7 @@ const GenerarOrdenTrabajo = () => {
         title="Orden Creada"
         open={isSuccessModalOpen}
         onOk={() => setIsSuccessModalOpen(false)}
-        onCancel={() => setIsSuccessModalOpen(false)}
+        onCancel={() => {setIsSuccessModalOpen(false); navigate(`/DetalleOrdenTrabajo/${newOrderId}`);}}
         footer={[
           <Button
             key="ok"
@@ -479,7 +493,9 @@ const GenerarOrdenTrabajo = () => {
           </Button>,
         ]}
       >
-        <p>¡La orden de trabajo se creó exitosamente!</p>
+        <Result
+        status="success"
+        title="¡La orden de trabajo se creó exitosamente!"></Result>
       </Modal>
     </div>
     </div>
