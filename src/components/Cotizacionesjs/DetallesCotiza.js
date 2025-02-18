@@ -239,7 +239,6 @@ const CotizacionDetalles = () => {
               setLoading(false);
               return;
           }
-  
           const emailQuery = emailList.length > 0 ? `&emails=${encodeURIComponent(emailList.join(","))}` : "";
   
           const response = await fetch(`${Api_Host.defaults.baseURL}/cotizacion/${id}/pdf/enviar?user_id=${user_id}${emailQuery}`, {

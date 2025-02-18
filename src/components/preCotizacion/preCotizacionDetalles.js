@@ -171,56 +171,56 @@ const PreCotizacionDetalles = () => {
      setIsModalVisible(false);
    };
      const [extraEmails, setExtraEmails] = useState("");
-     //ENVIAR CORREO
      const handleSendEmail = async () => {
-         setLoading(true);
-         try {
-             const user_id = localStorage.getItem("user_id");
-             if (!user_id) {
-                 setResultStatus("error");
-                 setResultMessage("No se encontró el ID del usuario.");
-                 setIsResultModalVisible(true);
-                 setLoading(false);
-                 return;
-             }
-     
-             // Validar que los correos ingresados sean correctos
-             const emailList = extraEmails.split(",").map(email => email.trim()).filter(email => email);
-             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-             const invalidEmails = emailList.filter(email => !emailRegex.test(email));
-     
-             if (invalidEmails.length > 0) {
-                 setResultStatus("error");
-                 setResultMessage(`Correos inválidos: ${invalidEmails.join(", ")}`);
-                 setIsResultModalVisible(true);
-                 setLoading(false);
-                 return;
-             }
-     
-             const emailQuery = emailList.length > 0 ? `&emails=${encodeURIComponent(emailList.join(","))}` : "";
-     
-             const response = await fetch(`${Api_Host.defaults.baseURL}/precotizacion/${id}/pdf/?user_id=${user_id}&organizacion_id=${organizationId}${emailQuery}`, {
-                 method: "GET",
-                 headers: { "Content-Type": "application/json" },
-             });
-     
-             if (response.ok) {
-                 const result = await response.text();
-                 setResultStatus("success");
-                 setResultMessage(result || "Correo enviado exitosamente.");
-             } else {
-                 setResultStatus("error");
-                 setResultMessage("Error al enviar el correo.");
-             }
-         } catch (error) {
-           console.error("Error al enviar el correo:", error);
-           setResultStatus("error");
-           setResultMessage("Hubo un error al enviar el correo.");
-       } finally {
-           setIsResultModalVisible(true);
-           setLoading(false);
-       }
-     };
+      setLoading(true);
+      try {
+        const user_id = localStorage.getItem("user_id");
+        if (!user_id) {
+          setResultStatus("error");
+          setResultMessage("No se encontró el ID del usuario.");
+          setIsResultModalVisible(true);
+          setLoading(false);
+          return;
+        }
+    
+        // Validar que los correos ingresados sean correctos
+        const emailList = extraEmails.split(",").map(email => email.trim()).filter(email => email);
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const invalidEmails = emailList.filter(email => !emailRegex.test(email));
+    
+        if (invalidEmails.length > 0) {
+          setResultStatus("error");
+          setResultMessage(`Correos inválidos: ${invalidEmails.join(", ")}`);
+          setIsResultModalVisible(true);
+          setLoading(false);
+          return;
+        }
+    
+        const emailQuery = emailList.length > 0 ? `&emails=${encodeURIComponent(emailList.join(","))}` : "";
+    
+        // Cambia la URL para usar la nueva ruta de precotización
+        const response = await fetch(`${Api_Host.defaults.baseURL}/precotizacion/${id}/pdf/enviar?user_id=${user_id}&organizacion_id=${organizationId}${emailQuery}`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        });
+    
+        if (response.ok) {
+          const result = await response.text();
+          setResultStatus("success");
+          setResultMessage(result || "Correo enviado exitosamente.");
+        } else {
+          setResultStatus("error");
+          setResultMessage("Error al enviar el correo.");
+        }
+      } catch (error) {
+        console.error("Error al enviar el correo:", error);
+        setResultStatus("error");
+        setResultMessage("Hubo un error al enviar el correo.");
+      } finally {
+        setIsResultModalVisible(true);
+        setLoading(false);
+      }
+    };
 
      const handDuoModal=()=>{    
           setIsModalVisible(false);
@@ -275,7 +275,7 @@ const PreCotizacionDetalles = () => {
                 >               
                
                <p><Text strong>Subtotal:</Text> {subtotalConvertido.toFixed(2)} {esUSD ? "USD" : "MXN"}</p>
-               <p><Text strong>Descuento ({cotizacionInfo?.descuento || 0}%):</Text> -{descuentoConvertido.toFixed(2)} {esUSD ? "USD" : "MXN"}</p>
+               <p><Text strong>Descuento ({cotizacionInfo?.descuento || 0}%):</Text> {descuentoConvertido.toFixed(2)} {esUSD ? "USD" : "MXN"}</p>
                <p><Text strong>Subtotal con Descuento:</Text> {subtotalConDescuentoConvertido.toFixed(2)} {esUSD ? "USD" : "MXN"}</p>
                <p><Text strong>IVA ({ivaPorcentaje * 100 || 0}%):</Text> {ivaConvertido.toFixed(2)} {esUSD ? "USD" : "MXN"}</p>
                <p><Text strong>Total:</Text> {totalConvertido.toFixed(2)} {esUSD ? "USD" : "MXN"}</p>
