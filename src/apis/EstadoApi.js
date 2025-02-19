@@ -7,3 +7,5 @@ const Estado_Api= axios.create({
 })
 
 export const getEstadoById =async (id)=> Estado_Api.get(`/${id}/`);
+
+export const getAllEstado =async ()=> Estado_Api.get(`/`);

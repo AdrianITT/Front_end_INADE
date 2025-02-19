@@ -362,7 +362,7 @@ const Empresa = () => {
       </div>
       <div className="table-center">
         {/* Pasar los datos al componente Table */}
-        <Table columns={columns} dataSource={empresas} rowKey="id" bordered rowClassName={(record)=>record.incompleta? 'fila-incompleta': ''}/>
+        <Table columns={columns} dataSource={empresas} pagination={{ pageSize: 5 }}  rowKey="id" bordered rowClassName={(record)=>record.incompleta? 'fila-incompleta': ''}/>
       </div>
         {/*Modal para agregar Empresa */}
       <Modal title="Registro" open={isModalOpen} onOk={handleOk} onCancel={handleCancel} width={800} okText="Crear Empresa" cancelarText="Cancelar">
