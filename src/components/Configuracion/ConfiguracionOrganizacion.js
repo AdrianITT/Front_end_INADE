@@ -1,5 +1,5 @@
 import React, { useCallback,useState, useEffect } from "react";
-import { Tabs, Form, Input, Select, Button, Modal,Upload,Card, message, Result} from "antd";
+import { Tabs, Form, Input, Select, Button, Modal,Upload,Card, message, Result, Alert} from "antd";
 
 import "./configuracion.css"
 import {  UploadOutlined } from '@ant-design/icons';
@@ -34,6 +34,8 @@ const ConfiguraciónOrganizacion=()=>{
   const [tipoMoneda, setTipoMoneda] = useState([]);
   const [iva, setIva] = useState([]);
   const [isSuccessModalVisible, setIsSuccessModalVisible] = useState(false);
+  const [isErrorModalVisible, setIsErrorModalVisible] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   // Obtener el id de la organización del usuario autenticado
   const userOrganizationId = ObtenerOrganizacion("organizacion_id" );// O la forma en la que almacenas el ID de la organización
@@ -226,6 +228,7 @@ useEffect(() => {
       fetchOrganizacion();
     } catch (error) {
       setLoading(false);
+      showErrorModal(error.message || "Error al actualizar la organización.");
       message.error("Error al actualizar los datos");
     }
   };
@@ -299,6 +302,7 @@ useEffect(() => {
     } catch (error) {
       console.error("Error al actualizar la orden de trabajo", error);
       message.error("Error al actualizar la orden de trabajo.");
+      showErrorModal(error.message || "Error al actualizar la organización.");
     } finally {
       setLoading(false);
     }
@@ -386,6 +390,7 @@ useEffect(() => {
     } catch (error) {
         console.error("Error al actualizar la cotización", error);
         message.error("Error al actualizar la cotización.");
+        showErrorModal(error.message || "Error al actualizar la organización.");
     } finally {
         setLoading(false);
     }
@@ -432,16 +437,39 @@ const handleGuardarConfiguracionSistema = async (values) => {
   } catch (error) {
     console.error("Error al actualizar la configuración del sistema", error);
     message.error("Error al actualizar la configuración del sistema.");
+    showErrorModal(error.message || "Error al actualizar la organización.");
   } finally {
     setLoading(false);
   }
 };
 
-// Función para cerrar el modal y redirigir
-const handleSuccessOk = () => {
-  setIsSuccessModalVisible(false);
-};
+  // Función para cerrar el modal y redirigir
+  const handleSuccessOk = () => {
+    setIsSuccessModalVisible(false);
+  };
+
+  // Función para cerrar el modal de error
+  const handleErrorOk = () => {
+    setIsErrorModalVisible(false);
+  };
   
+// ✅ Función para manejar errores específicos
+const showErrorModal = (error) => {
+  let formattedMessage = "Ocurrió un error inesperado.";
+
+  if (typeof error === "object" && error !== null) {
+    formattedMessage = Object.entries(error)
+      .map(([key, value]) => `${key}: ${Array.isArray(value) ? value.join(", ") : value}`)
+      .join("\n");
+  } else if (typeof error === "string") {
+    formattedMessage = error;
+  }
+
+  // 🔥 CORREGIDO: Se cambia el estado para que el modal se muestre
+  setErrorMessage(formattedMessage);
+  setIsErrorModalVisible(true);
+};
+
   
 
   const renderOrganizacion = () => (
@@ -706,7 +734,7 @@ const handleSuccessOk = () => {
         </Form.Item>
          <Form.Item label="Tipo de cambio dólar:" name="tipoCambioDolar"
          rules={[{ required: true, message: "Ingrese el tipo de cambio del dólar." }]}>
-           <Input placeholder="Ingrese el tipo de cambio del dólar." />
+           <Input type="number" min="0" placeholder="Ingrese el tipo de cambio del dólar." />
          </Form.Item>
          <Button type="primary" htmlType="submit" loading={loading} style={{ width: "100%" }}>
            Guardar configuración de sistema
@@ -755,6 +783,34 @@ const handleSuccessOk = () => {
             status="success"
             title="¡Éxito!"
             subTitle="Los cambios se guardaron correctamente."/>
+          </Modal>
+
+          {/* Modal de error */}
+          <Modal
+            title="¡Error!"
+            open={isErrorModalVisible} // ✅ Verifica que este estado cambie correctamente
+            onOk={handleErrorOk}
+            cancelButtonProps={{ style: { display: "none" } }}
+            okText="Aceptar"
+          >
+            <Alert
+              message="Se ha producido un error"
+              description={
+                <pre
+                  style={{
+                    backgroundColor: "#f5f5f5",
+                    padding: "10px",
+                    borderRadius: "5px",
+                    whiteSpace: "pre-wrap",
+                    fontSize: "14px",
+                  }}
+                >
+                  {errorMessage}
+                </pre>
+              }
+              type="error"
+              showIcon
+            />
           </Modal>
         </div>
       );
