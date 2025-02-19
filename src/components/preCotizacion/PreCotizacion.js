@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Table, Button, Space, message} from "antd";
+import { Table, Button, Space, message } from "antd";
 import { Link } from "react-router-dom";
 import { FileTwoTone, PlusOutlined } from "@ant-design/icons";
 import "./PrecotizacionData.css";
@@ -9,13 +9,19 @@ const PreCotizacionData = () => {
   const [preCotizaciones, setPreCotizaciones] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Obtener datos desde la API
+  // Obtener el ID de la organización del usuario desde el local storage
+  const organizationId = parseInt(localStorage.getItem("organizacion_id"), 10);
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
         const response = await getAllPrecotizacion();
-        const data = response.data.map((item) => ({
+        // Filtrar las pre-cotizaciones según el ID de la organización
+        const filteredPreCotizaciones = response.data.filter(
+          (item) => item.organizacion === organizationId
+        );
+        const data = filteredPreCotizaciones.map((item) => ({
           key: item.id,
           id: item.id,
           cliente: `${item.nombreCliente} ${item.apellidoCliente}`,
@@ -30,13 +36,7 @@ const PreCotizacionData = () => {
     };
 
     fetchData();
-  }, []);
-
-  // Función para eliminar una pre-cotización
-  /*const handleDelete = (id) => {
-    setPreCotizaciones(preCotizaciones.filter((item) => item.id !== id));
-    message.success("Pre-cotización eliminada");
-  };*/
+  }, [organizationId]);
 
   // Definir las columnas de la tabla
   const columns = [
@@ -62,7 +62,8 @@ const PreCotizacionData = () => {
       render: (_, record) => (
         <Space>
           <Link to={`/preCotizacionDetalles/${record.id}`}>
-          <Button type="primary" icon={<FileTwoTone />} /></Link>
+            <Button type="primary" icon={<FileTwoTone />} />
+          </Link>
         </Space>
       ),
       width: 150,
@@ -70,14 +71,14 @@ const PreCotizacionData = () => {
   ];
 
   return (
-     <div className="container">
+    <div className="container">
       <h1 className="title">Pre-Cotizaciones</h1>
 
       <div className="button-container">
-      <Link to="/CrearPreCotizacion">
-        <Button type="primary" icon={<PlusOutlined />}>
-          Añadir Pre-Cotización
-        </Button>
+        <Link to="/CrearPreCotizacion">
+          <Button type="primary" icon={<PlusOutlined />}>
+            Añadir Pre-Cotización
+          </Button>
         </Link>
       </div>
 
