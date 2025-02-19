@@ -1,5 +1,5 @@
 import React, { useCallback,useState, useEffect } from "react";
-import { Tabs, Form, Input, Select, Button, Modal,Upload,Card, message} from "antd";
+import { Tabs, Form, Input, Select, Button, Modal,Upload,Card, message, Result} from "antd";
 
 import "./configuracion.css"
 import {  UploadOutlined } from '@ant-design/icons';
@@ -10,7 +10,7 @@ import { updateInfoOrdenTrabajo,getInfoOrdenTrabajoById, crearInfoOrdenTrabajo }
 import { getInfoCotizacionById, updateInfoCotizacion, crearInfoCotizacion } from "../../apis/InfoCotizacionApi";
 import { updateMarcaAgua,createMaraAgua } from "../../apis/MarcaDeAguaApi";
 import {ObtenerOrganizacion} from "../obtenerOrganizacion/ObtenerOrganizacion";
-import { getInfoSistema,updateInfoSistema,getInfoSistemaById } from "../../apis/InfoSistemaApi";
+import { updateInfoSistema,getInfoSistemaById } from "../../apis/InfoSistemaApi";
 import { getAllTipoMoneda } from "../../apis/Moneda";
 import { getAllIva } from "../../apis/ivaApi";
 
@@ -33,6 +33,7 @@ const ConfiguraciónOrganizacion=()=>{
   const [infConfiguracion, setInfConfiguracion] = useState(null);
   const [tipoMoneda, setTipoMoneda] = useState([]);
   const [iva, setIva] = useState([]);
+  const [isSuccessModalVisible, setIsSuccessModalVisible] = useState(false);
 
   // Obtener el id de la organización del usuario autenticado
   const userOrganizationId = ObtenerOrganizacion("organizacion_id" );// O la forma en la que almacenas el ID de la organización
@@ -211,9 +212,11 @@ useEffect(() => {
         await updateOrganizacion(userOrganizationId, formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
+        setIsSuccessModalVisible(true);
       } else {
         console.log("HW");
         await updateOrganizacion(userOrganizationId, datosAEnviar);
+        setIsSuccessModalVisible(true);
       }
   
       console.log("Datos enviados:", values);
@@ -279,11 +282,13 @@ useEffect(() => {
           ...organizaciones,
           infoOrdenTrabajo: nuevaOrdenTrabajo.id,
         });
+        setIsSuccessModalVisible(true);
   
         message.success("Orden de trabajo creada correctamente");
       } else {
         // Actualizar orden de trabajo existente
         await updateInfoOrdenTrabajo(organizaciones.infoOrdenTrabajo, payload);
+        setIsSuccessModalVisible(true);
         message.success("Orden de trabajo actualizada correctamente");
       }
   
@@ -365,10 +370,12 @@ useEffect(() => {
             });
 
             message.success("Cotización creada correctamente");
+            setIsSuccessModalVisible(true);
         } else {
             // Actualizar cotización existente
             console.log("Actualizando cotización con ID:", organizaciones.infoCotizacion);
             await updateInfoCotizacion(organizaciones.infoCotizacion, payload);
+            setIsSuccessModalVisible(true);
             message.success("Cotización actualizada correctamente");
         }
 
@@ -421,12 +428,18 @@ const handleGuardarConfiguracionSistema = async (values) => {
     console.log(responseConfiguracion.data);
     formConfiguracion.setFieldsValue(responseConfiguracion.data);
     console.log(formConfiguracion);
+    setIsSuccessModalVisible(true);
   } catch (error) {
     console.error("Error al actualizar la configuración del sistema", error);
     message.error("Error al actualizar la configuración del sistema.");
   } finally {
     setLoading(false);
   }
+};
+
+// Función para cerrar el modal y redirigir
+const handleSuccessOk = () => {
+  setIsSuccessModalVisible(false);
 };
   
   
@@ -674,7 +687,7 @@ const handleGuardarConfiguracionSistema = async (values) => {
       onFinish={handleGuardarConfiguracionSistema}
       initialValues={infConfiguracion}>
          <Form.Item label="Moneda Predeterminada:" name="tipoMoneda" required>
-          <Select placeholder="Seleccione la moneda predeterminada." >
+          <Select placeholder="Seleccione la moneda predeterminada." disabled={true}>
             {tipoMoneda.map((moneda) => (
               <Select.Option key={moneda.id} value={moneda.id}>
                 {moneda.codigo} {moneda.descripcion}
@@ -683,9 +696,9 @@ const handleGuardarConfiguracionSistema = async (values) => {
           </Select>
         </Form.Item>
         <Form.Item label="Tasa de IVA Predeterminada:" name="iva" required>
-          <Select placeholder="Seleccione la tasa de IVA predeterminada.">
+          <Select placeholder="Seleccione la tasa de IVA predeterminada." >
             {iva.map((tasa) => (
-              <Select.Option key={tasa.id} value={tasa.id}>
+              <Select.Option key={tasa.id} value={tasa.id} >
                 {tasa.porcentaje}%
               </Select.Option>
             ))}
@@ -729,6 +742,19 @@ const handleGuardarConfiguracionSistema = async (values) => {
             cancelText="No, cancelar"
           >
             <p>¿Estás seguro? No podrás revertir los cambios.</p>
+          </Modal>
+
+          {/* Modal de éxito */}
+          <Modal
+            open={isSuccessModalVisible}
+            onOk={handleSuccessOk}
+            cancelButtonProps={{ style: { display: "none" } }} // Ocultar botón de cancelar
+            okText="Aceptar"
+          >
+            <Result
+            status="success"
+            title="¡Éxito!"
+            subTitle="Los cambios se guardaron correctamente."/>
           </Modal>
         </div>
       );
