@@ -29,8 +29,6 @@ const RegistroCotizacion = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [descuento, setDescuento] = useState(0);
   const [tipoCambioDolar, setTipoCambioDolar] = useState(1);
-  const [isSuccessModalVisible, setIsSuccessModalVisible] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
 
   // Obtener el tipo de cambio del dólar
   useEffect(() => {

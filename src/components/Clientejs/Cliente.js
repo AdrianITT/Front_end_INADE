@@ -77,19 +77,31 @@ const Cliente = () => {
     try {
       const empresasMap = await loadEmpresasMap();
       const res = await getAllCliente();
-      const filteredClientes = res.data.filter(cliente => empresasMap[cliente.empresa]);
-      const formattedData = filteredClientes.map(cliente => ({
-        key: cliente.id,
-        Cliente: `${cliente.nombrePila} ${cliente.apPaterno} ${cliente.apMaterno}`,
-        Empresa: empresasMap[cliente.empresa] || 'Empresa no encontrada',
-        Correo: cliente.correo,
-        activo: cliente.activo // Se asume que existe este campo
-      }));
-      setClientes(formattedData);
+      
+      const filteredClientes = res.data.map(cliente => {
+        const datosIncompletos = !cliente.nombrePila || !cliente.apPaterno || !cliente.apMaterno || !cliente.correo || !empresasMap[cliente.empresa];
+  
+        return {
+          key: cliente.id,
+          Cliente: `${cliente.nombrePila || "Sin nombre"} ${cliente.apPaterno || ""} ${cliente.apMaterno || ""}`,
+          Empresa: empresasMap[cliente.empresa] || 'Empresa no encontrada',
+          Correo: cliente.correo || "Sin correo",
+          activo: cliente.activo,
+          incompleto: datosIncompletos  // 🔹 Agregamos flag para resaltar
+        };
+      });
+  
+      // 🔹 Ordenar primero los clientes con datos incompletos
+      const sortedClientes = filteredClientes.sort((a, b) => b.incompleto - a.incompleto);
+      console.log(sortedClientes);
+
+  
+      setClientes(sortedClientes);
     } catch (error) {
       console.error('Error al cargar los clientes', error);
     }
   }, [loadEmpresasMap]);
+  
 
   // Cargar títulos y clientes
   useEffect(() => {
@@ -138,13 +150,13 @@ const Cliente = () => {
       correo: formValues.correo,
       telefono: formValues.telefono || "",
       celular: formValues.celular || "",
-      fax: formValues.fax || "",
+      fax: formValues.fax || "No disponible",
       empresa: empresaId,
       titulo: formValues.titulo,
       UsoCfdi: formValues.UsoCfdi || 3,
     };
 
-    if (!clienteData.nombrePila || !clienteData.apPaterno || !clienteData.apMaterno || !clienteData.correo || !clienteData.empresa || !clienteData.titulo) {
+    if (!clienteData.nombrePila || !clienteData.apPaterno || !clienteData.apMaterno || !clienteData.correo || !clienteData.empresa) {
       console.error("Faltan campos obligatorios para crear el cliente");
       return null;
     }
@@ -264,6 +276,7 @@ const Cliente = () => {
     </StickyBox>
   );
 
+
   return (
     <div className="container-center">
       <h1 className="title-center">Clientes</h1>
@@ -294,7 +307,10 @@ const Cliente = () => {
                   label: 'Clientes Activos',
                   key: '1',
                   children: (
-                    <Table columns={columnsActivos} dataSource={clientes} />
+                    <Table columns={columnsActivos} 
+                    dataSource={clientes} 
+                    rowClassName={(record) => record.incompleto ? 'row-incompleto' : ''}
+                    />
                   ),
                 },
                 {
@@ -304,6 +320,7 @@ const Cliente = () => {
                     <Table
                       dataSource={clientes.filter(c => !c.activo)}
                       columns={columnsInactivos}
+                      
                       bordered
                       pagination={{
                         pageSize: 5,
@@ -394,7 +411,7 @@ const Cliente = () => {
               <Form.Item
                 label="Celular:"
                 name="celular"
-                rules={[{ required: true, message: 'Por favor ingresa un número de celular.' }]}
+                
               >
                 <Input placeholder="Celular" />
               </Form.Item>

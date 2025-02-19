@@ -103,14 +103,26 @@ const Empresa = () => {
         (empresa) => empresa.organizacion === parseInt(userOrganizationId)
       );
   
-      const formattedData = filteredEmpresas.map((empresa) => ({
-        key: empresa.id,
-        Empresa: empresa.nombre,
-        RFC: empresa.rfc,
-        Direccion: `${empresa.calle} ${empresa.numero}, ${empresa.colonia}, ${empresa.ciudad}, ${empresa.estado}, ${empresa.codigoPostal}`,
-      }));
+      const formattedData = filteredEmpresas.map((empresa) => {
+        // Determinar si la empresa tiene datos incompletos
+        const datosIncompletos = 
+          !empresa.calle || !empresa.numero || !empresa.colonia || 
+          !empresa.ciudad || !empresa.estado || !empresa.codigoPostal;
   
-      setEmpresas(formattedData);
+        return {
+          key: empresa.id,
+          Empresa: empresa.nombre,
+          RFC: empresa.rfc,
+          Direccion: `${empresa.calle || ''} ${empresa.numero || ''}, ${empresa.colonia || ''}, ${empresa.ciudad || ''}, ${empresa.estado || ''}, ${empresa.codigoPostal || ''}`,
+          incompleta: datosIncompletos // Flag para marcar las filas incompletas
+        };
+      });
+      // 🔹 Ordenar primero las empresas con datos incompletos
+      const sortedEmpresas = formattedData.sort((a, b) => {
+      return b.incompleta - a.incompleta; // true (1) va antes que false (0)
+      });
+  
+      setEmpresas(sortedEmpresas);
     } catch (error) {
       console.error("Error al cargar las empresas:", error);
     }
@@ -350,7 +362,7 @@ const Empresa = () => {
       </div>
       <div className="table-center">
         {/* Pasar los datos al componente Table */}
-        <Table columns={columns} dataSource={empresas} rowKey="id" bordered />
+        <Table columns={columns} dataSource={empresas} rowKey="id" bordered rowClassName={(record)=>record.incompleta? 'fila-incompleta': ''}/>
       </div>
         {/*Modal para agregar Empresa */}
       <Modal title="Registro" open={isModalOpen} onOk={handleOk} onCancel={handleCancel} width={800} okText="Crear Empresa" cancelarText="Cancelar">

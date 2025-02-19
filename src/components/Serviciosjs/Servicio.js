@@ -278,7 +278,7 @@ const handleConfirmDeleteService = async () => {
       setMetodos(prevMetodos => [...prevMetodos, response]);
       
       // Cerrar el modal
-      //setIsModalOpenMetodos(false);
+      setIsModalOpenMetodos(false);
       // 🔹 Mostrar modal de éxito
       setSuccessMessage("¡El método ha sido creado exitosamente!");
       setIsSuccessModalVisible(true);
