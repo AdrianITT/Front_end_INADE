@@ -310,6 +310,7 @@ const Cliente = () => {
                     <Table columns={columnsActivos} 
                     dataSource={clientes} 
                     rowClassName={(record) => record.incompleto ? 'row-incompleto' : ''}
+                    pagination={{ pageSize: 5 }} 
                     />
                   ),
                 },

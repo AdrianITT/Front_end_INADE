@@ -1,6 +1,6 @@
 import React, { useState, useEffect,useMemo} from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { MailTwoTone, CheckCircleTwoTone, FilePdfTwoTone } from "@ant-design/icons";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import { MailTwoTone, CheckCircleTwoTone, FilePdfTwoTone, FormOutlined } from "@ant-design/icons";
 import { Card, Table, Row, Col, Typography, Spin, message, Menu,Dropdown,Button, Form, Checkbox, Input, Modal, Result } from "antd";
 import { getPreCotizacionById,updatePrecotizacion} from "../../apis/precotizacionApi";
 import { getAllServicioPrecotizacion } from "../../apis/ServiciosPrecotizacionApi";
@@ -262,11 +262,13 @@ const PreCotizacionDetalles = () => {
             </Menu.Item>
         
             {/* ✅ Solo se muestra si el estado es 8 */}
-            {cotizacionInfo?.estado === 8 && (
+            {cotizacionInfo?.estado === 8 ? (
               <Menu.Item key="4" icon={<CheckCircleTwoTone twoToneColor="#52c41a" />} onClick={actualizarEstado}>
                 Actualizar estado
               </Menu.Item>
-            )}
+            ):(<Link to="/cotizar"><Menu.Item key="4" icon={<FormOutlined  twoToneColor="#52c41a" />} >
+              Ir a Cotizacion
+            </Menu.Item></Link>)}
         
             <Menu.Item key="5" icon={<FilePdfTwoTone />} onClick={handleDownloadPDF} loading={loading} >
               Ver PDF
