@@ -1,5 +1,5 @@
 import React, { useState, useEffect,useMemo} from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { MailTwoTone, CheckCircleTwoTone, FilePdfTwoTone } from "@ant-design/icons";
 import { Card, Table, Row, Col, Typography, Spin, message, Menu,Dropdown,Button, Form, Checkbox, Input, Modal, Result } from "antd";
 import { getPreCotizacionById,updatePrecotizacion} from "../../apis/precotizacionApi";
@@ -8,6 +8,7 @@ import { getServicioById } from "../../apis/ServiciosApi";
 import { getIvaById } from "../../apis/ivaApi";
 import { Api_Host } from "../../apis/api";
 import { getInfoSistema } from "../../apis/InfoSistemaApi";
+import {getEstadoById} from "../../apis/EstadoApi";
 
 const { Title, Text } = Typography;
 
@@ -25,12 +26,26 @@ const PreCotizacionDetalles = () => {
   const [isResultModalVisible, setIsResultModalVisible] = useState(false);
   const [resultMessage, setResultMessage] = useState("");
   const [resultStatus, setResultStatus] = useState("success"); // "success" o "error"
+  const [estadoNombre, setEstadoNombre] = useState("Cargando...");
+  const [isConfirmModalVisible, setIsConfirmModalVisible] = useState(false);
+  const [isSuccessModalVisible, setIsSuccessModalVisible] = useState(false);
+  const navigate=useNavigate();
 
   useEffect(() => {
     const fetchCotizacion = async () => {
       try {
         const response = await getPreCotizacionById(id);
         setCotizacionInfo(response.data);
+        // ✅ Obtener el estado por su ID
+      if (response.data.estado) {
+          try {
+            const estadoResp = await getEstadoById(response.data.estado);
+            setEstadoNombre(estadoResp.data.nombre);
+          } catch (error) {
+            console.error("Error obteniendo el estado:", error);
+            setEstadoNombre("Desconocido"); // En caso de error
+          }
+        }
       } catch (error) {
         message.error("Error al obtener la pre-cotización.");
         console.error("Error al obtener la pre-cotización:", error);
@@ -145,23 +160,35 @@ const PreCotizacionDetalles = () => {
     };
 
     const actualizarEstado = async () => {
-     if (!cotizacionInfo) return; // Asegurar que la cotización existe
-   
-     try {
-       const nuevaCotizacion = {
-         ...cotizacionInfo,  // Mantiene todos los datos actuales
-         estado: 7           // Cambia solo el estado
-       };
-   
-       const response = await updatePrecotizacion(cotizacionInfo.id, nuevaCotizacion); // Enviar la actualización
-       setCotizacionInfo(response.data);  // Actualizar la UI con la nueva información
-   
-       message.success("Estado actualizado a 7 correctamente.");
-     } catch (error) {
-       console.error("Error al actualizar el estado:", error);
-       message.error("No se pudo actualizar el estado.");
-     }
-   };
+      if (!cotizacionInfo) {
+        message.error("No se encontró la cotización.");
+        return;
+      }
+      
+      setIsConfirmModalVisible(true); // 👉 Mostrar modal
+    };
+    
+    const handleConfirmChange = async () => {
+      try {
+        const nuevaCotizacion = {
+          ...cotizacionInfo,
+          estado: 7, // Nuevo estado
+        };
+    
+        const response = await updatePrecotizacion(cotizacionInfo.id, nuevaCotizacion);
+        setCotizacionInfo(response.data);
+        setIsConfirmModalVisible(false); // 👉 Cerrar modal
+        setIsSuccessModalVisible(true);
+        setTimeout(() => {
+          setIsSuccessModalVisible(false);
+          navigate("/cotizar");
+        }, 1000);
+        message.success("Estado actualizado correctamente.");
+      } catch (error) {
+        console.error("Error al actualizar el estado:", error);
+        message.error("No se pudo actualizar el estado.");
+      }
+    };
 
    const showEmailModal = () => {
      setIsModalVisible(true);
@@ -228,19 +255,25 @@ const PreCotizacionDetalles = () => {
         }
    
 
-  const menu = (
-     <Menu>
-       <Menu.Item key="1" icon={<MailTwoTone />} onClick={showEmailModal}>
-         Enviar por correo
-       </Menu.Item>
-       <Menu.Item key="4" icon={<CheckCircleTwoTone twoToneColor="#52c41a" />} onClick={actualizarEstado}>
-         Actualizar estado
-       </Menu.Item>
-       <Menu.Item key="5" icon={<FilePdfTwoTone />} onClick={handleDownloadPDF} loading={loading} >
-         Ver PDF
-       </Menu.Item>
-     </Menu>
-   );
+        const menu = (
+          <Menu>
+            <Menu.Item key="1" icon={<MailTwoTone />} onClick={showEmailModal}>
+              Enviar por correo
+            </Menu.Item>
+        
+            {/* ✅ Solo se muestra si el estado es 8 */}
+            {cotizacionInfo?.estado === 8 && (
+              <Menu.Item key="4" icon={<CheckCircleTwoTone twoToneColor="#52c41a" />} onClick={actualizarEstado}>
+                Actualizar estado
+              </Menu.Item>
+            )}
+        
+            <Menu.Item key="5" icon={<FilePdfTwoTone />} onClick={handleDownloadPDF} loading={loading} >
+              Ver PDF
+            </Menu.Item>
+          </Menu>
+        );
+        
 
   return (
     <Spin spinning={loading}>
@@ -257,7 +290,7 @@ const PreCotizacionDetalles = () => {
                 <p><Text strong>Fecha de Caducidad:</Text> {cotizacionInfo.fechaCaducidad}</p>
                 <p><Text strong>Descuento:</Text> {cotizacionInfo.descuento}%</p>
                 <p><Text strong>IVA:</Text>{ivaPorcentaje ? `${ivaPorcentaje}%` : "Cargando..."}</p>
-                <p><Text strong>Estado:</Text> {cotizacionInfo.estado}</p>
+                <p><Text strong>Estado:</Text> {estadoNombre}</p>
               </Card>
             </Col>
             {/* ✅ Nueva Card: Resumen Financiero */}
@@ -309,22 +342,52 @@ const PreCotizacionDetalles = () => {
           </Form>
         </Modal>
 
-                    {/* Modal para mostrar el resultado del envío*/}
-                    <Modal
-            title={resultStatus === "success" ? "Éxito" : "Error"}
-            open={isResultModalVisible}
-            onCancel={handDuoModal}
-            footer={[
-                <Button key="close" onClick={handDuoModal}>
-                    Cerrar
-                </Button>
-            ]}
-        >
+        {/* Modal para mostrar el resultado del envío*/}
+        <Modal
+        title={resultStatus === "success" ? "Éxito" : "Error"}
+        open={isResultModalVisible}
+        onCancel={handDuoModal}
+        footer={[
+            <Button key="close" onClick={handDuoModal}>
+                Cerrar
+            </Button>
+                ]}
+                  >
             <Result
             title={<p style={{ color: resultStatus === "success" ? "green" : "red" }}>{resultMessage}</p>}
-            />
-            
-        </Modal>
+            />           
+      </Modal>
+
+      {/* Modal de confirmación para actualizar el estado */}
+      <Modal
+        title="Confirmar actualización"
+        open={isConfirmModalVisible}
+        onCancel={() => setIsConfirmModalVisible(false)}
+        footer={[
+          <Button key="cancel" onClick={() => setIsConfirmModalVisible(false)}>
+            Cancelar
+          </Button>,
+          <Button key="confirm" type="primary" onClick={handleConfirmChange}>
+            Sí, actualizar estado
+          </Button>,
+        ]}
+      >
+        <p>¿Estás seguro de que deseas actualizar el estado de la cotización?</p>
+      </Modal>
+
+      {/* Modal de Éxito */}
+      <Modal
+        title="Estado Actualizado"
+        open={isSuccessModalVisible}
+        footer={null}
+        closable={false} // Evita que lo cierren antes de la redirección
+      >
+        <Result
+          status="success"
+          title="¡Estado actualizado con éxito!"
+          subTitle="Serás redirigido a la página de cotizaciones en breve..."
+        />
+      </Modal>
     </Spin>
   );
 };

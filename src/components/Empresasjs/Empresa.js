@@ -568,6 +568,13 @@ const Empresa = () => {
               <Form.Item
                 label="Regimen fiscal:"
                 name="regimenFiscal"
+                rules={[
+                  {
+                    required: true,
+                  },
+                ]}
+                labelCol={{ span: 24 }} // Hace que el label ocupe toda la fila
+                wrapperCol={{ span: 24 }} // Hace que el Select esté debajo del label 
               >
                 <Select>
                   {regimenfiscal.map((regimen) => (
