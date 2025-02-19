@@ -139,7 +139,6 @@ const EditarCliente = () => {
             <Form.Item
               label="Título:"
               name="titulo"
-              rules={[{ required: true, message: "Por favor selecciona un título" }]}
             >
               <Select placeholder="Selecciona un título">
                 {titulos.map((titulo) => (
