@@ -33,10 +33,10 @@ const PreCotizacionData = () => {
   }, []);
 
   // Función para eliminar una pre-cotización
-  const handleDelete = (id) => {
+  /*const handleDelete = (id) => {
     setPreCotizaciones(preCotizaciones.filter((item) => item.id !== id));
     message.success("Pre-cotización eliminada");
-  };
+  };*/
 
   // Definir las columnas de la tabla
   const columns = [

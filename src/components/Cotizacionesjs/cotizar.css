@@ -7,6 +7,13 @@
      text-align: center; /* Centra horizontalmente el contenido */
      margin-top: 20px; /* Espaciado superior */
    }
+
+   .row-incompleto {
+    background-color: #ffebcc !important; /* Fondo amarillo claro */
+    /*color: #d35400 !important;  Texto naranja oscuro */
+    /*font-weight: bold;*/
+  }
+  
    
    .totals {
      margin-bottom: 20px; /* Espaciado inferior */

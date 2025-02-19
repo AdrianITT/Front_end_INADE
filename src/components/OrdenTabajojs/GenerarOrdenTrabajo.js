@@ -192,14 +192,6 @@ const GenerarOrdenTrabajo = () => {
   };
 
 
-  // Función para manejar la selección de servicio
-  const handleServicioChange = (conceptoId, value) => {
-    setServicios((prevConceptos) =>
-      prevConceptos.map((concepto) =>
-        concepto.id === conceptoId ? { ...concepto, servicio: value } : concepto
-      )
-    );
-  };
 
   // Función para manejar el cambio de cantidad o precio
   const handleInputChange = (conceptoId, field, value) => {

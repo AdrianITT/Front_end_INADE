@@ -104,16 +104,23 @@ const Cotizar = () => {
         const empresa = empresasMap[cliente.empresa] || {};
         const moneda = monedasMap[cot.tipoMoneda] || {};
 
+      // 🔹 Verificar si hay datos incompletos en cliente o empresa
+      const clienteIncompleto = !cliente.nombrePila || !cliente.apPaterno || !cliente.apMaterno || !cliente.correo;
+      const empresaIncompleta = !empresa.nombre || !empresa.rfc || !empresa.calle || !empresa.numero || !empresa.colonia;
+
         return {
           ...cot,
-          empresa: empresa.nombre || "",
-          contacto: `${cliente.nombrePila || ""} ${cliente.apPaterno || ""} ${cliente.apMaterno || ""}`.trim(),
+          empresa: empresa.nombre || "Empresa desconocida",
+          contacto: `${cliente.nombrePila || "Sin nombre"} ${cliente.apPaterno || ""} ${cliente.apMaterno || ""}`.trim(),
           moneda: moneda.codigo || "",
           estado: estadosMap[cot.estado] || "Desconocido",
+          incompleto: clienteIncompleto || empresaIncompleta, // ✅ Flag para resaltar
         };
       });
+    // 🔹 Ordenar primero los incompletos
+    const sortedCotizaciones = cotizacionesConDetalles.sort((a, b) => b.incompleto - a.incompleto);
 
-      setCotizacion(cotizacionesConDetalles);
+    setCotizacion(sortedCotizaciones);
     } catch (error) {
       console.error("Error al obtener cotizaciones y detalles:", error);
     }
@@ -209,6 +216,7 @@ const Cotizar = () => {
             className="cotizar-table"
             dataSource={dataSource}
             columns={columnsCotizaciones}
+            rowClassName={(record) => record.incompleto ? "row-incompleto" : ""}
             bordered
             pagination={{
               pageSize: 5,

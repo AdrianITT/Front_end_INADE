@@ -26,3 +26,7 @@
      margin: auto; /* Centra horizontalmente el contenedor del botón */
    }
    
+   .fila-incompleta {
+     background-color: #fff3cd !important; /* Amarillo suave */
+   }
+   

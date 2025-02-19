@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Input, Tabs, Card, Table, Row, Col, Typography, Button, Menu, Dropdown, Checkbox, Form, Alert, Modal, message, Spin, Select,Result } from "antd";
+import { Input, Tabs, Card, Table, Row, Col, Typography, Button, Menu, Dropdown, Checkbox, Form, Modal, message, Spin, Select,Result } from "antd";
 import { MailTwoTone, CopyTwoTone, EditTwoTone, CheckCircleTwoTone, FilePdfTwoTone } from "@ant-design/icons";
 import { getAllCotizacion, updateCotizacion } from "../../apis/CotizacionApi";
 import { getAllCliente } from "../../apis/ClienteApi";
@@ -30,7 +30,7 @@ const CotizacionDetalles = () => {
   const [loading, setLoading] = useState(false);
   const [tipoMoneda, setTipoMoneda] = useState({});
   const [tipoCambioDolar, setTipoCambioDolar] = useState(1);
-  const [iva, setIva] = useState({});
+  const [, setIva] = useState({});
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [form] = Form.useForm();
   const [tipoMonedaOptions, setTipoMonedaOptions] = useState([]);

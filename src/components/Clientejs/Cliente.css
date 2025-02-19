@@ -7,6 +7,11 @@
   box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); /* Sombras suaves */
   border-radius: 8px; /* Bordes redondeados */
 }
+.row-incompleto {
+  background-color: #fff3cd !important; /* Color amarillo claro */
+  /* color: #856404 !important; Texto más oscuro para mejor visibilidad */
+}
+
 
 /* Estilo para el título */
 .title-center {
