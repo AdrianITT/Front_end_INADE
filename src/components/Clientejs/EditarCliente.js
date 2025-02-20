@@ -119,7 +119,6 @@ const EditarCliente = () => {
             <Form.Item
               label="Apellidos materno:"
               name="apMaterno"
-              rules={[{ required: true, message: 'Por favor ingresa los apellidos.' }]}
             >
               <Input placeholder="Ingresa Ambos apellidos del cliente" />
             </Form.Item>

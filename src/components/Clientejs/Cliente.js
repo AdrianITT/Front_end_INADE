@@ -79,7 +79,7 @@ const Cliente = () => {
       const res = await getAllCliente();
       
       const filteredClientes = res.data.map(cliente => {
-        const datosIncompletos = !cliente.nombrePila || !cliente.apPaterno || !cliente.apMaterno || !cliente.correo || !empresasMap[cliente.empresa];
+        const datosIncompletos = !cliente.nombrePila || !cliente.apPaterno || !cliente.UsoCfdi || !empresasMap[cliente.empresa];
   
         return {
           key: cliente.id,
@@ -375,7 +375,7 @@ const Cliente = () => {
               <Form.Item
                 label="Apellidos materno:"
                 name="apMaterno"
-                rules={[{ required: true, message: 'Por favor ingresa los apellidos.' }]}
+                rules={[{ message: 'Por favor ingresa los apellidos.' }]}
               >
                 <Input placeholder="Ingresa Ambos apellidos del cliente" />
               </Form.Item>

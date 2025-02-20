@@ -188,7 +188,7 @@ const EditarCotizacion = () => {
           const ivaPorcentaje = parseFloat(
             ivasData.find(iva => iva.id === ivaSeleccionado)?.porcentaje || 16
           );
-          const iva = subtotalConDescuento * (ivaPorcentaje / 100);
+          const iva = subtotalConDescuento * (ivaPorcentaje);
         
           const factorConversion = tipoMonedaSeleccionada === 2 ? parseFloat(tipoCambioDolar) || 1 : 1;
           const total = subtotalConDescuento + iva;

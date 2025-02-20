@@ -131,7 +131,7 @@ const Cotizar = () => {
         const moneda = monedasMap[cot.tipoMoneda] || {};
 
       // 🔹 Verificar si hay datos incompletos en cliente o empresa
-      const clienteIncompleto = !cliente.nombrePila || !cliente.apPaterno || !cliente.apMaterno || !cliente.correo;
+      const clienteIncompleto = !cliente.nombrePila || !cliente.apPaterno || !cliente.correo || !cliente.UsoCfdi;
       const empresaIncompleta = !empresa.nombre || !empresa.rfc || !empresa.calle || !empresa.numero || !empresa.colonia;
 
         return {
