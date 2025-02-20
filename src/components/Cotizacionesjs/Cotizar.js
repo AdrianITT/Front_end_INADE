@@ -15,8 +15,34 @@ const columnsCotizaciones = [
     key: "id",
     render: (text) => <span className="cotizacion-text">{text}</span>,
   },
-  { title: "Empresa", dataIndex: "empresa", key: "empresa" },
-  { title: "Contacto", dataIndex: "contacto", key: "contacto" },
+  { title: "Empresa", 
+    dataIndex: "empresa", 
+    key: "empresa",
+    render: (text, record) =>
+      record.incompleto ? (
+        <Link to={"/empresa"}>
+          <span className="empresa-link" style={{ color: "red", fontWeight: "bold" }}>
+            {text} (Completar)
+          </span>
+        </Link>
+      ) : (
+        <span>{text}</span>
+      ),
+    },
+  { title: "Contacto", 
+    dataIndex: "contacto", 
+    key: "contacto",
+    render: (text, record) =>
+    record.incompleto ? (
+      <Link to={"/cliente"}>
+        <span className="contacto-link" style={{ color: "red", fontWeight: "bold" }}>
+          {text} (Completar)
+        </span>
+      </Link>
+    ) : (
+      <span>{text}</span>
+    ),
+  },
   {
     title: "Solicitud",
     dataIndex: "fechaSolicitud",

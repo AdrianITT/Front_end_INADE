@@ -33,6 +33,7 @@ import ProtectedRoute from "./components/ProtectedRoute"; // Importa el componen
 import PreCotizacion from "./components/preCotizacion/PreCotizacion";
 import CrearPreCotizacion from "./components/preCotizacion/CrearpreCotizacion";
 import PreCotizacionDetalles from "./components/preCotizacion/preCotizacionDetalles";
+import EditarCotizacion from "./components/Cotizacionesjs/EditarCotizacion";
 
 
 // Hook para cambiar el título de la pestaña
@@ -121,6 +122,7 @@ const AppRouter = () => {
           <Route path="/CrearPreCotizacion" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><CrearPreCotizacion /></ProtectedRoute>} />
           <Route path="/PreCotizacion" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><PreCotizacion/></ProtectedRoute>} />
           <Route path="/PreCotizacionDetalles/:id" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><PreCotizacionDetalles/></ProtectedRoute>} />
+          <Route path="/EditarCotizacion/:id" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><EditarCotizacion/></ProtectedRoute>} />
         </Route>
       </Routes>
     </Router>
