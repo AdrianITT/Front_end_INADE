@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { Input, Tabs, Card, Table, Row, Col, Typography, Button, Menu, Dropdown, Checkbox, Form, Modal, message, Spin, Select,Result } from "antd";
 import { MailTwoTone, CopyTwoTone, EditTwoTone, CheckCircleTwoTone, FilePdfTwoTone } from "@ant-design/icons";
 import { getAllCotizacion, updateCotizacion } from "../../apis/CotizacionApi";
@@ -38,6 +38,7 @@ const CotizacionDetalles = () => {
   const [isResultModalVisible, setIsResultModalVisible] = useState(false);
   const [resultMessage, setResultMessage] = useState("");
   const [resultStatus, setResultStatus] = useState("success"); // "success" o "error"
+  const navigate=useNavigate();
 
   useEffect(() => {
     const fetchTipoMoneda = async () => {
@@ -156,13 +157,14 @@ const CotizacionDetalles = () => {
   };
 
   const showEditModal = () => {
-    form.setFieldsValue({
+    navigate(`/EditarCotizacion/${id}`);
+    /*form.setFieldsValue({
       fechaSolicitud: cotizacionInfo?.fechaSolicitud,
       fechaCaducidad: cotizacionInfo?.fechaCaducidad,
       iva: cotizacionInfo?.iva,
       tipoMoneda: cotizacionInfo?.tipoMoneda,
     });
-    setIsEditModalVisible(true);
+    setIsEditModalVisible(true);*/
   };
 
   const handleEditOk = async () => {
