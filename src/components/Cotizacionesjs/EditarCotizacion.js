@@ -4,7 +4,7 @@ import { Form, Input, Button, Row, Col, Select, Checkbox, Divider, message, Date
 import dayjs from "dayjs";
 import { useParams, useNavigate } from "react-router-dom";
 import { getCotizacionById, updateCotizacion } from "../../apis/CotizacionApi";
-import { getAllCotizacionServicio, updateCotizacionServicio } from "../../apis/CotizacionServicioApi";
+import { getAllCotizacionServicio, updateCotizacionServicio, createCotizacionServicio } from "../../apis/CotizacionServicioApi";
 import { getAllTipoMoneda } from "../../apis/Moneda";
 import { getAllIva } from "../../apis/ivaApi";
 import { getAllServicio, getServicioById } from "../../apis/ServiciosApi";
@@ -86,6 +86,7 @@ const EditarCotizacion = () => {
                     precio: parseFloat(servicioResponse.data.precio) || 0,
                     descripcion: record ? record.descripcion : "",
                     cotizacion: record.cotizacion,
+                    precioEditable: record ? record.precio : parseFloat(servicioResponse.data.precio) || 0,
                   };
                 })
               );
@@ -176,7 +177,7 @@ const EditarCotizacion = () => {
           }
         
           const subtotal = conceptos.reduce((acc, curr) => {
-            const precio = parseFloat(curr.precio) || 0;
+            const precio = parseFloat(curr.precioEditable) || 0;
             const cantidad = parseInt(curr.cantidad, 10) || 0;
             return acc + cantidad * precio;
           }, 0);
@@ -259,63 +260,132 @@ const EditarCotizacion = () => {
    
      // Guardar cambios
      const handleSubmit = async () => {
-          try {
-              // ✅ 1. Crear objeto para actualizar la cotización
-              const cotizacionActualizada = {
-                    fechaSolicitud: fechaSolicitada ? fechaSolicitada.format("YYYY-MM-DD") : null,
-                    fechaCaducidad: fechaCaducidad ? fechaCaducidad.format("YYYY-MM-DD") : null,
-                    tipoMoneda: tipoMonedaSeleccionada,
-                    denominacion: tiposMonedaData.find(moneda => moneda.id === tipoMonedaSeleccionada)?.codigo,
-                    iva: ivaSeleccionado || cotizacionData.iva,
-                    descuento: descuento !== undefined ? descuento : cotizacionData.descuento,
-                    estado: cotizacionData.estado, // Mantener el estado actual
-                    cliente: cotizacionData.cliente, // Mantener el cliente actual
-                    servicios: conceptos.map(concepto => concepto.id), // Lista de IDs de servicios
-              };
-      
-              console.log("Datos de cotización a actualizar:", cotizacionActualizada);
-      
-              // ✅ 2. Llamar a la API para actualizar la cotización
-              await updateCotizacion(id, cotizacionActualizada);
-      
-              // ✅ 3. Iterar sobre los conceptos para actualizar cada servicio relacionado con la cotización
-              const updateServiciosPromises = conceptos.map(async (concepto) => {
-               const data = {
-                   cantidad: concepto.cantidad,
-                   precio: concepto.precio,
-                   descripcion: concepto.descripcion,
-                   servicio: concepto.servicio,
-                   cotizacion: id,
-               };
-
-               console.log(`Enviando actualización de servicio (ID: ${concepto.id}):`, data);
-               try {
-                    const response = await updateCotizacionServicio(concepto.id, data);
-                    return response;
-                } catch (error) {
-                    console.error(`Error en actualización de servicio ${concepto.id}:`, error.response?.data || error.message);
-                    throw error;
-                }
-            });
-              
-      
-              // ✅ 4. Ejecutar todas las actualizaciones de servicios
-              const updateServiciosResults =await Promise.allSettled(updateServiciosPromises);
-
-              updateServiciosResults.forEach((result, index) => {
-               if (result.status === "rejected") {
-                   console.error(`Error al actualizar concepto ${conceptos[index].id}:`, result.reason);
-               }
-           });
-      
-              // ✅ 5. Mostrar mensaje de éxito y cerrar modal
-              message.success("Cotización actualizada correctamente");
-              setIsModalVisible(true);
-          } catch (error) {
-              console.error("Error al actualizar la cotización", error);
-              message.error("Error al actualizar la cotización");
+      try {
+        // 1. Crear objeto con los datos de la cotización
+        const cotizacionActualizada = {
+          fechaSolicitud: fechaSolicitada ? fechaSolicitada.format("YYYY-MM-DD") : null,
+          fechaCaducidad: fechaCaducidad ? fechaCaducidad.format("YYYY-MM-DD") : null,
+          tipoMoneda: tipoMonedaSeleccionada,
+          denominacion: tiposMonedaData.find(moneda => moneda.id === tipoMonedaSeleccionada)?.codigo,
+          iva: ivaSeleccionado || cotizacionData.iva,
+          descuento: descuento !== undefined ? descuento : cotizacionData.descuento,
+          estado: cotizacionData.estado,
+          cliente: cotizacionData.cliente,
+          cotizacion: id,
+        };
+    
+        console.log("Datos de cotización a actualizar:", cotizacionActualizada);
+    
+        // 2. Actualizar la cotización en la API
+        await updateCotizacion(id, cotizacionActualizada);
+    
+        // 3. Dividir servicios en existentes y nuevos
+        const serviciosExistentes = [];
+        const nuevosServicios = [];
+    
+        // Verificar la estructura de `cotizacionData.servicios`
+        console.log("Estructura de cotizacionData.servicios:", cotizacionData.servicios);
+    
+        // Convertir `cotizacionData.servicios` en un array si es un objeto
+        const serviciosArray = Array.isArray(cotizacionData.servicios)
+          ? cotizacionData.servicios
+          : Object.values(cotizacionData.servicios);
+    
+        // Obtener los IDs de los servicios que ya existen en la cotización
+        const idsServiciosEnCotizacion = serviciosArray.map((s) => parseInt(s, 10));
+        console.log("IDs de servicios en la cotización:", idsServiciosEnCotizacion);
+    
+        conceptos.forEach((concepto) => {
+          const servicioId = parseInt(concepto.servicio, 10);
+          const servicioYaEnCotizacion = idsServiciosEnCotizacion.includes(servicioId);
+        
+          if (servicioYaEnCotizacion) {
+            // Este servicio ya existe en la cotización
+            serviciosExistentes.push(concepto);
+          } else {
+            // Es un servicio nuevo que no está en la cotización
+            nuevosServicios.push(concepto);
           }
-      };
+        });
+    
+        console.log("Servicios existentes a actualizar:", serviciosExistentes);
+        console.log("Nuevos servicios a crear:", nuevosServicios);
+    
+        // 4. Actualizar solo `cantidad` y `precioEditable` para servicios existentes
+        const updateServiciosPromises = serviciosExistentes.map(async (concepto) => {
+          if (!concepto.id) {
+            console.error(`❌ El servicio con ID ${concepto.id} no existe en la BD`);
+            return;
+          }
+    
+          const data = {
+            id: concepto.id, // Incluir el ID de `CotizacionServicio`
+            cantidad: parseInt(concepto.cantidad, 10), // Actualizar cantidad
+            precio: parseFloat(concepto.precioEditable), // Actualizar precioEditable
+            servicio: parseInt(concepto.servicio, 10), // Incluir el ID del servicio
+            descripcion: concepto.descripcion, // Incluir la descripción
+            cotizacion: parseInt(id, 10), // Incluir el ID de la cotización
+          };
+    
+          try {
+            console.log(`🔹 Actualizando servicio existente (ID: ${concepto.id})...`);
+            console.log("Datos a enviar:", data); // Depuración: Verificar los datos enviados
+            return await updateCotizacionServicio(concepto.id, data);
+          } catch (error) {
+            console.error(`❌ Error al actualizar servicio ${concepto.id}:`, error.response?.data || error.message);
+            throw error;
+          }
+        });
+    
+        // 5. Ejecutar todas las actualizaciones
+        const updateServiciosResults = await Promise.allSettled(updateServiciosPromises);
+
+        updateServiciosResults.forEach((result, index) => {
+          if (result.status === "rejected") {
+            console.error(`Error al actualizar servicio ${index + 1}:`, result.reason);
+          }
+        });
+        
+        // 6. Crear los nuevos servicios en la tabla CotizacionServicio
+        if (nuevosServicios.length > 0) {
+          try {
+            // Prepara promesas de creación
+            const createServiciosPromises = nuevosServicios.map((concepto) => {
+              const data = {
+                cantidad: parseInt(concepto.cantidad, 10),
+                precio: parseFloat(concepto.precioEditable),
+                servicio: parseInt(concepto.servicio, 10),
+                descripcion: concepto.descripcion,
+                cotizacion: parseInt(id, 10), // el ID de la cotización
+              };
+              return createCotizacionServicio(data);
+            });
+        
+            // Ejecuta las promesas de creación
+            const createServiciosResults = await Promise.allSettled(createServiciosPromises);
+        
+            createServiciosResults.forEach((result, index) => {
+              if (result.status === "rejected") {
+                console.error(`Error al crear el servicio nuevo ${index + 1}:`, result.reason);
+              } else {
+                console.log("Servicio nuevo creado con éxito:", result.value?.data);
+              }
+            });
+          } catch (error) {
+            console.error("Error al crear los nuevos servicios:", error);
+            message.error("Error al crear los nuevos servicios");
+          }
+        }
+    
+        // 6. Mostrar mensaje de éxito
+        message.success("Cotización actualizada correctamente");
+        setIsModalVisible(true);
+      } catch (error) {
+        console.error("Error al actualizar la cotización", error);
+        message.error("Error al actualizar la cotización");
+      }
+    };
+      
       
      useEffect(() => {
           console.log("Estado de conceptos después de la actualización: =>", conceptos);
@@ -410,7 +480,6 @@ const EditarCotizacion = () => {
                               placeholder="Selecciona un servicio"
                               value={concepto.nombreServicio || undefined}
                               onChange={(value) => handleServicioChange(concepto.id, value)}
-                              disabled={true}
                               >
                               {obtenerServiciosDisponibles(concepto.id).map((servicio) => (
                                    <Select.Option key={servicio.id} value={servicio.id}>
@@ -459,17 +528,17 @@ const EditarCotizacion = () => {
                              <Input
                                type="number"
                                min="0"
-                               value={concepto.precio}
-                               onChange={(e) => handleInputChange(concepto.id, "precio", parseFloat(e.target.value))}
+                               value={concepto.precioEditable}
+                               onChange={(e) => handleInputChange(concepto.id, "precioEditable", parseFloat(e.target.value))}
                              />
                            </Form.Item>
                          </Col>
                        </Row>
                      </Card></div>
                    ))}
-                   {/* <Button type="primary" onClick={handleAddConcepto} style={{ marginBottom: "16px" }}>
+                    <Button type="primary" onClick={handleAddConcepto} style={{ marginBottom: "16px" }}>
                      Añadir Concepto
-                   </Button>*/}
+                   </Button>
            
                    <div className="cotizacion-totals-buttons">
                      <div className="cotizacion-totals">
