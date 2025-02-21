@@ -168,20 +168,19 @@ const DetalleOrdenTrabajo = () => {
 
   const menu = (
     <Menu>
-      <Link to={`/detalles_cotizaciones/${cotizacionData.id}`}>
-        <Menu.Item key="1" icon={<span><RightCircleTwoTone /></span>}>
-          Ir a cotización
-        </Menu.Item>
-      </Link>
-      <Link to={`/CrearFactura/${orderId}`}>
-        <Menu.Item key="2" icon={<span><FileTextTwoTone /></span>}>
-          detalles de Facturar
-        </Menu.Item>
-      </Link>
-      <Menu.Item key="3" icon={<span><FilePdfTwoTone /></span>} onClick={handleDownloadPDF}>
+      <Menu.Item key="1" icon={<RightCircleTwoTone />}>
+        <Link to={`/detalles_cotizaciones/${cotizacionData.id}`}>Ir a cotización</Link>
+      </Menu.Item>
+
+      <Menu.Item key="2" icon={<FileTextTwoTone />}>
+        <Link to={`/CrearFactura/${orderId}`}>Detalles de Facturar</Link>
+      </Menu.Item>
+
+      <Menu.Item key="3" icon={<FilePdfTwoTone />} onClick={handleDownloadPDF}>
         Ver PDF
       </Menu.Item>
     </Menu>
+
   );
 
   return (

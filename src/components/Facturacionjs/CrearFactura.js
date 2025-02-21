@@ -230,8 +230,9 @@ const CrearFactura = () => {
   // Función para obtener los Servicios de la Orden de Trabajo
   const obtenerServicios = async () => {
       try {
-          const response = await getAllServicio;
+          const response = await getAllServicio();
           setServiciosList(response.data);
+          console.log("Servicios:", response.data);
       } catch (error) {
           console.error("Error al obtener los Servicios", error);
           message.error("Error al obtener los Servicios.");
@@ -252,17 +253,27 @@ const CrearFactura = () => {
       const cotizacionServiciosFiltrados = responseCotizacionServicio.data.filter(
         (cotiServ) => cotiServ.cotizacion === cotizacionId
       );
-      
-      // Combinar la información: por cada servicio de la orden, se busca el registro correspondiente en la cotización
+      // 🟢 Asegurar que `serviciosList` tenga datos antes de usarlo
+      let listaServicios = serviciosList;
+      if (listaServicios.length === 0) {
+          const responseServicios = await getAllServicio();
+          listaServicios = responseServicios.data;
+          setServiciosList(responseServicios.data); // Guardar en el estado
+      }
+
+      // 🟢 Combinar información: Agregar `nombreServicio` correctamente
       const serviciosRelacionados = ordenServicios.map((servicio) => {
-        const cotizacionServicio = cotizacionServiciosFiltrados.find(
-          (cotiServ) => cotiServ.servicio === servicio.servicio
-        );
-        return {
-          ...servicio,
-          // Se utiliza el precio de la cotización; si no se encuentra, se mantiene el que ya estaba (como fallback)
-          precio: cotizacionServicio ? cotizacionServicio.precio : servicio.precio,
-        };
+          const cotizacionServicio = cotizacionServiciosFiltrados.find(
+              (cotiServ) => cotiServ.servicio === servicio.servicio
+          );
+
+          const servicioInfo = listaServicios.find((s) => s.id === servicio.servicio);
+
+          return {
+              ...servicio,
+              precio: cotizacionServicio ? cotizacionServicio.precio : servicio.precio,
+              nombreServicio: servicioInfo ? servicioInfo.nombreServicio : "Sin nombre",
+          };
       });
       
       setOrdenTrabajoServicios(serviciosRelacionados);
