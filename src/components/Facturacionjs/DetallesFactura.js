@@ -770,7 +770,7 @@ const handDuoModal=()=>{
             title={<p style={{ color: resultStatus === "success" ? "green" : "red" }}>{resultMessage}</p>}
             />
         </Modal>
-
+            {/* 
         <Modal
           title={resultStatus === "success" ? "Éxito" : "Error"}
           visible={isResultModalVisible}
@@ -785,7 +785,7 @@ const handDuoModal=()=>{
             status={resultStatus}
             title={resultMessage}
           />
-        </Modal>
+        </Modal>*/}
     </div>
     </Spin>
   );
