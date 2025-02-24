@@ -237,7 +237,7 @@ const EditarCotizacion = () => {
                     ...concepto,
                     servicio: servicioSeleccionado.id,
                     precio: servicioSeleccionado.precio || 0, // ✅ Asignamos el precio correcto
-                    precioFinal: servicioSeleccionado.precio || 0, // ✅ También en precioFinal
+                    precioEditable: servicioSeleccionado.precio || 0, // ✅ También en precioFinal
                     nombreServicio: servicioSeleccionado.nombreServicio, // ✅ Mantenemos el nombre
                   }
                 : concepto
@@ -553,8 +553,8 @@ const EditarCotizacion = () => {
          <Modal
            title="Información"
            open={isModalVisible}
-           onOk={() => navigate("/cotizar")}
-           onCancel={() => navigate("/cotizar")}
+           onOk={() => navigate(`/detalles_cotizaciones/${id}/`)}
+           onCancel={() => navigate(`/detalles_cotizaciones/${id}/`)}
            okText="Cerrar"
          >
            <Result status="success" title="¡Se actualizó exitosamente!" />
