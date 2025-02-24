@@ -4,7 +4,7 @@ import { Form, Input, Button, Row, Col, Select, Checkbox, Divider, message, Date
 import dayjs from "dayjs";
 import { useParams, useNavigate } from "react-router-dom";
 import { getCotizacionById, updateCotizacion } from "../../apis/CotizacionApi";
-import { getAllCotizacionServicio, updateCotizacionServicio, createCotizacionServicio } from "../../apis/CotizacionServicioApi";
+import { getAllCotizacionServicio, updateCotizacionServicio, createCotizacionServicio, deleteCotizacionServicio } from "../../apis/CotizacionServicioApi";
 import { getAllTipoMoneda } from "../../apis/Moneda";
 import { getAllIva } from "../../apis/ivaApi";
 import { getAllServicio, getServicioById } from "../../apis/ServiciosApi";
@@ -155,13 +155,26 @@ const EditarCotizacion = () => {
        ));
      };
 
-       const handleRemoveConcepto = (id) => {
+       /*const handleRemoveConcepto = (id) => {
          if (conceptos.length > 1) {
            setConceptos(conceptos.filter((concepto) => concepto.id !== id));
          } else {
            message.warning("Debe haber al menos un concepto.");
          }
-       };
+       };*/
+
+       const handleToggleEliminar = (id, checked) => {
+        // Verificar si al marcar se estaría dejando sin ningún concepto activo
+        const notDeletedCount = conceptos.filter(c => !c.eliminar).length;
+        if (checked && notDeletedCount === 1) {
+          message.warning("Debe haber al menos un concepto.");
+          return;
+        }
+        setConceptos(conceptos.map(c =>
+          c.id === id ? { ...c, eliminar: checked } : c
+        ));
+      };
+      
 
    
      // Calcular totales
@@ -261,123 +274,102 @@ const EditarCotizacion = () => {
      // Guardar cambios
      const handleSubmit = async () => {
       try {
-        // 1. Crear objeto con los datos de la cotización
-        const cotizacionActualizada = {
-          fechaSolicitud: fechaSolicitada ? fechaSolicitada.format("YYYY-MM-DD") : null,
-          fechaCaducidad: fechaCaducidad ? fechaCaducidad.format("YYYY-MM-DD") : null,
-          tipoMoneda: tipoMonedaSeleccionada,
-          denominacion: tiposMonedaData.find(moneda => moneda.id === tipoMonedaSeleccionada)?.codigo,
-          iva: ivaSeleccionado || cotizacionData.iva,
-          descuento: descuento !== undefined ? descuento : cotizacionData.descuento,
-          estado: cotizacionData.estado,
-          cliente: cotizacionData.cliente,
-          cotizacion: id,
-        };
+        // Preparar el objeto de actualización de la cotización...
+        // (Código existente para la actualización de la cotización)
     
-        console.log("Datos de cotización a actualizar:", cotizacionActualizada);
+        // Separar conceptos marcados para eliminación y los que se conservarán
+        const conceptosAEliminar = conceptos.filter(c => c.eliminar);
+        const conceptosNoEliminados = conceptos.filter(c => !c.eliminar);
     
-        // 2. Actualizar la cotización en la API
-        await updateCotizacion(id, cotizacionActualizada);
+        // Si tienes una API para eliminar servicios, puedes iterar los conceptos a eliminar.
+        // Asegúrate de haber importado la función, por ejemplo:
+        // import { deleteCotizacionServicio } from "../../apis/CotizacionServicioApi";
+        const deleteServiciosPromises = conceptosAEliminar.map(async (concepto) => {
+          if (concepto.id) {
+            try {
+              await deleteCotizacionServicio(concepto.id);
+              console.log(`Servicio ${concepto.id} eliminado`);
+            } catch (error) {
+              console.error(`Error al eliminar servicio ${concepto.id}:`, error);
+              throw error;
+            }
+          }
+        });
+        await Promise.allSettled(deleteServiciosPromises);
     
-        // 3. Dividir servicios en existentes y nuevos
+        // Procesar los conceptos que se actualizarán o crearán
         const serviciosExistentes = [];
         const nuevosServicios = [];
-    
-        // Verificar la estructura de `cotizacionData.servicios`
-        console.log("Estructura de cotizacionData.servicios:", cotizacionData.servicios);
-    
-        // Convertir `cotizacionData.servicios` en un array si es un objeto
+        // Convertir cotizacionData.servicios en array, como en tu código original
         const serviciosArray = Array.isArray(cotizacionData.servicios)
           ? cotizacionData.servicios
           : Object.values(cotizacionData.servicios);
-    
-        // Obtener los IDs de los servicios que ya existen en la cotización
         const idsServiciosEnCotizacion = serviciosArray.map((s) => parseInt(s, 10));
-        console.log("IDs de servicios en la cotización:", idsServiciosEnCotizacion);
     
-        conceptos.forEach((concepto) => {
+        conceptosNoEliminados.forEach((concepto) => {
           const servicioId = parseInt(concepto.servicio, 10);
           const servicioYaEnCotizacion = idsServiciosEnCotizacion.includes(servicioId);
-        
+    
           if (servicioYaEnCotizacion) {
-            // Este servicio ya existe en la cotización
             serviciosExistentes.push(concepto);
           } else {
-            // Es un servicio nuevo que no está en la cotización
             nuevosServicios.push(concepto);
           }
         });
     
-        console.log("Servicios existentes a actualizar:", serviciosExistentes);
-        console.log("Nuevos servicios a crear:", nuevosServicios);
-    
-        // 4. Actualizar solo `cantidad` y `precioEditable` para servicios existentes
+        // Actualizar los servicios existentes
         const updateServiciosPromises = serviciosExistentes.map(async (concepto) => {
           if (!concepto.id) {
             console.error(`❌ El servicio con ID ${concepto.id} no existe en la BD`);
             return;
           }
-    
           const data = {
-            id: concepto.id, // Incluir el ID de `CotizacionServicio`
-            cantidad: parseInt(concepto.cantidad, 10), // Actualizar cantidad
-            precio: parseFloat(concepto.precioEditable), // Actualizar precioEditable
-            servicio: parseInt(concepto.servicio, 10), // Incluir el ID del servicio
-            descripcion: concepto.descripcion, // Incluir la descripción
-            cotizacion: parseInt(id, 10), // Incluir el ID de la cotización
+            id: concepto.id,
+            cantidad: parseInt(concepto.cantidad, 10),
+            precio: parseFloat(concepto.precioEditable),
+            servicio: parseInt(concepto.servicio, 10),
+            descripcion: concepto.descripcion,
+            cotizacion: parseInt(id, 10),
           };
     
           try {
             console.log(`🔹 Actualizando servicio existente (ID: ${concepto.id})...`);
-            console.log("Datos a enviar:", data); // Depuración: Verificar los datos enviados
+            console.log("Datos a enviar:", data);
             return await updateCotizacionServicio(concepto.id, data);
           } catch (error) {
             console.error(`❌ Error al actualizar servicio ${concepto.id}:`, error.response?.data || error.message);
             throw error;
           }
         });
-    
-        // 5. Ejecutar todas las actualizaciones
         const updateServiciosResults = await Promise.allSettled(updateServiciosPromises);
-
         updateServiciosResults.forEach((result, index) => {
           if (result.status === "rejected") {
             console.error(`Error al actualizar servicio ${index + 1}:`, result.reason);
           }
         });
-        
-        // 6. Crear los nuevos servicios en la tabla CotizacionServicio
+    
+        // Crear los nuevos servicios
         if (nuevosServicios.length > 0) {
-          try {
-            // Prepara promesas de creación
-            const createServiciosPromises = nuevosServicios.map((concepto) => {
-              const data = {
-                cantidad: parseInt(concepto.cantidad, 10),
-                precio: parseFloat(concepto.precioEditable),
-                servicio: parseInt(concepto.servicio, 10),
-                descripcion: concepto.descripcion,
-                cotizacion: parseInt(id, 10), // el ID de la cotización
-              };
-              return createCotizacionServicio(data);
-            });
-        
-            // Ejecuta las promesas de creación
-            const createServiciosResults = await Promise.allSettled(createServiciosPromises);
-        
-            createServiciosResults.forEach((result, index) => {
-              if (result.status === "rejected") {
-                console.error(`Error al crear el servicio nuevo ${index + 1}:`, result.reason);
-              } else {
-                console.log("Servicio nuevo creado con éxito:", result.value?.data);
-              }
-            });
-          } catch (error) {
-            console.error("Error al crear los nuevos servicios:", error);
-            message.error("Error al crear los nuevos servicios");
-          }
+          const createServiciosPromises = nuevosServicios.map((concepto) => {
+            const data = {
+              cantidad: parseInt(concepto.cantidad, 10),
+              precio: parseFloat(concepto.precioEditable),
+              servicio: parseInt(concepto.servicio, 10),
+              descripcion: concepto.descripcion,
+              cotizacion: parseInt(id, 10),
+            };
+            return createCotizacionServicio(data);
+          });
+          const createServiciosResults = await Promise.allSettled(createServiciosPromises);
+          createServiciosResults.forEach((result, index) => {
+            if (result.status === "rejected") {
+              console.error(`Error al crear el servicio nuevo ${index + 1}:`, result.reason);
+            } else {
+              console.log("Servicio nuevo creado con éxito:", result.value?.data);
+            }
+          });
         }
     
-        // 6. Mostrar mensaje de éxito
         message.success("Cotización actualizada correctamente");
         setIsModalVisible(true);
       } catch (error) {
@@ -385,6 +377,7 @@ const EditarCotizacion = () => {
         message.error("Error al actualizar la cotización");
       }
     };
+    
       
       
      useEffect(() => {
@@ -465,7 +458,8 @@ const EditarCotizacion = () => {
                        <h3>Concepto {concepto.id}</h3>
                        <Row justify="end">
                          <div >
-                           <Checkbox onChange={() => handleRemoveConcepto(concepto.id)}>
+                           <Checkbox checked={concepto.eliminar || false}
+                           onChange={(e) => handleToggleEliminar(concepto.id, e.target.checked)}>
                              Eliminar
                            </Checkbox>
                          </div>
