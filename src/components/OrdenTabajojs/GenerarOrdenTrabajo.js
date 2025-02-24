@@ -383,19 +383,21 @@ const GenerarOrdenTrabajo = () => {
               <Row gutter={16}>
                 <Col span={24}>
                 <Form.Item
-                    name={['servicios', index, 'descripcion']}
-                    label="Descripción"
-                    rules={[{ required: true, message: "Por favor ingresa la descripción." }]}
-                    initialValue={concepto.descripcion} 
-                  >
-                    <TextArea
-                      placeholder="Escribe aquí la descripción del servicio"
-                      autoSize={{ minRows: 2, maxRows: 6 }}
-                      rows={2}
-                      value={concepto.descripcion} //Muestra la descripción correcta
-                      readOnly={true}
-                    />
-                  </Form.Item>
+                  name={['servicios', index, 'descripcion']}
+                  label="Descripción"
+                  rules={[{ required: true, message: "Por favor ingresa la descripción." }]}
+                  initialValue={concepto.descripcion} 
+                >
+                  <TextArea
+                    placeholder="Escribe aquí la descripción del servicio"
+                    autoSize={{ minRows: 2, maxRows: 6 }}
+                    rows={2}
+                    value={concepto.descripcion} // Muestra la descripción actual
+                    onChange={(e) =>
+                      handleInputChange(concepto.id, "descripcion", e.target.value)
+                    }
+                  />
+                </Form.Item>
                 </Col>
               </Row>
             </Card>

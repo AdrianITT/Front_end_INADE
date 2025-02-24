@@ -156,7 +156,7 @@ const Cliente = () => {
       UsoCfdi: formValues.UsoCfdi || 3,
     };
 
-    if (!clienteData.nombrePila || !clienteData.apPaterno || !clienteData.apMaterno || !clienteData.correo || !clienteData.empresa) {
+    if (!clienteData.nombrePila || !clienteData.apPaterno || !clienteData.correo || !clienteData.empresa) {
       console.error("Faltan campos obligatorios para crear el cliente");
       return null;
     }
