@@ -290,9 +290,9 @@ const CotizacionDetalles = () => {
       <Menu.Item key="1" icon={<MailTwoTone />} onClick={showEmailModal}>
         Enviar por correo
       </Menu.Item>
-      <Menu.Item key="2" icon={<CopyTwoTone />}>
+     {/* <Menu.Item key="2" icon={<CopyTwoTone />}>
         Duplicar
-      </Menu.Item>
+      </Menu.Item> */}
       <Menu.Item key="3" icon={<EditTwoTone />} onClick={showEditModal}>
         Editar
       </Menu.Item>
