@@ -23,3 +23,5 @@ export const updateCotizacionServicio = async (id, data) => {
          throw error;
      }
  };
+
+ export const deleteCotizacionServicio=(id)=>CotizacionServicio_Api.delete(`/${id}/`);
