@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { Table, Button, Card, Dropdown, Menu, message } from "antd";
-import { RightCircleTwoTone, FileTextTwoTone, FilePdfTwoTone, MailTwoTone } from "@ant-design/icons";
-import { Link, useParams } from "react-router-dom";
+import { Table, Button, Card, Dropdown, Menu, message, Modal } from "antd";
+import { RightCircleTwoTone, FileTextTwoTone, FilePdfTwoTone, MailTwoTone, DeleteOutlined } from "@ant-design/icons";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import "./cssOrdenTrabajo/DetallesOrdenTrabajo.css"; // Asegúrate de importar el archivo CSS
-import { getOrdenTrabajoById } from "../../apis/OrdenTrabajoApi";
+import { getOrdenTrabajoById, deleteOrdenTrabajo } from "../../apis/OrdenTrabajoApi";
 import { getClienteById } from "../../apis/ClienteApi";
 import { getEmpresaById } from "../../apis/EmpresaApi";
 import { getServicioById } from "../../apis/ServiciosApi";
@@ -16,6 +16,7 @@ import { getEstadoById } from "../../apis/EstadoApi";
 
 const DetalleOrdenTrabajo = () => {
   const { orderId } = useParams();
+  const navigate = useNavigate();
 
   // Estados para almacenar cada parte de la información
   const [orderHeader, setOrderHeader] = useState(null); // Datos de la tabla "ordentrabajo"
@@ -28,6 +29,7 @@ const DetalleOrdenTrabajo = () => {
   const [empresa, setEmpresa] = useState(null);
   const [estadoEmpresa, setEstadoEmpresa] = useState(null);
   const [estadoOrden, setEstadoOrden] = useState(null);
+  const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
 
 
   useEffect(() => {
@@ -166,6 +168,30 @@ const DetalleOrdenTrabajo = () => {
     }
   };
 
+    // Función para mostrar el modal de eliminación
+    const showDeleteModal = () => {
+      setIsDeleteModalVisible(true);
+    };
+
+      // Función para cancelar la eliminación
+  const handleCancelDelete = () => {
+    setIsDeleteModalVisible(false);
+  };
+
+  // Función para confirmar la eliminación
+  const handleConfirmDelete = async () => {
+    try {
+      await deleteOrdenTrabajo(orderId);
+      message.success("Orden de trabajo eliminada exitosamente");
+      setIsDeleteModalVisible(false);
+      // Redirige a la lista de órdenes o a la página que desees
+      navigate("/generar_orden");
+    } catch (error) {
+      console.error("Error al eliminar la orden de trabajo:", error);
+      message.error("Hubo un error al eliminar la orden de trabajo");
+    }
+  };
+
   const menu = (
     <Menu>
       <Menu.Item key="1" icon={<RightCircleTwoTone />}>
@@ -178,6 +204,11 @@ const DetalleOrdenTrabajo = () => {
 
       <Menu.Item key="3" icon={<FilePdfTwoTone />} onClick={handleDownloadPDF}>
         Ver PDF
+      </Menu.Item>
+
+      {/* Nueva opción para eliminar la orden de trabajo */}
+      <Menu.Item key="4" icon={<DeleteOutlined />} onClick={showDeleteModal}>
+        Eliminar Orden de Trabajo
       </Menu.Item>
     </Menu>
 
@@ -222,6 +253,18 @@ const DetalleOrdenTrabajo = () => {
         pagination={false}
         rowKey={(record) => record.idServicio}// O si tu record tiene id
       />
+
+      {/* Modal de confirmación para eliminación */}
+      <Modal
+        title="Confirmar eliminación"
+        visible={isDeleteModalVisible}
+        onOk={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+        okText="Eliminar"
+        cancelText="Cancelar"
+      >
+        <p>¿Estás seguro de que deseas eliminar esta orden de trabajo?</p>
+      </Modal>
     </div>
   );
 };

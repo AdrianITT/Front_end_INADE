@@ -12,3 +12,5 @@ export const createOrdenTrabajo=(data)=>OrdenesTrabajo_Api.post('/',data);
 export const getOrdenTrabajoById = (id) => OrdenesTrabajo_Api.get(`/${id}/`);
 
 export const PDFOrdenTrabajo=(id)=>OrdenesTrabajo_Api.get(`/${id}/pdf`);
+
+export const deleteOrdenTrabajo=(id)=>OrdenesTrabajo_Api.delete(`/${id}/`);
