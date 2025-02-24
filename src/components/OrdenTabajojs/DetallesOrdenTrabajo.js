@@ -13,6 +13,7 @@ import {  getAllOrdenesTrabajoServicio } from "../../apis/OrdenTabajoServiciosAp
 import { getMetodoById } from "../../apis/MetodoApi";
 import { Api_Host } from "../../apis/api";
 import { getEstadoById } from "../../apis/EstadoApi";
+import { Color } from "antd/es/color-picker";
 
 const DetalleOrdenTrabajo = () => {
   const { orderId } = useParams();
@@ -207,7 +208,7 @@ const DetalleOrdenTrabajo = () => {
       </Menu.Item>
 
       {/* Nueva opción para eliminar la orden de trabajo */}
-      <Menu.Item key="4" icon={<DeleteOutlined />} onClick={showDeleteModal}>
+      <Menu.Item key="4" icon={<DeleteOutlined style={{ color: 'red' }}/>} onClick={showDeleteModal}>
         Eliminar Orden de Trabajo
       </Menu.Item>
     </Menu>
