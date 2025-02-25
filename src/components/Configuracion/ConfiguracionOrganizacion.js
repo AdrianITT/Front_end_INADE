@@ -13,6 +13,7 @@ import {ObtenerOrganizacion} from "../obtenerOrganizacion/ObtenerOrganizacion";
 import { updateInfoSistema,getInfoSistemaById } from "../../apis/InfoSistemaApi";
 import { getAllTipoMoneda } from "../../apis/Moneda";
 import { getAllIva } from "../../apis/ivaApi";
+import { Api_Host } from "../../apis/api";
 
 
 const { TextArea } = Input;
@@ -470,6 +471,11 @@ const showErrorModal = (error) => {
   setIsErrorModalVisible(true);
 };
 
+const CotizacionPureva=()=>{
+  const user_id = localStorage.getItem("user_id");
+  window.open(`${Api_Host.defaults.baseURL}/cotizacion/1/pdf/?user_id=${user_id}`);
+}
+
   
 
   const renderOrganizacion = () => (
@@ -658,7 +664,7 @@ const showErrorModal = (error) => {
              <Button type="primary" htmlType="submit" loading={loading} style={{ marginRight: "8px" }}>
                Guardar Cotización
              </Button>
-             <Button type="default">Generar Cotización de Prueba Formato Actual</Button>
+             <Button type="submit" onClick={CotizacionPureva}>Generar Cotización de Prueba Formato Actual</Button>
            </div>
          </Form>
        </div>

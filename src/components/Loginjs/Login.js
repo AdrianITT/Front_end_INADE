@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { Form, Input, Button, Alert, Card, Checkbox } from "antd";
-import { Link, useNavigate } from "react-router-dom";
+import { Form, Input, Button, Alert, Card} from "antd";
+import { useNavigate } from "react-router-dom";
 import Login_Api from "../../apis/LoginApi";
 import "./Login.css";
 

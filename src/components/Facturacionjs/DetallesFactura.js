@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Card, Row, Col, Button, Table, Tabs, Dropdown, Menu, Modal, Select, Input, Form, DatePicker, Flex, Alert, Checkbox,message,Descriptions, Result, Spin  } from "antd";
 import { useParams } from "react-router-dom";
-import{FileTextTwoTone,MailTwoTone,FilePdfTwoTone,CloseCircleTwoTone} from "@ant-design/icons";
+import{FileTextTwoTone,MailTwoTone,FilePdfTwoTone,CloseCircleTwoTone, FileAddTwoTone} from "@ant-design/icons";
 import { getFacturaById, createPDFfactura } from "../../apis/FacturaApi";
 import { getAllFormaPago } from "../../apis/FormaPagoApi";
 import { getAllMetodopago } from "../../apis/MetodoPagoApi";
@@ -11,6 +11,7 @@ import { getTipoMonedaById } from "../../apis/Moneda";
 import { getClienteById } from "../../apis/ClienteApi";
 import { getEmpresaById } from "../../apis/EmpresaApi";
 import { Api_Host } from "../../apis/api";
+import PaymentCards from "../Facturacionjs/FacturaPagos"
 //import axios from "axios";
 import { getAllOrdenesTrabajoServicio } from "../../apis/OrdenTabajoServiciosApi";
 import { getAllCotizacionServicio } from "../../apis/CotizacionServicioApi";
@@ -18,6 +19,8 @@ import {getServicioById} from "../../apis/ServiciosApi";
 import {  getAllfacturafacturama } from "../../apis/FacturaFacturamaApi";
 import { getIvaById } from "../../apis/ivaApi";
 import { getInfoSistema } from "../../apis/InfoSistemaApi";
+import ComprobantePago from "./ModalComprobantePago";
+//import MenuItem from "antd/es/menu/MenuItem";
 
 
 const { Option } = Select;
@@ -47,6 +50,7 @@ const DetallesFactura = () => {
   const [isResultModalVisible, setIsResultModalVisible] = useState(false);
   const [resultMessage, setResultMessage] = useState("");
   const [resultStatus, setResultStatus] = useState("success"); // Puede ser "success" o "error"
+  const [modalOpen, setModalOpen] = useState(false);
   
 
   const esUSD = moneda.codigo === "USD";
@@ -85,6 +89,7 @@ const DetallesFactura = () => {
     },
   ];
 
+
   useEffect(() => {
     const fetchTipoCambio = async () => {
       try {
@@ -99,7 +104,6 @@ const DetallesFactura = () => {
       try {
         const response = await getFacturaById(id);
         if (response.data && typeof response.data === "object") {
-          console.log("📄 Datos recibidos:", response.data);
           setFactura(response.data);
           
           // Llamamos a fetchServicios pasando el ID de la orden de trabajo
@@ -563,11 +567,15 @@ const handDuoModal=()=>{
       <Menu.Item key="2" onClick={() => setVisibleCancelModal(true)} icon={<CloseCircleTwoTone />}>Cancelar factura</Menu.Item>
       <Menu.Item key="4" onClick={() => handleDownloadPDF(id)} icon={<FilePdfTwoTone />}>Descargar PDF</Menu.Item>
       <Menu.Item key="5" onClick={() => handleDownloadXML(id)}icon={<FileTextTwoTone />}>Descargar XML</Menu.Item>
+      <Menu.Item key="6" onClick={() => setModalOpen(true)} icon={<FileAddTwoTone />}>
+        Generar Comprobante de Pago
+      </Menu.Item>
     </Menu>
   );
 
 
-
+const TotalS=importeTotal;
+useEffect(() => {console.log('Importe total', TotalS)}, [TotalS]);
 
   return (
     <Spin spinning={loading}>
@@ -577,7 +585,7 @@ const handDuoModal=()=>{
         <Tabs.TabPane tab="Información" key="1">
           <Row gutter={16}>
             <Col span={16}>
-              <Card title="Info" bordered>
+              <Card title="Informacion" bordered>
                 <Row>
                   <Col span={12}>
                     <>
@@ -624,6 +632,7 @@ const handDuoModal=()=>{
                       Acciones para factura
                     </Button>
                   </Dropdown>
+                  <ComprobantePago isOpen={modalOpen} onClose={() => setModalOpen(false)} Total={importeTotal}/>
                 </div>
               )}
               <Card title="Cuenta" bordered style={{ marginTop: "20px" , padding:"40px"}}>
@@ -655,6 +664,10 @@ const handDuoModal=()=>{
             bordered
             rowKey={(record) => record.key}
           />
+        </Tabs.TabPane>
+        <Tabs.TabPane tab="Pago" key="2">
+          <p>Historial de la factura</p> 
+          <PaymentCards/> 
         </Tabs.TabPane>
       </Tabs>
 

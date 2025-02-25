@@ -1,123 +1,113 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Checkbox, Tabs, Table, Input, Form, Button, Modal, Select, Row, Col, Spin, Result } from 'antd';
-import StickyBox from 'react-sticky-box';
-import { Link, useNavigate } from "react-router-dom";
-import { ExclamationCircleOutlined, EditOutlined, CloseOutlined } from "@ant-design/icons";
-import { getAllCliente, createCliente, deleteCliente } from '../../apis/ClienteApi';
-import { getAllEmpresas, createEmpresas } from '../../apis/EmpresaApi';
-import { getAllTitulo } from '../../apis/TituloApi';
-import { getAllRegimenFiscal } from '../../apis/Regimenfiscla';
-import { getAllUsoCDFI } from '../../apis/UsocfdiApi';
-import './Cliente.css';
+// src/components/Cliente.js
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { Tabs, Input, Button, Modal, Form, Spin, Table, Checkbox, Result, Row, Col, Select } from "antd";
+import StickyBox from "react-sticky-box";
+import { useNavigate } from "react-router-dom";
+import {ExclamationCircleOutlined } from "@ant-design/icons";
+import ClienteTable from "./ClienteTable";
+import { createEmpresas } from "../../apis/EmpresaApi";
+import { useCatalogos } from "../Clientejs/useCatalogos";
+import { getAllCliente, createCliente, deleteCliente } from "../../apis/ClienteApi";
+import { getAllTitulo } from "../../apis/TituloApi";
+import "./Cliente.css";
 
 const Cliente = () => {
+  // Estados para modales y carga
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [createCompany, setCreateCompany] = useState(false);
   const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [clientes, setClientes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [clienteIdToDelete, setClienteIdToDelete] = useState(null);
+  const [createCompany, setCreateCompany] = useState(false);
+  const [titulos, setTitulos] = useState([]);
+  
   const [form] = Form.useForm();
   const navigate = useNavigate();
-  const [titulos, setTitulos] = useState([]);
-  const [clienteIdToDelete, setClienteIdToDelete] = useState(null);
-  const [regimenFiscal, setRegimenFiscal] = useState([]);
-  const [empresas, setEmpresas] = useState([]);
-  const [usosCfdi, setUsosCfdi] = useState([]);
-  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
 
-  // Obtener el ID de la organización una sola vez
+  // Obtener el ID de la organización (se hace una sola vez)
   const organizationId = useMemo(() => parseInt(localStorage.getItem("organizacion_id"), 10), []);
 
-  // Cargar datos iniciales (regimen, moneda, empresas y usos CFDI)
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const [regimenRes, empresasRes, usosCfdiRes] = await Promise.all([
-          getAllRegimenFiscal(),
-          getAllEmpresas(),
-          getAllUsoCDFI()
-        ]);
-        setRegimenFiscal(regimenRes.data);
-        const filteredEmpresas = empresasRes.data.filter(empresa => empresa.organizacion === organizationId);
-        setEmpresas(filteredEmpresas);
-        setUsosCfdi(usosCfdiRes.data);
-      } catch (error) {
-        console.error('Error al cargar los datos', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, [organizationId]);
+  // Usar el custom hook para cargar catálogos (regimen fiscal, empresas, usos CFDI)
+  const { regimenFiscal, empresas, usosCfdi, loading: catalogosLoading } = useCatalogos(organizationId);
 
-  // Función para eliminar un cliente
-  const handleDeleteCliente = async (id) => {
-    try {
-      await deleteCliente(id);
-      setClientes(prev => prev.filter(item => item.key !== id));
-      setIsAlertModalOpen(false);
-    } catch (error) {
-      console.error('Error al eliminar el cliente', error);
-    }
-  };
-
-  // Cargar empresas y devolver un objeto con id: nombre
-  const loadEmpresasMap = useCallback(async () => {
-    const res = await getAllEmpresas();
-    const filtered = res.data.filter(empresa => empresa.organizacion === organizationId);
-    return filtered.reduce((acc, empresa) => {
-      acc[empresa.id] = empresa.nombre;
-      return acc;
-    }, {});
-  }, [organizationId]);
-
-  // Cargar clientes y formatear datos para la tabla
+  // Función para cargar clientes desde la API y formatearlos para la tabla
   const loadClientes = useCallback(async () => {
     try {
-      const empresasMap = await loadEmpresasMap();
       const res = await getAllCliente();
-      
-      const filteredClientes = res.data.map(cliente => {
-        const datosIncompletos = !cliente.nombrePila || !cliente.apPaterno || !cliente.UsoCfdi || !empresasMap[cliente.empresa];
-  
+      // Se formatean los clientes: se calcula un flag "incompleto" si faltan datos
+      const clientesFormateados = res.data.map((cliente) => {
+        const datosIncompletos =
+          !cliente.nombrePila || !cliente.apPaterno || !cliente.UsoCfdi || !cliente.empresa;
         return {
           key: cliente.id,
           Cliente: `${cliente.nombrePila || "Sin nombre"} ${cliente.apPaterno || ""} ${cliente.apMaterno || ""}`,
-          Empresa: empresasMap[cliente.empresa] || 'Empresa no encontrada',
+          Empresa: empresas.find((e) => e.id === cliente.empresa)?.nombre || "Empresa no encontrada",
           Correo: cliente.correo || "Sin correo",
           activo: cliente.activo,
-          incompleto: datosIncompletos  // 🔹 Agregamos flag para resaltar
+          incompleto: datosIncompletos,
         };
       });
-  
-      // 🔹 Ordenar primero los clientes con datos incompletos
-      const sortedClientes = filteredClientes.sort((a, b) => b.incompleto - a.incompleto);
-      console.log(sortedClientes);
-
-  
+      // Ordenar los clientes, mostrando primero aquellos con datos incompletos
+      const sortedClientes = clientesFormateados.sort((a, b) => b.incompleto - a.incompleto);
       setClientes(sortedClientes);
     } catch (error) {
-      console.error('Error al cargar los clientes', error);
+      console.error("Error al cargar los clientes", error);
     }
-  }, [loadEmpresasMap]);
-  
+  }, [empresas]);
 
-  // Cargar títulos y clientes
+  // Cargar clientes al iniciar el componente
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      await loadClientes();
+      setLoading(false);
+    };
+    fetchData();
+  }, [loadClientes]);
+
+  // Cargar títulos (puedes extraer esto a un hook si se requiere)
   useEffect(() => {
     const fetchTitulos = async () => {
       try {
         const response = await getAllTitulo();
         setTitulos(response.data);
       } catch (error) {
-        console.error('Error al cargar los títulos:', error);
+        console.error("Error al cargar los títulos:", error);
       }
     };
     fetchTitulos();
-    loadClientes();
-  }, [loadClientes]);
+  }, []);
 
-  // Función para crear un cliente (y empresa si se requiere)
+  // Función para eliminar un cliente
+  const handleDeleteCliente = async (id) => {
+    try {
+      await deleteCliente(id);
+      setClientes((prev) => prev.filter((cliente) => cliente.key !== id));
+      setIsAlertModalOpen(false);
+    } catch (error) {
+      console.error("Error al eliminar el cliente", error);
+    }
+  };
+
+  // Funciones para mostrar y ocultar el modal de alerta de eliminación
+  const showAlertModal = (id) => {
+    setClienteIdToDelete(id);
+    setIsAlertModalOpen(true);
+  };
+
+  const handleOkAlert = () => {
+    if (clienteIdToDelete) {
+      handleDeleteCliente(clienteIdToDelete);
+    }
+    setIsAlertModalOpen(false);
+  };
+
+  const handleCancelAlert = () => {
+    setIsAlertModalOpen(false);
+  };
+
+  // Función para crear un cliente (y crear empresa si es necesario)
   const createClientAndReturnId = async (formValues, createCompanyFlag) => {
     let empresaId = formValues.empresa;
     if (createCompanyFlag) {
@@ -138,11 +128,11 @@ const Cliente = () => {
         const createEmpresaResponse = await createEmpresas(empresaData);
         empresaId = createEmpresaResponse.data.id;
       } catch (error) {
-        console.error('Error al crear la empresa', error);
+        console.error("Error al crear la empresa", error);
         return null;
       }
     }
-
+  
     const clienteData = {
       nombrePila: formValues.nombrePila,
       apPaterno: formValues.apPaterno,
@@ -155,7 +145,7 @@ const Cliente = () => {
       titulo: formValues.titulo,
       UsoCfdi: formValues.UsoCfdi || 3,
     };
-
+  
     if (!clienteData.nombrePila || !clienteData.apPaterno || !clienteData.correo || !clienteData.empresa) {
       console.error("Faltan campos obligatorios para crear el cliente");
       return null;
@@ -164,18 +154,18 @@ const Cliente = () => {
       const createClienteResponse = await createCliente(clienteData);
       return createClienteResponse.data.id;
     } catch (error) {
-      console.error('Error al crear el cliente', error);
+      console.error("Error al crear el cliente", error);
       return null;
     }
   };
 
-  // Handlers para el modal de creación de cliente
+  // Handler para el modal de creación de cliente
   const handleOk = async () => {
     try {
       const formValues = await form.validateFields();
       const newClientId = await createClientAndReturnId(formValues, createCompany);
       if (newClientId) {
-        loadClientes();
+        await loadClientes();
         setIsModalOpen(false);
         form.resetFields();
         setIsSuccessModalOpen(true);
@@ -188,17 +178,16 @@ const Cliente = () => {
     }
   };
 
+  // Handler para crear cliente y redirigir a cotización
   const handleCreateAndCotizar = async () => {
     try {
       const formValues = await form.validateFields();
       const newClientId = await createClientAndReturnId(formValues, createCompany);
       if (newClientId) {
-        loadClientes();
+        await loadClientes();
         setIsModalOpen(false);
         form.resetFields();
-        setIsSuccessModalOpen(true); // ✅ Mostrar modal de éxito
-      
-        // ✅ Esperar 3 segundos antes de redirigir
+        setIsSuccessModalOpen(true);
         setTimeout(() => {
           setIsSuccessModalOpen(false);
           navigate(`/crear_cotizacion/${newClientId}`);
@@ -218,64 +207,12 @@ const Cliente = () => {
     setCreateCompany(e.target.checked);
   };
 
-  const showAlertModal = (id) => {
-    setClienteIdToDelete(id);
-    setIsAlertModalOpen(true);
-  };
-
-  const handleOkAlert = () => {
-    if (clienteIdToDelete) {
-      handleDeleteCliente(clienteIdToDelete);
-    }
-    setIsAlertModalOpen(false);
-  };
-
-  const handleCancelAlert = () => {
-    setIsAlertModalOpen(false);
-  };
-
-  // Columnas para clientes activos
-  const columnsActivos = useMemo(() => [
-    { title: '#', dataIndex: 'key', key: 'key' },
-    { title: 'Cliente', dataIndex: 'Cliente', key: 'Cliente' },
-    { title: 'Empresa', dataIndex: 'Empresa', key: 'Empresa' },
-    { title: 'Correo', dataIndex: 'Correo', key: 'Correo' },
-    {
-      title: 'Acción',
-      key: 'action',
-      render: (_, record) => (
-        <div className="action-buttons">
-          <Link to={`/crear_cotizacion/${record.key}`}>
-            <Button className="action-button-cotizar">Cotizar</Button>
-          </Link>
-          <Link to={`/EditarCliente/${record.key}`}>
-            <Button className="action-button-edit">
-              <EditOutlined />
-            </Button>
-          </Link>
-          <Button className="action-button-delete" onClick={() => showAlertModal(record.key)}>
-            <CloseOutlined />
-          </Button>
-        </div>
-      ),
-    },
-  ], []);
-
-  // Columnas para clientes inactivos
-  const columnsInactivos = useMemo(() => [
-    { title: '#', dataIndex: 'key', key: 'key' },
-    { title: 'Cliente', dataIndex: 'Cliente', key: 'Cliente' },
-    { title: 'Empresa', dataIndex: 'Empresa', key: 'Empresa' },
-    { title: 'Correo', dataIndex: 'Correo', key: 'Correo' },
-  ], []);
-
-  // Renderizado de la barra de tabs con StickyBox
+  // Función para renderizar la barra de tabs con StickyBox
   const renderTabBar = (props, DefaultTabBar) => (
     <StickyBox offsetTop={64} offsetBottom={20} style={{ zIndex: 1 }}>
       <DefaultTabBar {...props} />
     </StickyBox>
   );
-
 
   return (
     <div className="container-center">
@@ -287,11 +224,7 @@ const Cliente = () => {
       ) : (
         <>
           <div className="search-bar">
-            <Input.Search
-              placeholder="Buscar proyectos..."
-              enterButton="Buscar"
-              style={{ width: "300px" }}
-            />
+            <Input.Search placeholder="Buscar proyectos..." enterButton="Buscar" style={{ width: "300px" }} />
           </div>
           <div className="button-top-container">
             <Button type="primary" onClick={() => setIsModalOpen(true)}>
@@ -304,29 +237,27 @@ const Cliente = () => {
               renderTabBar={renderTabBar}
               items={[
                 {
-                  label: 'Clientes Activos',
-                  key: '1',
-                  children: (
-                    <Table columns={columnsActivos} 
-                    dataSource={clientes} 
-                    rowClassName={(record) => record.incompleto ? 'row-incompleto' : ''}
-                    pagination={{ pageSize: 5 }} 
-                    />
-                  ),
+                  label: "Clientes Activos",
+                  key: "1",
+                  children: <ClienteTable clientes={clientes} showAlertModal={showAlertModal} />,
                 },
                 {
-                  label: 'Clientes Inactivos',
-                  key: '2',
+                  label: "Clientes Inactivos",
+                  key: "2",
                   children: (
                     <Table
-                      dataSource={clientes.filter(c => !c.activo)}
-                      columns={columnsInactivos}
-                      
+                      dataSource={clientes.filter((c) => !c.activo)}
+                      columns={[
+                        { title: "#", dataIndex: "key", key: "key" },
+                        { title: "Cliente", dataIndex: "Cliente", key: "Cliente" },
+                        { title: "Empresa", dataIndex: "Empresa", key: "Empresa" },
+                        { title: "Correo", dataIndex: "Correo", key: "Correo" },
+                      ]}
                       bordered
                       pagination={{
                         pageSize: 5,
                         showSizeChanger: true,
-                        pageSizeOptions: ['3', '5', '10'],
+                        pageSizeOptions: ["3", "5", "10"],
                       }}
                     />
                   ),
@@ -350,7 +281,12 @@ const Cliente = () => {
           <Button key="create" type="primary" onClick={handleOk}>
             Crear Cliente
           </Button>,
-          <Button key="create-quote" type="primary" style={{ backgroundColor: '#1890ff' }} onClick={handleCreateAndCotizar}>
+          <Button
+            key="create-quote"
+            type="primary"
+            style={{ backgroundColor: "#1890ff" }}
+            onClick={handleCreateAndCotizar}
+          >
             Crear y Cotizar
           </Button>,
         ]}
@@ -361,27 +297,27 @@ const Cliente = () => {
               <Form.Item
                 label="Nombre:"
                 name="nombrePila"
-                rules={[{ required: true, message: 'Por favor ingresa el nombre.' }]}
+                rules={[{ required: true, message: "Por favor ingresa el nombre." }]}
               >
                 <Input placeholder="Ingresa Nombre del cliente" />
               </Form.Item>
               <Form.Item
                 label="Apellidos paterno:"
                 name="apPaterno"
-                rules={[{ required: true, message: 'Por favor ingresa los apellidos.' }]}
+                rules={[{ required: true, message: "Por favor ingresa los apellidos." }]}
               >
                 <Input placeholder="Ingresa Ambos apellidos del cliente" />
               </Form.Item>
               <Form.Item
                 label="Apellidos materno:"
                 name="apMaterno"
-                rules={[{ message: 'Por favor ingresa los apellidos.' }]}
+                rules={[{ message: "Por favor ingresa los apellidos." }]}
               >
                 <Input placeholder="Ingresa Ambos apellidos del cliente" />
               </Form.Item>
               <Form.Item label="Título:" name="titulo">
                 <Select placeholder="Selecciona un título">
-                  {titulos.map(t => (
+                  {titulos.map((t) => (
                     <Select.Option key={t.id} value={t.id}>
                       {t.titulo} - {t.abreviatura}
                     </Select.Option>
@@ -390,7 +326,7 @@ const Cliente = () => {
               </Form.Item>
               <Form.Item label="Uso CFDI:" name="UsoCfdi">
                 <Select placeholder="Selecciona un Uso CFDI">
-                  {usosCfdi.map(uso => (
+                  {usosCfdi.map((uso) => (
                     <Select.Option key={uso.id} value={uso.id}>
                       {uso.codigo} - {uso.descripcion}
                     </Select.Option>
@@ -402,18 +338,14 @@ const Cliente = () => {
               <Form.Item
                 label="Correo Electrónico:"
                 name="correo"
-                rules={[{ required: true, message: 'Por favor ingresa un correo electrónico.' }]}
+                rules={[{ required: true, message: "Por favor ingresa un correo electrónico." }]}
               >
                 <Input placeholder="Correo electrónico" />
               </Form.Item>
               <Form.Item label="Teléfono:" name="telefono">
                 <Input placeholder="Teléfono" />
               </Form.Item>
-              <Form.Item
-                label="Celular:"
-                name="celular"
-                
-              >
+              <Form.Item label="Celular:" name="celular">
                 <Input placeholder="Celular" />
               </Form.Item>
               <Form.Item label="Fax:" name="fax">
@@ -431,13 +363,13 @@ const Cliente = () => {
                   <Form.Item
                     label="Nombre empresa:"
                     name="nombre"
-                    rules={[{ required: true, message: 'Por favor ingresa el nombre de la empresa.' }]}
+                    rules={[{ required: true, message: "Por favor ingresa el nombre de la empresa." }]}
                   >
                     <Input placeholder="Ingresa el Nombre de la Empresa" />
                   </Form.Item>
                   <Form.Item label="Régimen fiscal:" name="regimenFiscal">
                     <Select placeholder="Selecciona el régimen fiscal">
-                      {regimenFiscal.map(reg => (
+                      {regimenFiscal.map((reg) => (
                         <Select.Option key={reg.id} value={reg.id}>
                           {reg.codigo} - {reg.nombre}
                         </Select.Option>
@@ -447,14 +379,14 @@ const Cliente = () => {
                   <Form.Item
                     label="RFC:"
                     name="rfc"
-                    rules={[{ required: true, message: 'Por favor ingresa el RFC.' }]}
+                    rules={[{ required: true, message: "Por favor ingresa el RFC." }]}
                   >
                     <Input placeholder="Ingrese RFC" />
                   </Form.Item>
                   <Form.Item
                     label="Condiciones pago:"
                     name="condicionPago"
-                    rules={[{ required: true, message: 'Por favor ingresa la condición de pago.' }]}
+                    rules={[{ required: true, message: "Por favor ingresa la condición de pago." }]}
                   >
                     <Input placeholder="Condición de pago" />
                   </Form.Item>
@@ -463,42 +395,42 @@ const Cliente = () => {
                   <Form.Item
                     label="Calle:"
                     name="calle"
-                    rules={[{ required: true, message: 'Por favor ingresa la calle.' }]}
+                    rules={[{ required: true, message: "Por favor ingresa la calle." }]}
                   >
                     <Input placeholder="Calle" />
                   </Form.Item>
                   <Form.Item
                     label="Número:"
                     name="numero"
-                    rules={[{ required: true, message: 'Por favor ingresa el número.' }]}
+                    rules={[{ required: true, message: "Por favor ingresa el número." }]}
                   >
                     <Input placeholder="Número" />
                   </Form.Item>
                   <Form.Item
                     label="Colonia:"
                     name="colonia"
-                    rules={[{ required: true, message: 'Por favor ingresa la colonia.' }]}
+                    rules={[{ required: true, message: "Por favor ingresa la colonia." }]}
                   >
                     <Input placeholder="Colonia" />
                   </Form.Item>
                   <Form.Item
                     label="Ciudad:"
                     name="ciudad"
-                    rules={[{ required: true, message: 'Por favor ingresa la ciudad.' }]}
+                    rules={[{ required: true, message: "Por favor ingresa la ciudad." }]}
                   >
                     <Input placeholder="Ciudad" />
                   </Form.Item>
                   <Form.Item
                     label="Código Postal:"
                     name="codigoPostal"
-                    rules={[{ required: true, message: 'Por favor ingresa el código postal.' }]}
+                    rules={[{ required: true, message: "Por favor ingresa el código postal." }]}
                   >
                     <Input placeholder="Código Postal" />
                   </Form.Item>
                   <Form.Item
                     label="Estado:"
                     name="estado"
-                    rules={[{ required: true, message: 'Por favor ingresa el estado.' }]}
+                    rules={[{ required: true, message: "Por favor ingresa el estado." }]}
                   >
                     <Input placeholder="Estado" />
                   </Form.Item>
@@ -509,10 +441,10 @@ const Cliente = () => {
             <Form.Item
               label="Empresa:"
               name="empresa"
-              rules={[{ required: true, message: 'Por favor selecciona una empresa o crea una nueva.' }]}
+              rules={[{ required: true, message: "Por favor selecciona una empresa o crea una nueva." }]}
             >
               <Select placeholder="Selecciona una empresa">
-                {empresas.map(empresa => (
+                {empresas.map((empresa) => (
                   <Select.Option key={empresa.id} value={empresa.id}>
                     {empresa.nombre}
                   </Select.Option>
@@ -522,7 +454,7 @@ const Cliente = () => {
           )}
         </Form>
       </Modal>
-
+  
       {/* Modal de confirmación para eliminar cliente */}
       <Modal
         title={
