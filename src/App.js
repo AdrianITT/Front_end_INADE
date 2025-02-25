@@ -101,12 +101,12 @@ const App = () => {
       {/* Opciones de navegación */}
       <div className="contencenter">
         <br />
-        <Space>
-          <Row gutter={[24, 24]} justify="center">
+        <Space size ={0}>
+          <Row gutter={[0, 0]} justify="center">
             <Col xs={24} sm={12} md={8} lg={6} xl={4} className="col-style">
               <div>
                 <Link to="/empresa">
-                  <Card className="card-custom" title="Empresa" bordered={false}>
+                  <Card className="card-custom" title="Empresas" bordered={false}>
                     <div className="icon-container">
                       <ShopFilled />
                     </div>
@@ -117,7 +117,7 @@ const App = () => {
             <Col xs={24} sm={12} md={8} lg={6} xl={4} className="col-style">
               <div>
                 <Link to="/cliente">
-                  <Card className="card-custom" title="Cliente" bordered={false}>
+                  <Card className="card-custom" title="Clientes" bordered={false}>
                     <div className="icon-container">
                       <UserAddOutlined />
                     </div>
@@ -128,7 +128,7 @@ const App = () => {
             <Col xs={24} sm={12} md={8} lg={6} xl={4} className="col-style">
               <div>
                 <Link to="/servicio">
-                  <Card className="card-custom" title="Servicio" bordered={false}>
+                  <Card className="card-custom" title="Servicios" bordered={false}>
                     <div className="icon-container">
                       <ClearOutlined />
                     </div>
@@ -139,7 +139,7 @@ const App = () => {
             <Col xs={24} sm={12} md={8} lg={6} xl={4} className="col-style">
               <div>
                 <Link to="/cotizar">
-                  <Card className="card-custom" title="Cotizar" bordered={false}>
+                  <Card className="card-custom" title="Cotizaciones" bordered={false}>
                     <div className="badge-container">
                       <Badge count={countCotizaciones} />
                     </div>
@@ -155,7 +155,7 @@ const App = () => {
                 <Link to="/generar_orden">
                   <Card
                     className="card-custom"
-                    title="Generar Orden de Trabajo"
+                    title="Ordenes de Trabajo"
                     bordered={false}
                   >
                     <div className="icon-container">
@@ -168,7 +168,7 @@ const App = () => {
             <Col xs={24} sm={12} md={8} lg={6} xl={4} className="col-style">
               <div>
                 <Link to="/usuario">
-                  <Card className="card-custom" title="Usuario" bordered={false}>
+                  <Card className="card-custom" title="Usuarios" bordered={false}>
                     <div className="icon-container">
                       <UsergroupAddOutlined />
                     </div>
@@ -181,8 +181,13 @@ const App = () => {
                 <Link to="/configuracionorganizacion">
                   <Card
                     className="card-custom"
-                    title="Configuración de la organización"
+                    title="Configuración"
                     bordered={false}
+                    headStyle={{
+                      whiteSpace: "normal",
+                      overflow: "visible",
+                      textOverflow: "clip"
+                    }}
                   >
                     <div className="icon-container">
                       <SettingOutlined />
@@ -191,6 +196,7 @@ const App = () => {
                 </Link>
               </div>
             </Col>
+
             <Col xs={24} sm={12} md={8} lg={6} xl={4} className="col-style">
               <div>
                 <Link to="/factura">
@@ -205,7 +211,7 @@ const App = () => {
             <Col xs={24} sm={12} md={8} lg={6} xl={4} className="col-style">
               <div>
                 <Link to="/preCotizacion">
-                  <Card className="card-custom" title="Pre-Cotizacion" bordered={false}>
+                  <Card className="card-custom" title="Pre-Cotizaciones" bordered={false}>
                     <div className="icon-container">
                     <ThunderboltTwoTone />
                     </div>

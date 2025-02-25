@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AppstoreOutlined } from '@ant-design/icons';
 import { Menu, Button, Drawer } from 'antd';
 import { Link } from "react-router-dom";
 import Logout_Api from '../apis/LogoutApi';
-import imglogo from '../img/logo.png';
+//import imglogo from '../img/logo.png';
 import '../Header.css';
+import { getOrganizacionById } from '../apis/organizacionapi';
 
 const items = [
   {
@@ -12,7 +13,7 @@ const items = [
     key: 'inade',
   },
   {
-    key: 'alipay',
+    key: 'empresa',
     label: (
       <Link to="/empresa" rel="noopener noreferrer">
         Empresa
@@ -20,7 +21,7 @@ const items = [
     ),
   },
   {
-    key: 'alipay',
+    key: 'cliente',
     label: (
       <Link to="/cliente" rel="noopener noreferrer">
         Cliente
@@ -28,7 +29,7 @@ const items = [
     ),
   },
   {
-    key: 'alipay',
+    key: 'servicio',
     label: (
       <Link to="/servicio" rel="noopener noreferrer">
         Servicios
@@ -36,7 +37,7 @@ const items = [
     ),
   },
   {
-    key: 'alipay',
+    key: 'cotizar',
     label: (
       <Link to="/cotizar" rel="noopener noreferrer">
         Cotizar
@@ -49,7 +50,7 @@ const items = [
     icon: <AppstoreOutlined />,
     children: [
       {
-        key: '5',
+        key: 'generar_orden',
         label: (
           <Link to="/generar_orden" rel="noopener noreferrer">
             Generar Orden de Trabajo
@@ -57,7 +58,7 @@ const items = [
         ),
       },
       {
-        key: '6',
+        key: 'usuario',
         label: (
           <Link to="/usuario" rel="noopener noreferrer">
             Usuarios
@@ -65,15 +66,15 @@ const items = [
         ),
       },
       {
-        key: '7',
+        key: 'configuracion',
         label: (
           <Link to="/configuracionorganizacion" rel="noopener noreferrer">
-            Configuracion de la organización
+            Configuración de la organización
           </Link>
         ),
       },
       {
-        key: '8',
+        key: 'facturas',
         label: (
           <Link to="/factura" rel="noopener noreferrer">
             Facturas
@@ -87,25 +88,21 @@ const items = [
     label: (
       <div className="logout-button">
         <Button
-          color="primary"
-          variant="link"
           onClick={async () => {
             try {
-              // Usa Logout_Api para realizar la solicitud POST
               await Logout_Api.post("", {}, {
                 headers: {
                   Authorization: `Token ${localStorage.getItem('token')}`,
                 },
               });
-              // Limpia el localStorage
+              // Limpiar localStorage
               localStorage.removeItem('token');
               localStorage.removeItem('user_id');
               localStorage.removeItem('username');
               localStorage.removeItem('rol');
               localStorage.removeItem('organizacion');
               localStorage.removeItem('organizacion_id');
-
-              // Redirige al usuario a la página principal (http://localhost:3000/)
+              // Redirige al usuario a la página principal
               window.location.href = '/';
             } catch (error) {
               console.error('Error al cerrar sesión:', error);
@@ -119,6 +116,7 @@ const items = [
   },
 ];
 
+// Función para obtener los niveles de las claves (para el menú)
 const getLevelKeys = (items1) => {
   const key = {};
   const func = (items2, level = 1) => {
@@ -137,42 +135,60 @@ const getLevelKeys = (items1) => {
 const levelKeys = getLevelKeys(items);
 
 const Header = () => {
+  // Estado para almacenar el logo obtenido de la organización
+  const [logoOrganizacion, setLogoOrganizacion] = useState(null);
+
+  useEffect(() => {
+    const fetchLogoOrganizacion = async () => {
+      const organizationId = parseInt(localStorage.getItem("organizacion_id"), 10);
+      try {
+        const response = await getOrganizacionById(organizationId);
+        // Guarda el logo en el estado (asumiendo que la respuesta tiene la estructura: { data: { logo: 'url' } })
+        setLogoOrganizacion(response.data);
+        console.log("Logo de la organización:", response.data.logo);
+      } catch (error) {
+        console.error("Error al obtener la organización:", error);
+      }
+    };
+
+    fetchLogoOrganizacion();
+  }, []);
+
   const [open, setOpen] = useState(false);
-
-  const showDrawer = () => {
-    setOpen(true);
-  };
-
-  const onClose = () => {
-    setOpen(false);
-  };
+  const showDrawer = () => setOpen(true);
+  const onClose = () => setOpen(false);
 
   const [stateOpenKeys, setStateOpenKeys] = useState(['2', '23']);
   const onOpenChange = (openKeys) => {
     const currentOpenKey = openKeys.find((key) => stateOpenKeys.indexOf(key) === -1);
-    // open
     if (currentOpenKey !== undefined) {
       const repeatIndex = openKeys
         .filter((key) => key !== currentOpenKey)
         .findIndex((key) => levelKeys[key] === levelKeys[currentOpenKey]);
       setStateOpenKeys(
         openKeys
-          // remove repeat key
           .filter((_, index) => index !== repeatIndex)
-          // remove current level all child
           .filter((key) => levelKeys[key] <= levelKeys[currentOpenKey]),
       );
     } else {
-      // close
       setStateOpenKeys(openKeys);
     }
   };
+
   return (
-    <>
-      <div className="header-container">
-        <Link to="/home">
-          <div className='header-logo' ><img alt="INADE" src={imglogo} style={{ height: '40px', marginRight: '8px' }} /> <span></span> </div>
-        </Link>
+    <div className="header-container">
+      <Link to="/home">
+        {/* Si existe logoOrganizacion, muéstralo; de lo contrario, muestra una imagen por defecto */}
+        {logoOrganizacion && logoOrganizacion.logo ? (
+          <div className="header-logo">
+            <img alt="Logo de la Organización" src={logoOrganizacion.logo} style={{ height: '40px', marginRight: '8px' }} />
+          </div>
+        ) : (
+          <div className="header-logo">
+            <img alt="INADE" style={{ height: '40px', marginRight: '8px' }} />
+          </div>
+        )}
+      </Link>
 
         <div class="header-button">
           <Button color='primary' variant='filled' onClick={showDrawer}>
@@ -193,7 +209,6 @@ const Header = () => {
           />
         </Drawer>
       </div>
-    </>
   );
 };
 
