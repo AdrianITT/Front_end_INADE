@@ -34,9 +34,15 @@ const Cliente = () => {
   // Función para cargar clientes desde la API y formatearlos para la tabla
   const loadClientes = useCallback(async () => {
     try {
+      //Obtener todas las empresas de la organizacion
+      const empresaDeLaOrganizacion=empresas.filter(empresa=> empresa.organizacion===organizationId)
+
       const res = await getAllCliente();
+
+      //Filtrar los clientes que pertenecen a las empresas de la organizacion
+      const clientesFiltrados = res.data.filter(cliente=> empresaDeLaOrganizacion.some(empresa=>empresa.id===cliente.empresa));
       // Se formatean los clientes: se calcula un flag "incompleto" si faltan datos
-      const clientesFormateados = res.data.map((cliente) => {
+      const clientesFormateados = clientesFiltrados.map((cliente) => {
         const datosIncompletos =
           !cliente.nombrePila || !cliente.apPaterno || !cliente.UsoCfdi || !cliente.empresa;
         return {
@@ -54,7 +60,18 @@ const Cliente = () => {
     } catch (error) {
       console.error("Error al cargar los clientes", error);
     }
-  }, [empresas]);
+  }, [empresas, organizationId ]);
+
+  useEffect(() => {
+    if (empresas.length > 0) { // Solo cargar clientes si las empresas ya están cargadas
+      const fetchData = async () => {
+        setLoading(true);
+        await loadClientes();
+        setLoading(false);
+      };
+      fetchData();
+    }
+  }, [empresas, loadClientes]); // Depender de empresas y loadClientes
 
   // Cargar clientes al iniciar el componente
   useEffect(() => {
@@ -68,6 +85,7 @@ const Cliente = () => {
 
   // Cargar títulos (puedes extraer esto a un hook si se requiere)
   useEffect(() => {
+    console.log('catalogo: ', catalogosLoading)
     const fetchTitulos = async () => {
       try {
         const response = await getAllTitulo();

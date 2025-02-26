@@ -1,6 +1,6 @@
 import React, { useState, useEffect,useMemo} from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { MailTwoTone, CheckCircleTwoTone, FilePdfTwoTone, FormOutlined } from "@ant-design/icons";
+import { MailTwoTone, CheckCircleTwoTone, FilePdfTwoTone, FormOutlined, DeleteOutlined } from "@ant-design/icons";
 import { Card, Table, Row, Col, Typography, Spin, message, Menu,Dropdown,Button, Form, Checkbox, Input, Modal, Result } from "antd";
 import { getPreCotizacionById,updatePrecotizacion} from "../../apis/precotizacionApi";
 import { getAllServicioPrecotizacion } from "../../apis/ServiciosPrecotizacionApi";
@@ -272,6 +272,9 @@ const PreCotizacionDetalles = () => {
         
             <Menu.Item key="5" icon={<FilePdfTwoTone />} onClick={handleDownloadPDF} loading={loading} >
               Ver PDF
+            </Menu.Item>
+            <Menu.Item key="6" icon={<DeleteOutlined style={{ color: 'red' }}/>} >
+              Eliminar Orden de Trabajo
             </Menu.Item>
           </Menu>
         );
