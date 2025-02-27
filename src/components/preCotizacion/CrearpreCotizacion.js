@@ -456,8 +456,8 @@ const CrearPreCotizaciones = () => {
                   <Input
                     type="number"
                     min="1"
-                    //value={concepto.cantidad}
-                    //onChange={(e) => handleInputChange(concepto.id, "cantidad", parseInt(e.target.value))}
+                    value={concepto.cantidad}
+                    onChange={(e) => handleInputChange(concepto.id, "cantidad", parseInt(e.target.value))}
                   />
                 </Form.Item>
               </Col>
