@@ -6,10 +6,28 @@ import { EditOutlined, CloseOutlined } from "@ant-design/icons";
 
 // Recibe 'clientes' y 'showAlertModal' como props
 const ClienteTable = ({ clientes, showAlertModal }) => {
+
+  const clienteFilters=Array.from(new Set(clientes.map(item=>item.Cliente)))
+  .map(value=>({text: value, value}));
+  
+  const empresaFilters=Array.from(new Set(clientes.map(item=>item.Empresa)))
+  .map(value=>({text:value, value}));
+  
   const columns = [
-    { title: "#", dataIndex: "key", key: "key" },
-    { title: "Cliente", dataIndex: "Cliente", key: "Cliente" },
-    { title: "Empresa", dataIndex: "Empresa", key: "Empresa" },
+    { title: "#", dataIndex: "key", key: "key",
+      sorter:(a,b)=>a.key -b.key,
+      sortDireccions: ['ascend', 'descend'],
+     },
+    { title: "Cliente", dataIndex: "Cliente", key: "Cliente",
+      filters:clienteFilters,
+      onFilter:(value, record)=>record.Cliente===value,
+      filterSearch: true,
+     },
+    { title: "Empresa", dataIndex: "Empresa", key: "Empresa",
+      filters:empresaFilters,
+      onFilter:(value,record)=>record.Empresa===value,
+      filterSearch:true,
+     },
     { title: "Correo", dataIndex: "Correo", key: "Correo" },
     {
       title: "Acción",
@@ -34,7 +52,7 @@ const ClienteTable = ({ clientes, showAlertModal }) => {
       ),
     },
   ];
-
+  
   return (
     <Table
       columns={columns}

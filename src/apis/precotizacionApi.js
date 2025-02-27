@@ -26,3 +26,5 @@ export const createPreCotizacion = async (data) => {
        }
      }
    };
+
+   export const deletePrecotizar =(id)=>precotizacion_Api.delete(`/${id}/`);

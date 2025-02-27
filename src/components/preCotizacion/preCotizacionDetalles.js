@@ -1,8 +1,8 @@
 import React, { useState, useEffect,useMemo} from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { MailTwoTone, CheckCircleTwoTone, FilePdfTwoTone, FormOutlined, DeleteOutlined } from "@ant-design/icons";
-import { Card, Table, Row, Col, Typography, Spin, message, Menu,Dropdown,Button, Form, Checkbox, Input, Modal, Result } from "antd";
-import { getPreCotizacionById,updatePrecotizacion} from "../../apis/precotizacionApi";
+import { Card, Table, Row, Col, Typography, Spin, message, Menu,Dropdown,Button, Form, Checkbox, Input, Modal, Result, Popconfirm } from "antd";
+import { getPreCotizacionById,updatePrecotizacion, deletePrecotizar} from "../../apis/precotizacionApi";
 import { getAllServicioPrecotizacion } from "../../apis/ServiciosPrecotizacionApi";
 import { getServicioById } from "../../apis/ServiciosApi";
 import { getIvaById } from "../../apis/ivaApi";
@@ -249,35 +249,58 @@ const PreCotizacionDetalles = () => {
       }
     };
 
+    const confirm = async(e) => {
+      try{
+        await deletePrecotizar(id);
+        navigate("/preCotizacion");
+      }catch(error){
+        console.error("Error al Eliminar precotizacion:", error);
+      }
+      //console.log(e);
+      message.success('Click on Yes');
+    };
+
+    const cancel = (e) => {
+      //console.log(e);
+      message.error('Click on No');
+    };
+
+
      const handDuoModal=()=>{    
           setIsModalVisible(false);
           setIsResultModalVisible(false)
         }
-   
-
-        const menu = (
-          <Menu>
-            <Menu.Item key="1" icon={<MailTwoTone />} onClick={showEmailModal}>
-              Enviar por correo
-            </Menu.Item>
+        //Opciones del menu de pre-cotizacion
+    const menu = (
+      <Menu>
+        <Menu.Item key="1" icon={<MailTwoTone />} onClick={showEmailModal}>
+          Enviar por correo
+        </Menu.Item>
+    
+        {/* ✅ Solo se muestra si el estado es 8 */}
+        {cotizacionInfo?.estado === 8 ? (
+          <Menu.Item key="4" icon={<CheckCircleTwoTone twoToneColor="#52c41a" />} onClick={actualizarEstado}>
+            Actualizar estado
+          </Menu.Item>
+        ):(<Link to="/cotizar"><Menu.Item key="4" icon={<FormOutlined  twoToneColor="#52c41a" />} >
+          Ir a Cotizacion
+        </Menu.Item></Link>)}
+    
+        <Menu.Item key="5" icon={<FilePdfTwoTone />} onClick={handleDownloadPDF} loading={loading} >
+          Ver PDF
+        </Menu.Item>
+        <Menu.Item key="6" icon={<DeleteOutlined style={{ color: 'red' }}/>}  >
+          
         
-            {/* ✅ Solo se muestra si el estado es 8 */}
-            {cotizacionInfo?.estado === 8 ? (
-              <Menu.Item key="4" icon={<CheckCircleTwoTone twoToneColor="#52c41a" />} onClick={actualizarEstado}>
-                Actualizar estado
-              </Menu.Item>
-            ):(<Link to="/cotizar"><Menu.Item key="4" icon={<FormOutlined  twoToneColor="#52c41a" />} >
-              Ir a Cotizacion
-            </Menu.Item></Link>)}
-        
-            <Menu.Item key="5" icon={<FilePdfTwoTone />} onClick={handleDownloadPDF} loading={loading} >
-              Ver PDF
-            </Menu.Item>
-            <Menu.Item key="6" icon={<DeleteOutlined style={{ color: 'red' }}/>} >
-              Eliminar Orden de Trabajo
-            </Menu.Item>
-          </Menu>
-        );
+        <Popconfirm title="Eliminar PreCotizacion" description="¿Estas seguro de eliminar la pre-cotizacion?"
+          onConfirm={confirm} onCancel={cancel}
+          okText="Si" cancelText="No"
+        >
+          Eliminar PreCotizacion
+        </Popconfirm>
+        </Menu.Item>
+      </Menu>
+    );
         
 
   return (
