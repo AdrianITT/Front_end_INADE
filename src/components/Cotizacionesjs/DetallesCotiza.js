@@ -1,13 +1,14 @@
 // src/pages/CotizacionDetalles.js
-import React, { useState, useMemo } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
-import { Tabs, Typography, Spin, Dropdown, Menu, Button } from "antd";
+import React, { useState} from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { Tabs, Typography, Spin, Menu, message } from "antd";
 import { MailTwoTone, EditTwoTone, CheckCircleTwoTone, FilePdfTwoTone } from "@ant-design/icons";
 import { Api_Host } from "../../apis/api";
 import { useCotizacionDetails } from "../Cotizacionesjs/CotizacionDetalles/useCotizacionDetails";
 import ServiciosTable from "../Cotizacionesjs/CotizacionDetalles/ServiciosTable";
 import CotizacionInfoCard from "../Cotizacionesjs/CotizacionDetalles/CotizacionInfoCard";
 import { SendEmailModal, EditCotizacionModal, ResultModal } from "../Cotizacionesjs/CotizacionDetalles/CotizacionModals";
+import { updateCotizacion } from "../../apis/CotizacionApi";
 import "./cotizar.css";
 
 const { Title, Text } = Typography;
@@ -23,9 +24,14 @@ const CotizacionDetalles = () => {
   const [extraEmails, setExtraEmails] = useState("");
   const [resultMessage, setResultMessage] = useState("");
   const [resultStatus, setResultStatus] = useState("success");
+  const [, setCotizacionInfo] = useState([]);
+  const [loadingtwo, setLoading] = useState(false);
+  const [emailLoading, setEmailLoading] = useState(false);
+
+  
   
   // Obtenemos datos de la cotización mediante nuestro custom hook
-  const { cotizacionInfo, servicios, tipoMoneda, tipoCambioDolar, loading } = useCotizacionDetails(id);
+  const { cotizacionInfo, servicios, tipoMoneda, tipoCambioDolar, loading,refetch } = useCotizacionDetails(id);
   
   // Calcular si es USD y el factor de conversión
   const esUSD = tipoMoneda?.id === 2;
@@ -39,6 +45,73 @@ const CotizacionDetalles = () => {
       console.error("Error al descargar el PDF:", error);
     }
   };
+
+  const updateEstadoCotizacion=async (nuevoEstado)=>{
+    try{
+      const cotizacionData = {
+        ...cotizacionInfo,  // Mantén el resto de los datos intactos
+        estado: nuevoEstado,  // Actualiza solo el estado
+      };
+      const response = await updateCotizacion(cotizacionInfo.id, cotizacionData); // Enviar la actualización al backend
+      setCotizacionInfo(response.data);  // Actualiza el estado en el frontend
+      refetch();
+    }catch(error){
+      console.error("Error al actualizar el estado de la cotización", error);
+      message.error("Error al actualizar el estado de la cotización");
+    }
+  }
+
+  //ENVIAR CORREO
+  const handleSendEmail = async () => {
+      setEmailLoading(true);
+      try {
+          const user_id = localStorage.getItem("user_id");
+          if (!user_id) {
+              setResultStatus("error");
+              setResultMessage("No se encontró el ID del usuario.");
+              setIsResultModalVisible(true);
+              setLoading(false);
+              return;
+          }
+  
+          // Validar que los correos ingresados sean correctos
+          const emailList = extraEmails.split(",").map(email => email.trim()).filter(email => email);
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          const invalidEmails = emailList.filter(email => !emailRegex.test(email));
+  
+          if (invalidEmails.length > 0) {
+              setResultStatus("error");
+              setResultMessage(`Correos inválidos: ${invalidEmails.join(", ")}`);
+              setIsResultModalVisible(true);
+              setLoading(false);
+              return;
+          }
+          const emailQuery = emailList.length > 0 ? `&emails=${encodeURIComponent(emailList.join(","))}` : "";
+  
+          const response = await fetch(`${Api_Host.defaults.baseURL}/cotizacion/${id}/pdf/enviar?user_id=${user_id}${emailQuery}`, {
+              method: "GET",
+              headers: { "Content-Type": "application/json" },
+          });
+  
+          if (response.ok) {
+              const result = await response.text();
+              setResultStatus("success");
+              setResultMessage(result || "Correo enviado exitosamente.");
+          } else {
+              setResultStatus("error");
+              setResultMessage("Error al enviar el correo.");
+          }
+      } catch (error) {
+        console.error("Error al enviar el correo:", error);
+        setResultStatus("error");
+        setResultMessage("Hubo un error al enviar el correo.");
+    } finally {
+        setIsResultModalVisible(true);
+        setEmailLoading(false);
+    }
+  };
+  
+
   
   // Definición del menú de acciones (enviar correo, editar, actualizar estado, ver PDF)
   const menu = (
@@ -49,7 +122,7 @@ const CotizacionDetalles = () => {
       <Menu.Item key="3" icon={<EditTwoTone />} onClick={() => navigate(`/EditarCotizacion/${cotizacionInfo?.id}`)}>
         Editar
       </Menu.Item>
-      <Menu.Item key="4" icon={<CheckCircleTwoTone />} onClick={() => { /* Actualizar estado */ }}>
+      <Menu.Item key="4" icon={<CheckCircleTwoTone />} onClick={() => {  updateEstadoCotizacion(2) }}>
         Actualizar estado
       </Menu.Item>
       <Menu.Item key="5" icon={<FilePdfTwoTone />} onClick={handleDownloadPDF}>
@@ -61,7 +134,7 @@ const CotizacionDetalles = () => {
 
   
   return (
-    <Spin spinning={loading}>
+    <Spin spinning={loading|| emailLoading}>
       <div className="cotizacion-detalles-container">
         <div>
           <h1>Detalles de la Cotización {id} Proyecto</h1>
@@ -88,10 +161,11 @@ const CotizacionDetalles = () => {
         
         <SendEmailModal 
           visible={isModalVisible} 
+          cotizacionInfo={cotizacionInfo}
           handleCancel={() => setIsModalVisible(false)} 
           extraEmails={extraEmails} 
           setExtraEmails={setExtraEmails} 
-          handleSendEmail={() => { /* Lógica para enviar correo */ }} 
+          handleSendEmail={handleSendEmail}
         />
         
         <EditCotizacionModal 
