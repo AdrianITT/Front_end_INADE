@@ -5,6 +5,7 @@ import { ExclamationCircleOutlined } from "@ant-design/icons";
 
 export const SendEmailModal = ({
   visible,
+  cotizacionInfo,
   handleCancel,
   extraEmails,
   setExtraEmails,
@@ -25,7 +26,7 @@ export const SendEmailModal = ({
   >
     <h4>Selecciona los correos a los que deseas enviar la cotización:</h4>
     <Form layout="vertical">
-      <Checkbox defaultChecked>Correo predeterminado</Checkbox>
+      <Checkbox defaultChecked>{cotizacionInfo?.correo || "N/A"}</Checkbox>
       <Form.Item label="Correos adicionales (separados por coma):">
         <Input
           placeholder="ejemplo@correo.com, otro@correo.com"
