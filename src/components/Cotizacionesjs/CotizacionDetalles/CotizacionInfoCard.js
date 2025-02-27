@@ -1,6 +1,6 @@
 // src/components/CotizacionInfoCard.js
-import React from "react";
-import { Card, Row, Col, Typography, Button, Dropdown, Menu } from "antd";
+import React, {useEffect, useState} from "react";
+import { Card, Row, Col, Typography, Button, Dropdown} from "antd";
 import { Link } from "react-router-dom";
 
 const { Text } = Typography;
@@ -17,6 +17,19 @@ const CotizacionInfoCard = ({
   const Csubtotaldescuento = Csubtotal - Cdescuento;
   const Civa = Csubtotaldescuento * (cotizacionInfo?.tasaIVA || 0);
   const Ctotal = Csubtotaldescuento + Civa;
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(()=>{
+    if(cotizacionInfo>1){
+      setIsVisible(false);
+    }else{
+      setIsVisible(true);
+    }
+  }, [cotizacionInfo?.estado]);
+
+  const toggleCard = () => {
+    setIsVisible((prevVisible) => !prevVisible);
+  }
 
   return (
     <Row gutter={16}>
@@ -53,6 +66,22 @@ const CotizacionInfoCard = ({
         </Card>
       </Col>
       <Col span={8}>
+                {cotizacionInfo?.estado > 1 &&(
+                  <Card
+                    title="Ordenes"
+                    bordered
+                    extra={
+                      <Link to={`/GenerarOrdenTrabajo/${cotizacionInfo.id}`}><Button
+                        type="primary"
+                        onClick={toggleCard}
+                        style={{ backgroundColor: "#13c2c2", borderColor: "#13c2c2" }}
+                      >
+                        Crear Orden de Trabajo
+                      </Button></Link>
+                    }
+                  >
+                  </Card>
+                )}
         <Card
           title="Cuenta"
           bordered

@@ -10,6 +10,8 @@ import { getAllServicio } from "../../apis/ServiciosApi";
 import { createPreCotizacion } from "../../apis/precotizacionApi";
 import { createServicioPreCotizacion } from "../../apis/ServiciosPrecotizacionApi";
 import { getInfoSistema } from "../../apis/InfoSistemaApi";
+import { getAllEmpresas } from "../../apis/EmpresaApi";
+import { getAllCliente } from "../../apis/ClienteApi";
 
 const { TextArea } = Input;
 
@@ -34,11 +36,10 @@ const CrearPreCotizaciones = () => {
   const [conceptos, setConceptos] = useState([
     { id: 1, servicio: "", cantidad: 1, precio: 0, precioFinal: 0, descripcion: "" },
   ]);
-
+  const [messageApi, contextHolder] = message.useMessage();
 
   // Obtener el ID de la organización una sola vez
   const organizationId = useMemo(() => parseInt(localStorage.getItem("organizacion_id"), 10), []);
-
 
   // Obtener el tipo de cambio del dólar
   useEffect(() => {
@@ -75,7 +76,6 @@ const CrearPreCotizaciones = () => {
     }
   };
 
-
   useEffect(() => {
     const fetchTipoMoneda = async () => {
       try {
@@ -105,7 +105,6 @@ const CrearPreCotizaciones = () => {
     fetchTipoMoneda();
     fetchServicios();
   }, [clienteId]);
-
 
 
 
@@ -197,33 +196,74 @@ const CrearPreCotizaciones = () => {
   };
 
   const { subtotal, descuentoValor, subtotalConDescuento, iva, total } = calcularTotales();
+  
+  const error = (text) => {
+    messageApi.open({
+      type: 'error',
+      content: text,
+    });
+  };
 
+  
   const handleSubmit = async () => {
     try {
-      
+      // Validar campos del formulario
       await form.validateFields();
-    if (!nombre || !apellido || !empresa || !fechaSolicitada || !tipoMonedaSeleccionada || !ivaSeleccionado) {
-      message.error("Por favor, completa todos los campos obligatorios.");
-      return;
-    }
-    
   
-    const dataPrecotizacion = {
-      nombreEmpresa: empresa,
-      nombreCliente: nombre,
-      apellidoCliente: apellido,
-      correo: correos,
-      denominacion: tiposMonedaData.find((moneda) => moneda.id === tipoMonedaSeleccionada)?.codigo.replace("-", "") || "N/A",
-      fechaSolicitud: fechaSolicitada.format("YYYY-MM-DD"),
-      fechaCaducidad: fechaCaducidad ? fechaCaducidad.format("YYYY-MM-DD") : null,
-      descuento: descuento,
-      iva: ivaSeleccionado,
-      organizacion:organizationId,
-      tipoMoneda: tipoMonedaSeleccionada,
-      estado: 8,
-    };
+      if (!nombre || !apellido || !empresa || !fechaSolicitada || !tipoMonedaSeleccionada || !ivaSeleccionado) {
+        message.error("Por favor, completa todos los campos obligatorios.");
+        return;
+      }
   
-
+      // Obtener todos los clientes y empresas existentes
+      const clientesExistentes = await getAllCliente();
+      const empresasExistentes = await getAllEmpresas();
+  
+      // Verificar si el cliente ya existe
+      const clienteExistente = clientesExistentes.data.find(
+        (cliente) =>
+          cliente.nombrePila === nombre && cliente.apPaterno === apellido
+      );
+  
+      // Verificar si la empresa ya existe
+      const empresaExistente = empresasExistentes.data.find(
+        (emp) => emp.nombre === empresa
+      );
+  
+      // Si el cliente o la empresa ya existen, mostrar un error y detener el proceso
+      if (clienteExistente) {
+        message.error("El cliente ya existe.");
+        console.log('el cliente existe');
+        const textCont='el Cliente ya existe';
+        error(textCont);
+        return;
+      }
+  
+      if (empresaExistente) {
+        
+        message.error("La empresa ya existe.");
+        console.log('la empresa ya existe');
+        const textEmpresa='La empresa ya existe';
+        error(textEmpresa);
+        return;
+      }
+  
+      // Si no existen, continuar con la creación de la pre-cotización
+      const dataPrecotizacion = {
+        nombreEmpresa: empresa,
+        nombreCliente: nombre,
+        apellidoCliente: apellido,
+        correo: correos,
+        denominacion: tiposMonedaData.find((moneda) => moneda.id === tipoMonedaSeleccionada)?.codigo.replace("-", "") || "N/A",
+        fechaSolicitud: fechaSolicitada.format("YYYY-MM-DD"),
+        fechaCaducidad: fechaCaducidad ? fechaCaducidad.format("YYYY-MM-DD") : null,
+        descuento: descuento,
+        iva: ivaSeleccionado,
+        organizacion: organizationId,
+        tipoMoneda: tipoMonedaSeleccionada,
+        estado: 8,
+      };
+  
       // ✅ 1. Crear la Pre-Cotización y obtener el ID
       const response = await createPreCotizacion(dataPrecotizacion);
   
