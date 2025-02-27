@@ -241,9 +241,7 @@ const Cliente = () => {
         </div>
       ) : (
         <>
-          <div className="search-bar">
-            <Input.Search placeholder="Buscar proyectos..." enterButton="Buscar" style={{ width: "300px" }} />
-          </div>
+
           <div className="button-top-container">
             <Button type="primary" onClick={() => setIsModalOpen(true)}>
               Añadir Cliente

@@ -356,6 +356,7 @@ const RegistroCotizacion = () => {
                 <Form.Item
                   label="Notas"
                   name={['conceptos', index, 'descripcion']}
+                  rules={[{ required: true, message: 'Por favor ingresa la descripcion.' }]}
                 >
                   <TextArea
                     rows={2}

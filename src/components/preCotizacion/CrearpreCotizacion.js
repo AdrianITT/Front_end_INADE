@@ -451,13 +451,13 @@ const CrearPreCotizaciones = () => {
               <Col span={12}>
                 <Form.Item 
                 label="Cantidad de servicios"
-                name={['conceptos', index, 'cantidad']}
+                //name={['conceptos', index, 'cantidad']}
                 rules={[{ required: true, message: 'Por favor ingresa la cantidad.' }]}>
                   <Input
                     type="number"
                     min="1"
-                    //value={concepto.cantidad}
-                    //onChange={(e) => handleInputChange(concepto.id, "cantidad", parseInt(e.target.value))}
+                    value={concepto.cantidad}
+                    onChange={(e) => handleInputChange(concepto.id, "cantidad", parseInt(e.target.value))}
                   />
                 </Form.Item>
               </Col>
@@ -474,8 +474,9 @@ const CrearPreCotizaciones = () => {
                 </Form.Item>
               </Col>
               <Col span={12}>
-              <Form.Item label="Notas" name={['servicios', concepto.id, 'descripcion']}
-              rules={[{ required: true, message: 'Por favor ingresa el precio.' }]}>
+              <Form.Item label="Notas" 
+              name={['servicios', concepto.id, 'descripcion']}
+              rules={[{ required: true, message: 'Por favor ingresa la descripcion.' }]}>
                 <TextArea
                   value={concepto.descripcion}
                   onChange={(e) => handleInputChange(concepto.id, "descripcion", e.target.value)}
