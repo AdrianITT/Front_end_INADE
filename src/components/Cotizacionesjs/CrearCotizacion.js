@@ -29,6 +29,7 @@ const RegistroCotizacion = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [descuento, setDescuento] = useState(0);
   const [tipoCambioDolar, setTipoCambioDolar] = useState(1);
+  const [form] = Form.useForm();
 
   // Obtener el tipo de cambio del dólar
   useEffect(() => {
@@ -177,6 +178,7 @@ const RegistroCotizacion = () => {
 
   const handleSubmit = async () => {
     try {
+      await form.validateFields();
       const cotizacionData = {
         fechaSolicitud: dayjs(fechaSolicitada).format("YYYY-MM-DD"),
         fechaCaducidad: dayjs(fechaCaducidad).format("YYYY-MM-DD"),
@@ -203,9 +205,6 @@ const RegistroCotizacion = () => {
         return createCotizacionServicio(conceptoData);
       });
       await Promise.all(conceptosPromises);
-      // Mostrar modal de éxito
-    //setSuccessMessage("¡La cotización se ha creado exitosamente!");
-    //setIsSuccessModalVisible(true);
     } catch (error) {
       console.error("Error al crear la cotización", error);
       message.error("Error al crear la cotización");
@@ -215,7 +214,10 @@ const RegistroCotizacion = () => {
   return (
     <div className="cotizacion-container">
       <h1 className="cotizacion-title">Registro de Cotización</h1>
-      <Form layout="vertical">
+      <Form 
+      form={form}
+      layout="vertical"
+      >
         <div className="cotizacion-info-message">
           <strong>Por favor, complete todos los campos requeridos con la información correcta.</strong>
         </div>
@@ -291,11 +293,12 @@ const RegistroCotizacion = () => {
         </Form.Item>
 
         <Divider>Agregar Conceptos</Divider>
-        {conceptos.map((concepto) => (
-          <div key={concepto.id}><Card>
+        {conceptos.map((concepto, index) => (
+        <div key={concepto.id}>
+          <Card>
             <h3>Concepto {concepto.id}</h3>
             <Row justify="end">
-              <div >
+              <div>
                 <Checkbox onChange={() => handleRemoveConcepto(concepto.id)}>
                   Eliminar
                 </Checkbox>
@@ -303,8 +306,12 @@ const RegistroCotizacion = () => {
             </Row>
             <Row gutter={16}>
               <Col span={12}>
-                <Form.Item label="Servicio" rules={[{ required: true, message: 'Por favor selecciona el servicio.' }]}>
-                <Select
+                <Form.Item
+                  label="Servicio"
+                  name={['conceptos', index, 'servicio']}
+                  rules={[{ required: true, message: 'Por favor selecciona el servicio.' }]}
+                >
+                  <Select
                     placeholder="Selecciona un servicio"
                     value={concepto.servicio || undefined}
                     onChange={(value) => handleServicioChange(concepto.id, value)}
@@ -318,7 +325,10 @@ const RegistroCotizacion = () => {
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <Form.Item label="Cantidad de servicios" rules={[{ required: true, message: 'Por favor ingresa la cantidad.' }]}>
+                <Form.Item
+                  label="Cantidad de servicios"
+                  rules={[{ required: true, message: 'Por favor ingresa la cantidad.' }]}
+                >
                   <Input
                     type="number"
                     min="1"
@@ -330,7 +340,10 @@ const RegistroCotizacion = () => {
             </Row>
             <Row gutter={16}>
               <Col span={12}>
-                <Form.Item label="Precio sugerido" rules={[{ required: true, message: 'Por favor ingresa el precio.' }]}>
+                <Form.Item
+                  label="Precio sugerido"
+                  rules={[{ required: true, message: 'Por favor ingresa el precio.' }]}
+                >
                   <Input
                     disabled={true}
                     type="number"
@@ -340,19 +353,26 @@ const RegistroCotizacion = () => {
                 </Form.Item>
               </Col>
               <Col span={12}>
-              <Form.Item label="Notas" name={['servicios', concepto.id, 'descripcion']}>
-                <TextArea
-                  rows={2}
-                  value={concepto.descripcion}
-                  onChange={(e) => handleInputChange(concepto.id, "descripcion", e.target.value)}
-                  placeholder="Notas que aparecerán al final de la cotización (Opcional)"
-                />
-            </Form.Item>
+                <Form.Item
+                  label="Notas"
+                  name={['conceptos', index, 'descripcion']}
+                >
+                  <TextArea
+                    rows={2}
+                    value={concepto.descripcion}
+                    onChange={(e) => handleInputChange(concepto.id, "descripcion", e.target.value)}
+                    placeholder="Notas que aparecerán al final de la cotización (Opcional)"
+                  />
+                </Form.Item>
               </Col>
             </Row>
             <Row gutter={16}>
               <Col span={12}>
-                <Form.Item label="Precio final" rules={[{ required: true, message: 'Por favor ingresa el precio.' }]}>
+                <Form.Item
+                  label="Precio final"
+
+                  rules={[{ required: true, message: 'Por favor ingresa el precio.' }]}
+                >
                   <Input
                     type="number"
                     min="0"
@@ -362,8 +382,9 @@ const RegistroCotizacion = () => {
                 </Form.Item>
               </Col>
             </Row>
-          </Card></div>
-        ))}
+          </Card>
+        </div>
+          ))}
         <Button type="primary" onClick={handleAddConcepto} style={{ marginBottom: "16px" }}>
           Añadir Concepto
         </Button>

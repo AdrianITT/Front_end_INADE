@@ -145,7 +145,7 @@ const Header = () => {
         const response = await getOrganizacionById(organizationId);
         // Guarda el logo en el estado (asumiendo que la respuesta tiene la estructura: { data: { logo: 'url' } })
         setLogoOrganizacion(response.data);
-        console.log("Logo de la organización:", response.data.logo);
+        //console.log("Logo de la organización:", response.data.logo);
       } catch (error) {
         console.error("Error al obtener la organización:", error);
       }

@@ -30,6 +30,11 @@ const CrearPreCotizaciones = () => {
   const [apellido, setApellido] = useState("");
   const [empresa, setEmpresa] = useState("");
   const [correos, setCorreo] = useState("");
+  const [form] = Form.useForm();
+  const [conceptos, setConceptos] = useState([
+    { id: 1, servicio: "", cantidad: 1, precio: 0, precioFinal: 0, descripcion: "" },
+  ]);
+
 
   // Obtener el ID de la organización una sola vez
   const organizationId = useMemo(() => parseInt(localStorage.getItem("organizacion_id"), 10), []);
@@ -48,6 +53,18 @@ const CrearPreCotizaciones = () => {
     };
     fetchTipoCambio();
   }, []);
+
+  useEffect(() => {
+    form.setFieldsValue({
+      conceptos: conceptos.map((concepto) => ({
+        servicio: concepto.servicio,
+        cantidad: concepto.cantidad,
+        precio: concepto.precio,
+        precioFinal: concepto.precioFinal,
+        descripcion: concepto.descripcion,
+      })),
+    });
+  }, [conceptos]);
 
   const handleFechaSolicitadaChange = (date) => {
     setFechaSolicitada(date);
@@ -89,9 +106,7 @@ const CrearPreCotizaciones = () => {
     fetchServicios();
   }, [clienteId]);
 
-  const [conceptos, setConceptos] = useState([
-    { id: 1, servicio: "", cantidad: 1, precio: 0,precioFinal: 0, descripcion: "" },
-  ]);
+
 
 
 
@@ -101,7 +116,17 @@ const CrearPreCotizaciones = () => {
 
   const handleRemoveConcepto = (id) => {
     if (conceptos.length > 1) {
-      setConceptos(conceptos.filter((concepto) => concepto.id !== id));
+      const updatedConceptos = conceptos.filter((concepto) => concepto.id !== id);
+      setConceptos(updatedConceptos);
+      form.setFieldsValue({
+        conceptos: updatedConceptos.map((concepto) => ({
+          servicio: concepto.servicio,
+          cantidad: concepto.cantidad,
+          precio: concepto.precio,
+          precioFinal: concepto.precioFinal,
+          descripcion: concepto.descripcion,
+        })),
+      });
     } else {
       message.warning("Debe haber al menos un concepto.");
     }
@@ -112,6 +137,15 @@ const CrearPreCotizaciones = () => {
       concepto.id === id ? { ...concepto, [field]: value } : concepto
     );
     setConceptos(updatedConceptos);
+    form.setFieldsValue({
+      conceptos: updatedConceptos.map((concepto) => ({
+        servicio: concepto.servicio,
+        cantidad: concepto.cantidad,
+        precio: concepto.precio,
+        precioFinal: concepto.precioFinal,
+        descripcion: concepto.descripcion,
+      })),
+    });
   };
 
   const handleServicioChange = (conceptoId, servicioId) => {
@@ -165,10 +199,14 @@ const CrearPreCotizaciones = () => {
   const { subtotal, descuentoValor, subtotalConDescuento, iva, total } = calcularTotales();
 
   const handleSubmit = async () => {
+    try {
+      
+      await form.validateFields();
     if (!nombre || !apellido || !empresa || !fechaSolicitada || !tipoMonedaSeleccionada || !ivaSeleccionado) {
       message.error("Por favor, completa todos los campos obligatorios.");
       return;
     }
+    
   
     const dataPrecotizacion = {
       nombreEmpresa: empresa,
@@ -185,7 +223,7 @@ const CrearPreCotizaciones = () => {
       estado: 8,
     };
   
-    try {
+
       // ✅ 1. Crear la Pre-Cotización y obtener el ID
       const response = await createPreCotizacion(dataPrecotizacion);
   
@@ -204,7 +242,7 @@ const CrearPreCotizaciones = () => {
           const servicioData = {
             descripcion: concepto.descripcion || "Sin descripción",
             precio: Number(concepto.precioFinal) || 0,
-            cantidad: Number(concepto.cantidad) || 1,
+            cantidad: Number(concepto.cantidad) || 0,
             preCotizacion: preCotizacionId,
             servicio: concepto.servicio,
           };
@@ -246,7 +284,11 @@ const CrearPreCotizaciones = () => {
   return (
     <div className="cotizacion-container">
       <h1 className="cotizacion-title">Registro de Pre-Cotización</h1>
-      <Form layout="vertical">
+      <Form 
+      layout="vertical"
+      form={form}
+      >
+
         <div className="cotizacion-info-message">
           <strong>Por favor, complete todos los campos requeridos con la información correcta.</strong>
         </div>
@@ -376,7 +418,8 @@ const CrearPreCotizaciones = () => {
         </Form.Item>
 
         <Divider>Agregar Conceptos</Divider>
-        {conceptos.map((concepto) => (
+        
+        {conceptos.map((concepto, index) => (
           <div key={concepto.id}><Card>
             <h3>Concepto {concepto.id}</h3>
             <Row justify="end">
@@ -388,7 +431,10 @@ const CrearPreCotizaciones = () => {
             </Row>
             <Row gutter={16}>
               <Col span={12}>
-                <Form.Item label="Servicio" rules={[{ required: true, message: 'Por favor selecciona el servicio.' }]}>
+                <Form.Item 
+                label="Servicio" 
+                name={['conceptos', index, 'servicio']}
+                rules={[{ required: true, message: 'Por favor selecciona el servicio.' }]}>
                 <Select
                     placeholder="Selecciona un servicio"
                     value={concepto.servicio || undefined}
@@ -403,12 +449,15 @@ const CrearPreCotizaciones = () => {
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <Form.Item label="Cantidad de servicios" rules={[{ required: true, message: 'Por favor ingresa la cantidad.' }]}>
+                <Form.Item 
+                label="Cantidad de servicios"
+                name={['conceptos', index, 'cantidad']}
+                rules={[{ required: true, message: 'Por favor ingresa la cantidad.' }]}>
                   <Input
                     type="number"
                     min="1"
-                    value={concepto.cantidad}
-                    onChange={(e) => handleInputChange(concepto.id, "cantidad", parseInt(e.target.value))}
+                    //value={concepto.cantidad}
+                    //onChange={(e) => handleInputChange(concepto.id, "cantidad", parseInt(e.target.value))}
                   />
                 </Form.Item>
               </Col>
@@ -425,7 +474,8 @@ const CrearPreCotizaciones = () => {
                 </Form.Item>
               </Col>
               <Col span={12}>
-              <Form.Item label="Notas" name={['servicios', concepto.id, 'descripcion']}>
+              <Form.Item label="Notas" name={['servicios', concepto.id, 'descripcion']}
+              rules={[{ required: true, message: 'Por favor ingresa el precio.' }]}>
                 <TextArea
                   value={concepto.descripcion}
                   onChange={(e) => handleInputChange(concepto.id, "descripcion", e.target.value)}
@@ -436,7 +486,9 @@ const CrearPreCotizaciones = () => {
             </Row>
             <Row gutter={16}>
               <Col span={12}>
-                <Form.Item label="Precio final" rules={[{ required: true, message: 'Por favor ingresa el precio.' }]}>
+                <Form.Item label="Precio final" 
+                //name={['conceptos', index, 'precioFinal']}
+                rules={[{ required: true, message: 'Por favor ingresa el precio.' }]}>
                   <Input
                     type="number"
                     min="0"
