@@ -137,21 +137,24 @@ const CrearFactura = () => {
       (acc, servicio) => acc + servicio.cantidad * servicio.precio,
       0
     );
-    const nuevoIva = nuevoSubtotal * tasaIva;
-    const nuevoTotal = nuevoSubtotal + nuevoIva;
-    const nuevadesc= nuevoSubtotal * descuento;
+
+    const descuentoSubtotal = nuevoSubtotal * (descuento / 100);
+    const nuevoSubtotalConDescuento = nuevoSubtotal - descuentoSubtotal;
+    const nuevoIva = nuevoSubtotalConDescuento * tasaIva;
+    const nuevoTotal = nuevoSubtotalConDescuento + nuevoIva;
+
   
     setSubtotal(nuevoSubtotal.toFixed(2));
     setIva(nuevoIva.toFixed(2));
     setTotal(nuevoTotal.toFixed(2));
-    setDescuento(nuevadesc.toFixed(2));
+
   
     // Actualizar valores en el formulario
     form.setFieldsValue({
       subtotal: `$${(nuevoSubtotal / factorConversion).toFixed(2)} ${esUSD ? "USD" : "MXN"}`,
       iva: `$${(nuevoIva / factorConversion).toFixed(2)} ${esUSD ? "USD" : "MXN"}`,
       total: `$${(nuevoTotal / factorConversion).toFixed(2)} ${esUSD ? "USD" : "MXN"}`,
-      descuentos: `$${(nuevadesc / factorConversion).toFixed(2)} ${esUSD ? "USD" : "MXN"}`,
+
     });
   };
   
@@ -347,7 +350,9 @@ const obtenerIva = async (ivaIdParam = 1) => {
         ordenTrabajo: parseInt(id),  // ID de la orden de trabajo
         tipoCfdi: values.tipoCfdi,  // ID del CFDI seleccionado
         formaPago: values.formaPago,  // ID de la forma de pago seleccionada
-        metodoPago: values.metodoPago  // ID del método de pago seleccionado
+        metodoPago: values.metodoPago, // ID del método de pago seleccionado
+        importe: total,  // Total de la factura
+        tipoMoneda: moneda.codigo
     }
     try {
       message.success("Factura creada con éxito");
