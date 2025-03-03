@@ -34,7 +34,8 @@ import PreCotizacion from "./components/preCotizacion/PreCotizacion";
 import CrearPreCotizacion from "./components/preCotizacion/CrearpreCotizacion";
 import PreCotizacionDetalles from "./components/preCotizacion/preCotizacionDetalles";
 import EditarCotizacion from "./components/Cotizacionesjs/EditarCotizacion";
-
+import Pagos from "./components/Pagosjs/Pagos";
+import CrearPagos from "./components/Pagosjs/CrearPagos";
 
 // Hook para cambiar el título de la pestaña
 const usePageTitle = () => {
@@ -123,6 +124,9 @@ const AppRouter = () => {
           <Route path="/PreCotizacion" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><PreCotizacion/></ProtectedRoute>} />
           <Route path="/PreCotizacionDetalles/:id" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><PreCotizacionDetalles/></ProtectedRoute>} />
           <Route path="/EditarCotizacion/:id" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><EditarCotizacion/></ProtectedRoute>} />
+          <Route path="/Pagos" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><Pagos/></ProtectedRoute>} />
+          <Route path="/CrearPagos" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><CrearPagos/></ProtectedRoute>} />
+          <Route path="/CrearPagos/:id" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><CrearPagos/></ProtectedRoute>} />
         </Route>
       </Routes>
     </Router>

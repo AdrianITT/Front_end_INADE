@@ -15,6 +15,7 @@ import {
   UsergroupAddOutlined,
   EditOutlined,
   ThunderboltTwoTone,
+  DollarTwoTone,
 } from "@ant-design/icons";
 import { Link } from "react-router-dom";
 
@@ -214,6 +215,17 @@ const App = () => {
                   <Card className="card-custom" title="Pre-Cotizaciones" bordered={false}>
                     <div className="icon-container">
                     <ThunderboltTwoTone />
+                    </div>
+                  </Card>
+                </Link>
+              </div>
+            </Col>
+            <Col xs={24} sm={12} md={8} lg={6} xl={4} className="col-style">
+              <div>
+                <Link to="/Pagos">
+                  <Card className="card-custom" title="Pagos" bordered={false}>
+                    <div className="icon-container">
+                    <DollarTwoTone />
                     </div>
                   </Card>
                 </Link>
