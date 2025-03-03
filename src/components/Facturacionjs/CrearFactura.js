@@ -484,7 +484,11 @@ const obtenerIva = async (ivaIdParam = 1) => {
           <Button type="primary" htmlType="submit" style={{ backgroundColor: "#52c41a", borderColor: "#52c41a" }}>
             Confirmar datos
           </Button>
-          <Button type="danger" style={{ backgroundColor: "#f5222d", borderColor: "#f5222d" }} onClick={navigate(-1)}>
+          <Button
+            type="danger"
+            style={{ backgroundColor: "#f5222d", borderColor: "#f5222d" }}
+            onClick={() => navigate(-1)}
+          >
             Cancelar
           </Button>
         </div>

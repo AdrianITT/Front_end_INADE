@@ -9,6 +9,9 @@ import { getAllCotizacion, getCotizacionById} from '../../apis/CotizacionApi';
 import { getAllCotizacionServicio } from '../../apis/CotizacionServicioApi';
 import { getAllOrdenesTrabajo } from '../../apis/OrdenTrabajoApi';
 import { createComprobantepago } from '../../apis/PagosApi';
+import { createComprobantepagoFactura, getAllComprobantepagoFactura } from '../../apis/ComprobantePagoFacturaApi';
+import {getAllMetodopago} from '../../apis/MetodoPagoApi';
+import { getIvaById } from '../../apis/ivaApi';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -33,6 +36,19 @@ const CrearPagos = () => {
 
   // Estado para el cliente seleccionado
   const [selectedClient, setSelectedClient] = useState(null);
+
+  // Estado para almacenar la lista de métodos de pago
+  const [metodosPago, setMetodosPago] = useState([]);
+  // Estado para indicar si se están cargando los métodos
+  const [loadingMetodos, setLoadingMetodos] = useState(false);
+  // Estado para el método de pago seleccionado
+  const [selectedMetodoPago, setSelectedMetodoPago] = useState(null);
+
+  // Estados globales fuera del array de facturas:
+const [fechaSolicitada, setFechaSolicitada] = useState(null);
+const [formaPagoGlobal, setFormaPagoGlobal] = useState('');
+const [metodoPagoGlobal, setMetodoPagoGlobal] = useState(null);
+
 
   // Estado local para el formulario de facturas
   const [facturas, setFacturas] = useState([
@@ -60,6 +76,18 @@ const CrearPagos = () => {
         setLoadingClientes(false);
       }
     };
+    const fetchMetodosPago = async () => {
+      setLoadingMetodos(true);
+      try {
+        const response = await getAllMetodopago();
+        setMetodosPago(response.data);
+      } catch (error) {
+        console.error("Error al obtener métodos de pago:", error);
+      } finally {
+        setLoadingMetodos(false);
+      }
+    };
+    fetchMetodosPago();
     fetchClientes();
   }, []);
 
@@ -83,6 +111,7 @@ const CrearPagos = () => {
               // Buscar la cotización asociada a la orden de trabajo
               const cotizacion = cotizacionesRes.data.find(c => c.id === orden.cotizacion);
               console.log('cotizaciones: ', cotizacion);
+              console.log('hola');
               if (cotizacion) {
                 // Actualizamos el cliente seleccionado
                 setSelectedClient(cotizacion.cliente);
@@ -247,24 +276,7 @@ const CrearPagos = () => {
   };
   
 
-// Manejo de cambio en el select de factura
-const handleSelectChange = (facturaItemId, selectedFacturaId) => {
-  // 1) Actualiza la factura en "facturas"
-  setFacturas(prev =>
-    prev.map(fact =>
-      fact.id === facturaItemId
-        ? { ...fact, factura: selectedFacturaId }
-        : fact
-    )
-  );
-  // 2) Busca la factura en facturasData
-  const selectedFacturaObj = facturasData.find(fd => fd.id === selectedFacturaId);
-  if (selectedFacturaObj) {
-    // 3) setcotizacionId con el ID único
-    setcotizacionId(selectedFacturaObj.cotizacion); // <--- debe ser un número
-    console.log("Cotizacion ID directo de la factura:", selectedFacturaObj.cotizacion);
-  }
-};
+
 
   // Manejo de cambio en el select de forma de pago
   const handleFormaPagoChange = (id, value) => {
@@ -285,43 +297,47 @@ const handleSelectChange = (facturaItemId, selectedFacturaId) => {
   // ✅ Función para crear el comprobante de pago
   const handleCrearPagos = async () => {
     try {
-    // Suponiendo que tu backend NO maneja un array "detalles",
-    // sino un objeto plano con campos directos:
-    const dataParaBackend = {
-      // 'observaciones' en vez de 'notas'
-      observaciones: form.getFieldValue('Notas') || '',
+      // 1) Obtener observaciones y fecha
+      const obervaciones = form.getFieldValue("Notas") || "";
+      const fechaPago = fechaSolicitada
+        ? fechaSolicitada.format("YYYY-MM-DD HH:mm:ss")
+        : null;
+  
+      // 2) Construir ComprobantePago usando las variables globales
+      const dataComprobantePago = {
+        obervaciones,
+        fechaPago,
+        formapago: formaPagoGlobal,     // <-- del estado global
+        metodopago: metodoPagoGlobal,   // <-- del estado global
+      };
+  
+      // 3) Crear ComprobantePago
+      const respComprobante = await createComprobantepago(dataComprobantePago);
+      const comprobantepagoId = respComprobante.data.id;
+  
+      // 4) Para cada factura, crear ComprobantePagoFactura
+    // 4) Crear ComprobantePagoFactura para **cada** factura del array
+    for (const facturaItem of facturas) {
+      // Omitir si no seleccionó ninguna factura
+      if (!facturaItem.factura) continue; 
 
-      // 'fechaPago' en vez de 'fecha'
-      fechaPago: facturas[0].fechaSolicitada
-        ? facturas[0].fechaSolicitada.format('YYYY-MM-DD')
-        : null,
-
-      // 'facturaId' en vez de 'factura'
-      facturaId: facturas[0].factura,
-
-      // 'formaPago' ya coincide, por ejemplo
-      formaPago: facturas[0].formaPago,
-
-      // si tu backend pide 'metodoPago', agrégalo
-      metodoPago: 1,
-
-      // si tu backend espera 'precioTotal', 'precioPagar', 'precioRestante' directamente
-      precioTotal: facturas[0].precioTotal,
-      precioPagar: facturas[0].precioPagar,
-      precioRestante: facturas[0].precioRestante,
-    };
-
-    console.log("Data que envío al backend:", dataParaBackend);
-    const response = await createComprobantepago(dataParaBackend);
-    console.log("Respuesta del backend:", response);
-      // 4) Manejar la respuesta (puedes usar message de AntD para feedback)
-      message.success('¡Comprobante de pago creado con éxito!');
-      // Opcional: Redirigir o limpiar el formulario
+      const dataComprobanteFactura = {
+        montototal: Number(facturaItem.precioTotal) || 0,
+        montorestante: Number(facturaItem.precioRestante) || 0,
+        montopago: Number(facturaItem.precioPagar) || 0,
+        comprobantepago: comprobantepagoId,
+        factura: facturaItem.factura,
+      };
+      await createComprobantepagoFactura(dataComprobanteFactura);
+    }
+  
+      message.success("¡Comprobante de pago creado con éxito!");
     } catch (error) {
-      console.error('Error al crear comprobante de pago:', error);
-      message.error('Error al crear comprobante de pago');
+      console.error("Error en crear pagos:", error);
+      message.error("Error al crear el comprobante de pago");
     }
   };
+  
 
   const [descuento, setDescuento] = useState(0);  // Descuento en %
   const [iva, setIva] = useState(0);             // IVA en %
@@ -337,41 +353,46 @@ const handleSelectChange = (facturaItemId, selectedFacturaId) => {
         // 1) Obtener la cotización
         const cotiRes = await getCotizacionById(cotizacionId);
         const coti = cotiRes.data;
-        // coti.descuento y coti.iva
         setDescuento(coti.descuento);
-        setIva(coti.iva);
   
-        // 2) Obtener todos los cotizacionServicio
+        // 2) Obtener el porcentaje de IVA usando el id que viene en coti.iva
+        const ivaRes = await getIvaById(coti.iva);
+        // Supongamos que la respuesta tiene la propiedad "porcentaje"
+        const ivaPercentage = ivaRes.data.porcentaje;
+        setIva(ivaPercentage);
+  
+        // 3) Obtener todos los servicios de la cotización
         const cotiServRes = await getAllCotizacionServicio();
-        // Filtrar los que correspondan a esta cotización
         const serviciosFiltrados = cotiServRes.data.filter(
           (item) => item.cotizacion === Number(cotizacionId)
         );
   
-        // 3) Calcular el subtotal
+        // 4) Calcular el subtotal
         const nuevoSubtotal = serviciosFiltrados.reduce(
           (acc, item) => acc + (Number(item.precio) * Number(item.cantidad)),
           0
         );
   
-        // 4) Aplicar descuento e IVA (suponiendo coti.descuento=5 => 5%)
+        // 5) Calcular descuento, IVA y total usando el porcentaje obtenido
         const montoDescuento = nuevoSubtotal * (coti.descuento / 100);
         const subtotalConDesc = nuevoSubtotal - montoDescuento;
-        const montoIva = subtotalConDesc * (coti.iva / 100);
+        const montoIva = subtotalConDesc * (ivaPercentage);
         const montoTotal = subtotalConDesc + montoIva;
   
-        // 5) Guardar en tu estado
+        // 6) Guardar en el estado
         setSubtotal(nuevoSubtotal);
         setTotal(montoTotal);
   
-        // 6) (Opcional) Asignar el total a la primera factura del formulario
-        setFacturas(prev => prev.map((fact, index) =>
-          index === 0 
-            ? { ...fact, precioTotal: montoTotal.toFixed(2) } 
-            : fact
-        ));
+        // 7) (Opcional) Asignar el total a la primera factura del formulario
+        /*
+        setFacturas((prev) =>
+          prev.map((fact, index) =>
+            index === 0 ? { ...fact, precioTotal: montoTotal.toFixed(2) } : fact
+          )
+        );*/
+        
   
-        console.log("Descuento:", coti.descuento, "IVA:", coti.iva);
+        console.log("Descuento:", coti.descuento, "IVA:", ivaPercentage);
         console.log("Subtotal:", nuevoSubtotal, "Total:", montoTotal);
       } catch (error) {
         console.error("Error al obtener datos de la cotización:", error);
@@ -380,6 +401,73 @@ const handleSelectChange = (facturaItemId, selectedFacturaId) => {
   
     fetchCotiData();
   }, [cotizacionId]);
+
+  // Manejo de cambio en el select de factura
+const handleSelectChange = async (facturaItemId, selectedFacturaId) => {
+  // 1) Actualiza la factura seleccionada
+  setFacturas((prev) =>
+    prev.map((fact) =>
+      fact.id === facturaItemId
+        ? { ...fact, factura: selectedFacturaId }
+        : fact
+    )
+  );
+
+  // 2) Ajusta cotizacionId si lo necesitas
+  const selectedFacturaObj = facturasData.find((fd) => fd.id === selectedFacturaId);
+  if (selectedFacturaObj) {
+    setcotizacionId(selectedFacturaObj.cotizacion);
+  }
+
+  // 3) Traer todos los ComprobantePagoFactura (o filtrar por factura en el backend)
+  try {
+    const response = await getAllComprobantepagoFactura(); 
+    // O si tu backend lo permite:
+    // const response = await getComprobantepagoFacturaByFactura(selectedFacturaId);
+
+    // 4) Filtrar por la factura seleccionada
+    const comprobantesFactura = response.data.filter(
+      (cf) => cf.factura === selectedFacturaId
+    );
+    console.log('comprobantesFactura: ',comprobantesFactura);
+    if (comprobantesFactura.length > 0) {
+      // 5) Tomar la parcialidad más alta
+      const recordConParcialidadMaxima = comprobantesFactura.reduce((acc, curr) =>
+        curr.parcialidad > acc.parcialidad ? curr : acc
+      );
+
+      // 6) Usar su `montorestante` como "precioTotal"
+      const montorestante = recordConParcialidadMaxima.montorestante;
+
+      setFacturas((prev) =>
+        prev.map((fact) => {
+          if (fact.id === facturaItemId) {
+            return { ...fact, precioTotal: montorestante.toString() };
+          }
+          return fact;
+        })
+      );
+    } else {
+      // No hay pagos previos => muestra el total de la cotización, 
+      // o un valor en blanco, según tu preferencia
+      setFacturas((prev) =>
+        prev.map((fact) => {
+          if (fact.id === facturaItemId) {
+            // Si quieres el total de la cotización (guardado en `total`):
+            return { ...fact, precioTotal: total.toFixed(2) };
+            
+            // O en blanco:
+            // return { ...fact, precioTotal: '' };
+          }
+          return fact;
+        })
+      );
+
+    }
+  } catch (err) {
+    console.error('Error obteniendo ComprobantePagoFactura:', err);
+  }
+};
   
 
   return (
@@ -425,6 +513,64 @@ const handleSelectChange = (facturaItemId, selectedFacturaId) => {
         }}
       >
         <Form layout="vertical" form={form}>
+          {/* Campos globales (fuera del map) */}
+          <Row gutter={16}>
+            <Col span={24}>
+              <Form.Item
+                label="Fecha y hora solicitada"
+                rules={[{ required: true, message: 'Por favor ingresa la fecha y hora.' }]}
+              >
+                <DatePicker
+                  showTime
+                  format="DD/MM/YYYY HH:mm"
+                  style={{ width: '100%' }}
+                  value={fechaSolicitada}
+                  onChange={(date) => setFechaSolicitada(date)}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={16}>
+            <Col span={24}>
+              <Form.Item label="Forma de pago">
+                <Select
+                  placeholder="Selecciona la forma de pago"
+                  value={formaPagoGlobal || undefined}
+                  onChange={(value) => setFormaPagoGlobal(value)}
+                  loading={loadingFormasPago}
+                  dropdownStyle={{ borderRadius: 8 }}
+                >
+                  {formasPagoData.map((fp) => (
+                    <Option key={fp.id} value={fp.id}>
+                      {`${fp.codigo} - ${fp.descripcion}`}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={16}>
+            <Col span={24}>
+              <Form.Item label="Método de pago">
+                <Select
+                  placeholder="Selecciona método de pago"
+                  style={{ width: 250 }}
+                  loading={loadingMetodos}
+                  value={metodoPagoGlobal}
+                  onChange={(value) => setMetodoPagoGlobal(value)}
+                  dropdownStyle={{ borderRadius: 8 }}
+                >
+                  {metodosPago.map((mp) => (
+                    <Option key={mp.id} value={mp.id}>
+                      {`${mp.codigo} - ${mp.descripcion}`}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+          </Row>
           {facturas.map((factura, index) => (
             <Card
               key={factura.id}
@@ -461,41 +607,6 @@ const handleSelectChange = (facturaItemId, selectedFacturaId) => {
                 </Col>
               </Row>
 
-              {/* Fecha Solicitada */}
-              <Row gutter={16}>
-                <Col span={24}>
-                  <Form.Item label="Fecha Solicitada" rules={[{ required: true, message: 'Por favor ingresa la fecha.' }]}>
-                    <DatePicker
-                      format="DD/MM/YYYY"
-                      style={{ width: '100%' }}
-                      value={factura.fechaSolicitada}
-                      onChange={(date) => handleFechaChange(factura.id, date)}
-                    />
-                  </Form.Item>
-                </Col>
-              </Row>
-
-              {/* Select: Forma de Pago */}
-              <Row gutter={16}>
-                <Col span={24}>
-                  <Form.Item label="Forma de pago">
-                    <Select
-                      placeholder="Selecciona la forma de pago"
-                      value={factura.formaPago || undefined}
-                      onChange={(value) => handleFormaPagoChange(factura.id, value)}
-                      loading={loadingFormasPago}
-                      dropdownStyle={{ borderRadius: 8 }}
-                    >
-                      {formasPagoData.map((fp) => (
-                        <Option key={fp.id} value={fp.id}>
-                          {`${fp.codigo} - ${fp.descripcion}`}
-                        </Option>
-                      ))}
-                    </Select>
-                  </Form.Item>
-                </Col>
-              </Row>
-
               <Row gutter={16}>
                 <Col span={12}>
                   <Form.Item label="Precio total">
@@ -506,6 +617,7 @@ const handleSelectChange = (facturaItemId, selectedFacturaId) => {
                         handleInputChange(factura.id, 'precioTotal', e.target.value)
                       }
                       style={{ borderRadius: 8 }}
+                      disabled={true}
                     />
                   </Form.Item>
                 </Col>
@@ -518,6 +630,7 @@ const handleSelectChange = (facturaItemId, selectedFacturaId) => {
                         handleInputChange(factura.id, 'precioPagar', e.target.value)
                       }
                       style={{ borderRadius: 8 }}
+                      
                     />
                   </Form.Item>
                 </Col>
@@ -547,6 +660,7 @@ const handleSelectChange = (facturaItemId, selectedFacturaId) => {
           {/* Notas generales */}
           <Form.Item
             label="Notas"
+            name="Notas"
             rules={[{ required: true, message: 'Por favor ingresa la descripción.' }]}
           >
             <TextArea
