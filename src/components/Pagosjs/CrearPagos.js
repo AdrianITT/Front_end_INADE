@@ -448,16 +448,17 @@ const handleSelectChange = async (facturaItemId, selectedFacturaId) => {
         })
       );
     } else {
-      // No hay pagos previos => muestra el total de la cotización, 
-      // o un valor en blanco, según tu preferencia
       setFacturas((prev) =>
         prev.map((fact) => {
           if (fact.id === facturaItemId) {
-            // Si quieres el total de la cotización (guardado en `total`):
-            return { ...fact, precioTotal: total.toFixed(2) };
-            
-            // O en blanco:
-            // return { ...fact, precioTotal: '' };
+            // 1) Busca la factura en el array facturasData
+            const invoiceObj = facturasData.find((f) => f.id === selectedFacturaId);
+            if (invoiceObj) {
+              // 2) Asigna su 'importe' como precioTotal
+              return { ...fact, precioTotal: invoiceObj.importe,tipoMoneda: invoiceObj.tipoMoneda };
+            }
+            // Si no se encuentra, lo dejas en blanco o como prefieras
+            return { ...fact, precioTotal: '', tipoMoneda: ''  };
           }
           return fact;
         })
@@ -654,6 +655,14 @@ const handleSelectChange = async (facturaItemId, selectedFacturaId) => {
                   {/* Espacio para más campos si es necesario */}
                 </Col>
               </Row>
+              <Col span={12}>
+                <Form.Item label="Moneda">
+                  <Input
+                    value={factura.tipoMoneda || ""}
+                    disabled
+                  />
+                </Form.Item>
+              </Col>
             </Card>
           ))}
 
