@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Card, Row, Col, Button, Table, Tabs, Dropdown, Menu, Modal, Select, Input, Form, DatePicker, Flex, Alert, Checkbox,message,Descriptions, Result, Spin  } from "antd";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import{FileTextTwoTone,MailTwoTone,FilePdfTwoTone,CloseCircleTwoTone, FileAddTwoTone} from "@ant-design/icons";
 import { getFacturaById, createPDFfactura } from "../../apis/FacturaApi";
 import { getAllFormaPago } from "../../apis/FormaPagoApi";
@@ -667,6 +667,17 @@ useEffect(() => {console.log('Importe total', TotalS)}, [TotalS]);
         </Tabs.TabPane>
         <Tabs.TabPane tab="Pago" key="2">
           <p>Historial de la factura</p> 
+          <Link to={`/CrearPagos/${id}`}>
+            <Button
+              type="primary"
+              style={{
+                backgroundColor: '#52c41a',
+                borderColor: '#52c41a',
+                borderRadius: 8
+              }}
+            >
+              Crear pagos
+            </Button></Link>
           <PaymentCards/> 
         </Tabs.TabPane>
       </Tabs>

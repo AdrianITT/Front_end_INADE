@@ -44,6 +44,7 @@ const CrearFactura = () => {
     const navigate = useNavigate();
     const [moneda, setMoneda] = useState({ codigo: "", descripcion: "" });
     const [cotizacionId, setCotizacionId] = useState(null);
+    //const [cotizacion, setcotizacionData]=useState(null);
 
 
     // Estados
@@ -51,6 +52,7 @@ const CrearFactura = () => {
     const [subtotal, setSubtotal] = useState(0);
     const [iva, setIva] = useState(0);
     const [total, setTotal] = useState(0);
+    const[descuento, setDescuento]=useState(0);
 
     const esUSD =moneda.codigo === "USD";
     const factorConversion = esUSD ? tipoCambioDolar : 1;
@@ -82,6 +84,7 @@ const CrearFactura = () => {
           console.log("Orden de trabajo:", ordenTrabajo.data);
           const cotizacion = await getCotizacionById(ordenTrabajo.data.cotizacion);
           console.log("Cotización:", cotizacion.data);
+          setDescuento(cotizacion.data.descuento);
           const tipoMoneda = await getTipoMonedaById(cotizacion.data.tipoMoneda);
           console.log("Tipo de moneda:", tipoMoneda.data);
           setMoneda({ codigo: tipoMoneda.data.codigo, descripcion: tipoMoneda.data.descripcion });
@@ -136,16 +139,19 @@ const CrearFactura = () => {
     );
     const nuevoIva = nuevoSubtotal * tasaIva;
     const nuevoTotal = nuevoSubtotal + nuevoIva;
+    const nuevadesc= nuevoSubtotal * descuento;
   
     setSubtotal(nuevoSubtotal.toFixed(2));
     setIva(nuevoIva.toFixed(2));
     setTotal(nuevoTotal.toFixed(2));
+    setDescuento(nuevadesc.toFixed(2));
   
     // Actualizar valores en el formulario
     form.setFieldsValue({
       subtotal: `$${(nuevoSubtotal / factorConversion).toFixed(2)} ${esUSD ? "USD" : "MXN"}`,
       iva: `$${(nuevoIva / factorConversion).toFixed(2)} ${esUSD ? "USD" : "MXN"}`,
       total: `$${(nuevoTotal / factorConversion).toFixed(2)} ${esUSD ? "USD" : "MXN"}`,
+      descuentos: `$${(nuevadesc / factorConversion).toFixed(2)} ${esUSD ? "USD" : "MXN"}`,
     });
   };
   
@@ -253,6 +259,7 @@ const CrearFactura = () => {
       const cotizacionServiciosFiltrados = responseCotizacionServicio.data.filter(
         (cotiServ) => cotiServ.cotizacion === cotizacionId
       );
+      console.log('cotizacionServiciosFiltrados: ',cotizacionServiciosFiltrados);
       // 🟢 Asegurar que `serviciosList` tenga datos antes de usarlo
       let listaServicios = serviciosList;
       if (listaServicios.length === 0) {
@@ -456,6 +463,9 @@ const obtenerIva = async (ivaIdParam = 1) => {
             <Input value={`$${(subtotal / factorConversion).toFixed(2)} ${esUSD ? "USD" : "MXN"}`}
               disabled  />
             </Form.Item>
+            <Form.Item label="Descuento:">
+              <Input value={`${descuento}%`} disabled />
+            </Form.Item>
             <Form.Item label="tasa IVA:">
               <Input value={`${tasaIva}%`} disabled />
             </Form.Item>
@@ -474,7 +484,7 @@ const obtenerIva = async (ivaIdParam = 1) => {
           <Button type="primary" htmlType="submit" style={{ backgroundColor: "#52c41a", borderColor: "#52c41a" }}>
             Confirmar datos
           </Button>
-          <Button type="danger" style={{ backgroundColor: "#f5222d", borderColor: "#f5222d" }}>
+          <Button type="danger" style={{ backgroundColor: "#f5222d", borderColor: "#f5222d" }} onClick={navigate(-1)}>
             Cancelar
           </Button>
         </div>

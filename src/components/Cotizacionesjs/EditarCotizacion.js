@@ -274,10 +274,22 @@ const EditarCotizacion = () => {
      // Guardar cambios
      const handleSubmit = async () => {
       try {
-        // Preparar el objeto de actualización de la cotización...
-        // (Código existente para la actualización de la cotización)
-    
-        // Separar conceptos marcados para eliminación y los que se conservarán
+        // Obtener la cotización actual
+        const response = await getCotizacionById(id);
+        const cotizacionActual = response.data;
+
+        // Crear el objeto actualizado combinando la información actual con los nuevos valores
+        const cotizacionUpdatePayload = {
+          ...cotizacionActual,  // conserva todos los campos actuales
+          tipoMoneda: tipoMonedaSeleccionada,
+          iva: ivaSeleccionado,
+          descuento: descuento,
+          denominacion: tipoMonedaSeleccionada === 1 ? "MXN" : "USD",
+        };
+
+        await updateCotizacion(id, cotizacionUpdatePayload);
+
+        // 2. Procesar eliminación de conceptos
         const conceptosAEliminar = conceptos.filter(c => c.eliminar);
         const conceptosNoEliminados = conceptos.filter(c => !c.eliminar);
     
