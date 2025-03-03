@@ -343,6 +343,7 @@ const obtenerIva = async (ivaIdParam = 1) => {
   ];
 
   const handlecrearFactura=async(values)=>{
+    const importeEnMoneda = parseFloat(total) / factorConversion;
     const datosFactura={
       notas:values.notas|| "",
       ordenCompra: values.ordenCompra||"",
@@ -351,7 +352,7 @@ const obtenerIva = async (ivaIdParam = 1) => {
         tipoCfdi: values.tipoCfdi,  // ID del CFDI seleccionado
         formaPago: values.formaPago,  // ID de la forma de pago seleccionada
         metodoPago: values.metodoPago, // ID del método de pago seleccionado
-        importe: total,  // Total de la factura
+        importe: importeEnMoneda,
         tipoMoneda: moneda.codigo
     }
     try {
