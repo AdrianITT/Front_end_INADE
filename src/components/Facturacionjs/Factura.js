@@ -93,11 +93,11 @@ const Factura = () => {
               })
             : "Desconocida";
           
-          // Calcular si es reciente (<= 3 días)
+          // Calcular si es reciente (<= 4 días)
           let recent = false;
           if (expedicionDate) {
             const diffDays = (currentDate - expedicionDate) / (1000 * 60 * 60 * 24);
-            recent = diffDays <= 3;
+            recent = diffDays < 4;
           }
 
           return {
@@ -257,10 +257,11 @@ const Factura = () => {
         bordered
         pagination={{ pageSize: 5 }}
         loading={loading}
-        rowClassName={(record) => (record.missing ? "highlighted-row" : "")}
+        rowClassName={(record) => (record.missing && record.recent) ? "highlighted-row" : ""}
       />
     </div>
   );
 };
 
 export default Factura;
+
