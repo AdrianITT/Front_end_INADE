@@ -298,14 +298,14 @@ const [metodoPagoGlobal, setMetodoPagoGlobal] = useState(null);
   const handleCrearPagos = async () => {
     try {
       // 1) Obtener observaciones y fecha
-      const obervaciones = form.getFieldValue("Notas") || "";
+      const observaciones = form.getFieldValue("Notas") || "";
       const fechaPago = fechaSolicitada
         ? fechaSolicitada.format("YYYY-MM-DD HH:mm:ss")
         : null;
   
       // 2) Construir ComprobantePago usando las variables globales
       const dataComprobantePago = {
-        obervaciones,
+        observaciones,
         fechaPago,
         formapago: formaPagoGlobal,     // <-- del estado global
         metodopago: metodoPagoGlobal,   // <-- del estado global
@@ -430,6 +430,7 @@ const handleSelectChange = async (facturaItemId, selectedFacturaId) => {
       (cf) => cf.factura === selectedFacturaId
     );
     console.log('comprobantesFactura: ',comprobantesFactura);
+    const invoiceObj = facturasData.find((f) => f.id === selectedFacturaId);
     if (comprobantesFactura.length > 0) {
       // 5) Tomar la parcialidad más alta
       const recordConParcialidadMaxima = comprobantesFactura.reduce((acc, curr) =>
@@ -442,7 +443,9 @@ const handleSelectChange = async (facturaItemId, selectedFacturaId) => {
       setFacturas((prev) =>
         prev.map((fact) => {
           if (fact.id === facturaItemId) {
-            return { ...fact, precioTotal: montorestante.toString() };
+            return { ...fact, precioTotal: montorestante.toString(),
+              tipoMoneda: invoiceObj ? invoiceObj.tipoMoneda : '' 
+             };
           }
           return fact;
         })
@@ -452,7 +455,7 @@ const handleSelectChange = async (facturaItemId, selectedFacturaId) => {
         prev.map((fact) => {
           if (fact.id === facturaItemId) {
             // 1) Busca la factura en el array facturasData
-            const invoiceObj = facturasData.find((f) => f.id === selectedFacturaId);
+            //const invoiceObj = facturasData.find((f) => f.id === selectedFacturaId);
             if (invoiceObj) {
               // 2) Asigna su 'importe' como precioTotal
               return { ...fact, precioTotal: invoiceObj.importe,tipoMoneda: invoiceObj.tipoMoneda };
