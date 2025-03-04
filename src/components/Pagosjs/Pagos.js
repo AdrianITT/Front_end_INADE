@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
-import { Table, Button } from "antd";
+import React, { useState, useEffect, useRef } from "react";
+import { Table, Button, Input, Space } from "antd";
 import { Link } from "react-router-dom";
+import { SearchOutlined } from "@ant-design/icons";
 import { getAllComprobantepago } from "../../apis/PagosApi";
 import { getAllComprobantepagoFactura } from "../../apis/ComprobantePagoFacturaApi";
 
@@ -10,11 +11,11 @@ const diccionario = {
   botonNuevo: "Nuevo Pago",
   columnas: {
     fechaPago: "Fecha de Pago",
-    idComprobantePago: "ID Comprobante Pago",
+    idComprobantePago: "Folio Comprobante Pago",
     montoTotal: "Monto Total",
     montoRestante: "Monto Restante",
     montoPago: "Monto Pago",
-    idFactura: "ID Factura",
+    idFactura: "Folio Factura",
     acciones: "Acciones",
     verDetalles: "Ver Detalles",
   },
@@ -23,6 +24,11 @@ const diccionario = {
 const Pagos = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
+
+    // Para el filtro personalizado
+    const [searchText, setSearchText] = useState("");       // Texto que ingresa el usuario
+    const [searchedColumn, setSearchedColumn] = useState(""); // Columna a la que se aplica
+    const searchInputRef = useRef(null);
 
   // Función para formatear la fecha a "año/día/mes"
   const formatToYDM = (isoDateString) => {
@@ -33,6 +39,20 @@ const Pagos = () => {
     const day = String(dateObj.getDate()).padStart(2, "0");
     return `${year}/${day}/${month}`; // Formato: año/día/mes
   };
+
+    // Función que se llama cuando el usuario da clic en "Buscar" o presiona Enter
+    const handleSearch = (selectedKeys, confirm, dataIndex) => {
+      confirm(); // Aplica el filtro
+      setSearchText(selectedKeys[0]); // Guardamos el texto buscado
+      setSearchedColumn(dataIndex);   // Guardamos la columna que se filtra
+    };
+  
+    // Función para limpiar el filtro y el input
+    const handleReset = (clearFilters) => {
+      clearFilters();
+      setSearchText("");
+    };
+  
 
   // Definición de columnas de la tabla usando el diccionario
   const columns = [
@@ -47,7 +67,17 @@ const Pagos = () => {
       title: diccionario.columnas.idComprobantePago,
       dataIndex: "comprobantepago",
       key: "comprobantepago",
+      // 1) Generar la lista de valores únicos como { text, value }
+      filters: [...new Set(data.map(item => item.comprobantepago))].map(val => ({
+        text: val,
+        value: val,
+      })),
+      // 2) Lógica de filtrado
+      onFilter: (value, record) => record.comprobantepago === value,
+      // 3) Activa la barra de búsqueda dentro del menú
+      filterSearch: true,
     },
+    
     {
       title: diccionario.columnas.montoTotal,
       dataIndex: "montototal",
