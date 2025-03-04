@@ -1,22 +1,35 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Row, Col, Button, Dropdown, Menu, message, Modal } from 'antd';
-import { CalendarOutlined, DollarOutlined, FilePdfTwoTone, DeleteOutlined } from '@ant-design/icons';
+import { Card, Row, Col, Button, Dropdown, Menu, Modal, Input, message } from 'antd';
+import { 
+  CalendarOutlined, 
+  DollarOutlined, 
+  FilePdfTwoTone, 
+  DeleteOutlined, 
+  MailTwoTone 
+} from '@ant-design/icons';
 import { getAllFacturaPagos } from '../../apis/FacturaPagosApi';
-import { getAllFacturaPagosFacturama, getAllFacturaPagosPDF } from '../../apis/PagosFacturamaApi';
+import { getAllFacturaPagosFacturama } from '../../apis/PagosFacturamaApi';
 import { deleteComprobantepago } from '../../apis/PagosApi';
 import { Api_Host } from "../../apis/api";
 
-const PaymentCards = ({ idFactura }) => {
+const PaymentCards = ({ idFactura, correoCliente }) => {
   const [pagos, setPagos] = useState([]);
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
   const [pagoToDelete, setPagoToDelete] = useState(null);
+  
+  // Estados para envío de correo (solo para correos adicionales)
+  const [isEmailModalVisible, setIsEmailModalVisible] = useState(false);
+  const [pagoForEmail, setPagoForEmail] = useState(null);
+  const [extraEmails, setExtraEmails] = useState(""); // se inicia vacío
+  const [loading, setLoading] = useState(false);
+  // Estado para el modal de confirmación de correo enviado
+  const [isConfirmationModalVisible, setIsConfirmationModalVisible] = useState(false);
 
   // Función para obtener los pagos desde el backend
   const fetchPagos = async () => {
     try {
       const response = await getAllFacturaPagos(idFactura);
       if (response.data && response.data.pagos) {
-        // Al cargar, establecemos isPDFVisible en función de si facturama_id es nulo o no
         const pagosConFlag = response.data.pagos.map((p) => ({
           ...p,
           isPDFVisible: p.facturama_id !== null,
@@ -37,18 +50,15 @@ const PaymentCards = ({ idFactura }) => {
   // Función para realizar el pago
   const handleRealizarPago = async (pagoId) => {
     try {
-      // 1. Llamada a la API que realiza el pago
       await getAllFacturaPagosFacturama(pagoId);
     } catch (error) {
       console.log("Se recibió un error del servidor (500), pero se ignora:", error);
     } finally {
-      // 2. Actualizamos el estado local para que el botón cambie
       setPagos((prevPagos) =>
         prevPagos.map((pago) =>
           pago.id === pagoId ? { ...pago, isPDFVisible: true } : pago
         )
       );
-      // 3. Recargamos la lista para sincronizar con el servidor
       await fetchPagos();
     }
   };
@@ -61,9 +71,7 @@ const PaymentCards = ({ idFactura }) => {
 
       const response = await fetch(pdfUrl, {
         method: "GET",
-        headers: {
-          "Content-Type": "application/pdf",
-        },
+        headers: { "Content-Type": "application/pdf" },
       });
 
       if (!response.ok) {
@@ -85,13 +93,13 @@ const PaymentCards = ({ idFactura }) => {
     }
   };
 
-  // Abre el modal de confirmación para eliminar el complemento de pago
+  // Abre el modal de eliminación y guarda el ID del pago
   const openDeleteModal = (pagoId) => {
     setPagoToDelete(pagoId);
     setIsDeleteModalVisible(true);
   };
 
-  // Función para confirmar la eliminación del complemento
+  // Confirma eliminación del complemento
   const handleConfirmDeleteComplemento = async () => {
     try {
       await deleteComprobantepago(pagoToDelete);
@@ -105,10 +113,73 @@ const PaymentCards = ({ idFactura }) => {
     }
   };
 
-  // Función para cancelar la eliminación
+  // Cancela el modal de eliminación
   const handleCancelDelete = () => {
     setIsDeleteModalVisible(false);
     setPagoToDelete(null);
+  };
+
+  // Abre el modal para enviar correo y guarda el pago correspondiente
+  const openEmailModal = (pago) => {
+    setPagoForEmail(pago);
+    setIsEmailModalVisible(true);
+    setExtraEmails(""); // se inicia vacío para ingresar solo correos adicionales
+  };
+
+  // Cancela el modal de correo
+  const handleCancelEmailModal = () => {
+    setIsEmailModalVisible(false);
+    setPagoForEmail(null);
+    setExtraEmails("");
+  };
+
+  // Función para enviar el correo con el complemento de pago
+  const handleSendEmail = async () => {
+    if (!pagoForEmail) return;
+    setLoading(true);
+    try {
+      // El correo del cliente se enviará siempre de forma automática
+      const clientEmail = correoCliente;
+      
+      // Validación básica para los correos adicionales
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const additionalEmailList = extraEmails
+        .split(",")
+        .map(email => email.trim())
+        .filter(email => email);
+      const invalidEmails = additionalEmailList.filter(email => !emailRegex.test(email));
+      if (invalidEmails.length > 0) {
+        message.error("Correo(s) inválido(s): " + invalidEmails.join(", "));
+        setLoading(false);
+        return;
+      }
+
+      // Combinar el correo del cliente con los correos adicionales
+      const emailList = clientEmail ? [clientEmail, ...additionalEmailList] : additionalEmailList;
+      const emailQuery = emailList.length > 0 
+        ? `&emails=${encodeURIComponent(emailList.join(","))}` 
+        : "";
+      const url = `${Api_Host.defaults.baseURL}/comprobantepago/${pagoForEmail.id}/enviar?${emailQuery}`;
+      const response = await fetch(url, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
+      if (response.ok) {
+        // Si se envía correctamente, se muestra el modal de confirmación
+        await response.text();
+        setIsConfirmationModalVisible(true);
+      } else {
+        message.error("Error al enviar el correo");
+      }
+    } catch (error) {
+      console.error("Error al enviar el correo:", error);
+      message.error("Hubo un error al enviar el correo");
+    } finally {
+      setIsEmailModalVisible(false);
+      setPagoForEmail(null);
+      setExtraEmails("");
+      setLoading(false);
+    }
   };
 
   // Renderiza el botón o menú según el estado del pago
@@ -121,6 +192,9 @@ const PaymentCards = ({ idFactura }) => {
           </Menu.Item>
           <Menu.Item key="2" icon={<DeleteOutlined style={{ color: 'red' }} />} onClick={() => openDeleteModal(pago.id)}>
             Eliminar Complemento
+          </Menu.Item>
+          <Menu.Item key="3" icon={<MailTwoTone />} onClick={() => openEmailModal(pago)}>
+            Enviar por correo
           </Menu.Item>
         </Menu>
       );
@@ -195,6 +269,37 @@ const PaymentCards = ({ idFactura }) => {
         cancelText="Cancelar"
       >
         <p>¿Estás seguro de eliminar este complemento de pago?</p>
+      </Modal>
+
+      {/* Modal para enviar por correo */}
+      <Modal
+        title="Enviar Complemento de Pago por Correo"
+        visible={isEmailModalVisible}
+        onOk={handleSendEmail}
+        onCancel={handleCancelEmailModal}
+        okText="Enviar"
+        cancelText="Cancelar"
+      >
+        <p>Correo del Cliente: {correoCliente}</p>
+        <p>
+          Ingresa los correos adicionales que desees (separados por coma):
+        </p>
+        <Input
+          placeholder="correo@ejemplo.com, otro@ejemplo.com"
+          value={extraEmails}
+          onChange={(e) => setExtraEmails(e.target.value)}
+        />
+      </Modal>
+
+      {/* Modal de confirmación para correo enviado */}
+      <Modal
+        title="Confirmación"
+        visible={isConfirmationModalVisible}
+        onOk={() => setIsConfirmationModalVisible(false)}
+        onCancel={() => setIsConfirmationModalVisible(false)}
+        okText="Aceptar"
+      >
+        <p>El correo se envió exitosamente.</p>
       </Modal>
     </>
   );

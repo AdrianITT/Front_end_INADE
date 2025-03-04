@@ -681,7 +681,8 @@ useEffect(() => {console.log('Importe total', TotalS)}, [TotalS]);
             </Button></Link> 
             </div>
           
-          <PaymentCards idFactura={id}/> 
+          <PaymentCards idFactura={id} correoCliente={cliente?.correo} />
+
         </Tabs.TabPane>
       </Tabs>
 
