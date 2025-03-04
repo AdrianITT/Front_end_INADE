@@ -4,6 +4,22 @@ import { Link } from "react-router-dom";
 import { getAllComprobantepago } from "../../apis/PagosApi";
 import { getAllComprobantepagoFactura } from "../../apis/ComprobantePagoFacturaApi";
 
+// Diccionario de textos (plantillas) para facilitar cambios y traducciones
+const diccionario = {
+  tituloPagina: "Comprobantes de Pagos",
+  botonNuevo: "Nuevo Pago",
+  columnas: {
+    fechaPago: "Fecha de Pago",
+    idComprobantePago: "ID Comprobante Pago",
+    montoTotal: "Monto Total",
+    montoRestante: "Monto Restante",
+    montoPago: "Monto Pago",
+    idFactura: "ID Factura",
+    acciones: "Acciones",
+    verDetalles: "Ver Detalles",
+  },
+};
+
 const Pagos = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -18,46 +34,46 @@ const Pagos = () => {
     return `${year}/${day}/${month}`; // Formato: año/día/mes
   };
 
-  // Definición de columnas de la tabla
+  // Definición de columnas de la tabla usando el diccionario
   const columns = [
     {
-      title: "Fecha de Pago",
+      title: diccionario.columnas.fechaPago,
       dataIndex: "fechaPago",
       key: "fechaPago",
       sorter: (a, b) => a.rawFechaPago - b.rawFechaPago,
       sortDirections: ["descend", "ascend"],
     },
     {
-      title: "ID Comprobante Pago",
+      title: diccionario.columnas.idComprobantePago,
       dataIndex: "comprobantepago",
       key: "comprobantepago",
     },
     {
-      title: "Monto Total",
+      title: diccionario.columnas.montoTotal,
       dataIndex: "montototal",
       key: "montototal",
     },
     {
-      title: "Monto Restante",
+      title: diccionario.columnas.montoRestante,
       dataIndex: "montorestante",
       key: "montorestante",
     },
     {
-      title: "Monto Pago",
+      title: diccionario.columnas.montoPago,
       dataIndex: "montopago",
       key: "montopago",
     },
     {
-      title: "ID Factura",
+      title: diccionario.columnas.idFactura,
       dataIndex: "factura",
       key: "factura",
     },
     {
-      title: "Acciones",
+      title: diccionario.columnas.acciones,
       key: "acciones",
       render: (text, record) => (
         <Link to={`/detallesfactura/${record.factura}`}>
-          Ver Detalles
+          {diccionario.columnas.verDetalles}
         </Link>
       ),
     },
@@ -122,10 +138,10 @@ const Pagos = () => {
         padding: "20px",
       }}
     >
-      <h1 style={{ textAlign: "center" }}>Comprobantes de Pagos</h1>
+      <h1 style={{ textAlign: "center" }}>{diccionario.tituloPagina}</h1>
       <Link to="/CrearPagos">
         <Button type="primary" style={{ marginBottom: "20px" }}>
-          Nuevo Pago
+          {diccionario.botonNuevo}
         </Button>
       </Link>
       <div style={{ width: "80%" }}>
