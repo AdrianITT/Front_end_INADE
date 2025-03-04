@@ -10,6 +10,8 @@ export const getAllComprobantepago=()=> Comprobantepago_Api.get('/');
 
 export const createComprobantepago=(data)=> Comprobantepago_Api.post('/', data);
 
+export const deleteComprobantepago =(id)=>Comprobantepago_Api.delete(`/${id}/`);
+
 //export const deleteCliente =(id)=>Cliente_Api.delete(`/${id}/`);
 
 //export const updateCliente = async (id, data) => Cliente_Api.put(`/${id}/`,data)
