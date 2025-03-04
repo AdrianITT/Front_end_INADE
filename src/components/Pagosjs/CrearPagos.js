@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Card, Select, Input, Button, Row, Col, Form, DatePicker, message, Modal } from 'antd';
+import { Card, Select, Input, Button, Row, Col, Form, DatePicker, message, Modal, Checkbox } from 'antd';
 import { getAllFactura } from '../../apis/FacturaApi';
 import { getAllFormaPago } from '../../apis/FormaPagoApi';
 import { getAllEmpresas } from '../../apis/EmpresaApi';
@@ -485,6 +485,21 @@ const handleSelectChange = async (facturaItemId, selectedFacturaId) => {
     console.error('Error obteniendo ComprobantePagoFactura:', err);
   }
 };
+const handleRemoveConcepto = (facturaId, e) => {
+  // Si el checkbox está marcado:
+  if (e.target.checked) {
+    setFacturas((prevFacturas) => {
+      // Si solo queda 1 factura, no se elimina
+      if (prevFacturas.length <= 1) {
+        message.warning("No puedes eliminar la última factura.");
+        return prevFacturas;
+      }
+      // De lo contrario, filtra la que se quiere eliminar
+      return prevFacturas.filter((fact) => fact.id !== facturaId);
+    });
+  }
+};
+
   
 
   return (
@@ -604,6 +619,13 @@ const handleSelectChange = async (facturaItemId, selectedFacturaId) => {
                 borderRadius: '8px 8px 0 0'
               }}
             >
+            <Row justify="end">
+              <div>
+                <Checkbox onChange={(e) => handleRemoveConcepto(factura.id,e)}>
+                  Eliminar
+                </Checkbox>
+              </div>
+            </Row>
               <Row gutter={16}>
                 <Col span={24}>
                   <Form.Item label="Factura">
