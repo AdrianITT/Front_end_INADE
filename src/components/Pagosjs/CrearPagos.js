@@ -41,8 +41,6 @@ const CrearPagos = () => {
   const [metodosPago, setMetodosPago] = useState([]);
   // Estado para indicar si se están cargando los métodos
   const [loadingMetodos, setLoadingMetodos] = useState(false);
-  // Estado para el método de pago seleccionado
-  const [selectedMetodoPago, setSelectedMetodoPago] = useState(null);
 
   // Estados globales fuera del array de facturas:
 const [fechaSolicitada, setFechaSolicitada] = useState(null);
@@ -185,6 +183,7 @@ const [metodoPagoGlobal, setMetodoPagoGlobal] = useState(null);
             ...fact,
             cliente: coti?.cliente, // <-- ahora cada factura tendrá .cliente
             cotizacion: coti?.id,
+            ordenTrabajo: orden,
           };
         });
 
@@ -279,6 +278,7 @@ const [metodoPagoGlobal, setMetodoPagoGlobal] = useState(null);
 
 
   // Manejo de cambio en el select de forma de pago
+  /*
   const handleFormaPagoChange = (id, value) => {
     setFacturas(prev =>
       prev.map(fact => (fact.id === id ? { ...fact, formaPago: value } : fact))
@@ -290,12 +290,19 @@ const [metodoPagoGlobal, setMetodoPagoGlobal] = useState(null);
     setFacturas(prev =>
       prev.map(fact => (fact.id === id ? { ...fact, fechaSolicitada: date } : fact))
     );
-  };
+  };*/
 
   const [form] = Form.useForm();
 
   // ✅ Función para crear el comprobante de pago
   const handleCrearPagos = async () => {
+      // Validar que para cada factura el precio a pagar no sea mayor al precio total
+  for (const facturaItem of facturas) {
+    if (Number(facturaItem.precioPagar) > Number(facturaItem.precioTotal)) {
+      message.error("El precio a pagar no puede ser mayor al precio total");
+      return; // Se interrumpe la función sin enviar el formulario
+    }
+  }
     try {
       // 1) Obtener observaciones y fecha
       const observaciones = form.getFieldValue("Notas") || "";
@@ -603,7 +610,7 @@ const handleSelectChange = async (facturaItemId, selectedFacturaId) => {
                     >
                       {obtenerFacturasDisponibles(factura.id).map((f) => (
                         <Option key={f.id} value={f.id}>
-                          {`Factura ${f.id}`}
+                          {`Factura ${f.id}- ${f.ordenTrabajo.codigo}`}
                         </Option>
                       ))}
                     </Select>
@@ -626,8 +633,19 @@ const handleSelectChange = async (facturaItemId, selectedFacturaId) => {
                   </Form.Item>
                 </Col>
                 <Col span={12}>
+                <Form.Item label="Moneda">
+                  <Input
+                    value={factura.tipoMoneda || ""}
+                    disabled
+                  />
+                </Form.Item>
+              </Col>
+              </Row>
+              <Col span={12}>
                   <Form.Item label="Precios a pagar">
                     <Input
+                      max={factura.precioTotal}
+                      min={1}
                       type="number"
                       value={factura.precioPagar}
                       onChange={(e) =>
@@ -638,7 +656,6 @@ const handleSelectChange = async (facturaItemId, selectedFacturaId) => {
                     />
                   </Form.Item>
                 </Col>
-              </Row>
 
               <Row gutter={16}>
                 <Col span={12}>
@@ -658,14 +675,7 @@ const handleSelectChange = async (facturaItemId, selectedFacturaId) => {
                   {/* Espacio para más campos si es necesario */}
                 </Col>
               </Row>
-              <Col span={12}>
-                <Form.Item label="Moneda">
-                  <Input
-                    value={factura.tipoMoneda || ""}
-                    disabled
-                  />
-                </Form.Item>
-              </Col>
+              
             </Card>
           ))}
 

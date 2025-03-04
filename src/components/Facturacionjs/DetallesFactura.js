@@ -667,18 +667,21 @@ useEffect(() => {console.log('Importe total', TotalS)}, [TotalS]);
         </Tabs.TabPane>
         <Tabs.TabPane tab="Pago" key="2">
           <p>Historial de la factura</p> 
-          <Link to={`/CrearPagos/${id}`}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px'}}>
+             <Link to={`/CrearPagos/${id}`}>
             <Button
               type="primary"
               style={{
                 backgroundColor: '#52c41a',
                 borderColor: '#52c41a',
-                borderRadius: 8
+                borderRadius: 8,
               }}
             >
               Crear pagos
-            </Button></Link>
-          <PaymentCards/> 
+            </Button></Link> 
+            </div>
+          
+          <PaymentCards idFactura={id}/> 
         </Tabs.TabPane>
       </Tabs>
 
