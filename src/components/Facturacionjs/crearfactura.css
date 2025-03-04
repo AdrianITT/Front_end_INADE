@@ -59,5 +59,10 @@
      gap: 10px;
    }
 
+   .highlighted-row {
+    background-color: #fff2e8; /* Color de fondo destacado */
+    font-weight: bold;          /* Opcional: texto en negrita */
+  }
+
    
    
