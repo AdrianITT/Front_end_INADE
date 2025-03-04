@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Card, Select, Input, Button, Row, Col, Form, DatePicker, message } from 'antd';
-import { useParams} from "react-router-dom";
+import { useNavigate, useParams } from 'react-router-dom';
+import { Card, Select, Input, Button, Row, Col, Form, DatePicker, message, Modal } from 'antd';
 import { getAllFactura } from '../../apis/FacturaApi';
 import { getAllFormaPago } from '../../apis/FormaPagoApi';
 import { getAllEmpresas } from '../../apis/EmpresaApi';
@@ -17,6 +17,7 @@ const { Option } = Select;
 const { TextArea } = Input;
 
 const CrearPagos = () => {
+  const navigate = useNavigate();
   const [cotizacionId, setcotizacionId]=useState();
   const { id } = useParams();
   // Estado para clientes (API)w
@@ -338,14 +339,19 @@ const [metodoPagoGlobal, setMetodoPagoGlobal] = useState(null);
       await createComprobantepagoFactura(dataComprobanteFactura);
     }
   
-      message.success("¡Comprobante de pago creado con éxito!");
-    } catch (error) {
-      console.error("Error en crear pagos:", error);
-      message.error("Error al crear el comprobante de pago");
-    }
-  };
+    message.success("¡Comprobante de pago creado con éxito!");
+    setIsModalVisible(true); // Mostrar el modal cuando el pago se registra correctamente
+  } catch (error) {
+    console.error("Error en crear pagos:", error);
+    message.error("Error al crear el comprobante de pago");
+  }
+};
+const handleModalOk = () => {
+  setIsModalVisible(false); // Ocultar el modal
+  navigate('/Pagos/'); // Redirigir a la pantalla /Pagos/
+};
   
-
+  const [isModalVisible, setIsModalVisible] = useState(false);
   const [descuento, setDescuento] = useState(0);  // Descuento en %
   const [iva, setIva] = useState(0);             // IVA en %
   const [servicios, setServicios] = useState([]); // Lista de cotizacionServicio filtrados
@@ -718,6 +724,16 @@ const handleSelectChange = async (facturaItemId, selectedFacturaId) => {
         >
           Crear pagos
         </Button>
+        <Modal
+        title="Pago Registrado"
+        visible={isModalVisible}
+        onOk={handleModalOk}
+        onCancel={handleModalOk} // También redirigir si el usuario cierra el modal
+        okText="Aceptar"
+        cancelText="Cerrar"
+      >
+        <p>El pago se ha registrado correctamente.</p>
+      </Modal>
       </div>
     </div>
   );
