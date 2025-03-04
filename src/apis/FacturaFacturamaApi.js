@@ -5,7 +5,6 @@ import { Api_Host } from "./api";
 const factura_Api= axios.create({
      baseURL: Api_Host.defaults.baseURL+'/factura-data/'
 })
-
 export const createFacturaFacturama=(data)=> factura_Api.post('/', data);
 
 
