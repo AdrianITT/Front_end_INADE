@@ -7,6 +7,8 @@ import './Empresa.css';
 
 import { getAllEmpresas, createEmpresas, deleteEmpresa, updateEmpresa, getEmpresaById } from '../../apis/EmpresaApi';
 import { getAllRegimenFiscal } from '../../apis/Regimenfiscla';
+import { getAllUsoCDFI } from '../../apis/UsocfdiApi';
+
 
 // Componentes separados
 import EmpresaTable from './EmpresaTable';
@@ -30,6 +32,9 @@ const Empresa = () => {
 
   // Estados para formulario
   const [regimenFiscal, setRegimenFiscal] = useState([]);
+
+  // NUEVO: Estado para almacenar los usos CFDI
+  const [usosCfdi, setUsosCfdi] = useState([]);
 
   // Cargar lista de empresas
   const loadEmpresas = useCallback(async () => {
@@ -71,10 +76,20 @@ const Empresa = () => {
     }
   }, []);
 
+  const loadUsosCfdi = useCallback(async () => {
+    try {
+      const response = await getAllUsoCDFI();
+      setUsosCfdi(response.data || []);
+    } catch (error) {
+      console.error("Error al cargar usos CFDI:", error);
+    }
+  }, []);
+
   useEffect(() => {
     loadEmpresas();
     loadRegimenFiscal();
-  }, [loadEmpresas, loadRegimenFiscal]);
+    loadUsosCfdi();
+  }, [loadEmpresas, loadRegimenFiscal,loadUsosCfdi]);
 
   // 1. ABRIR modal de crear
   const handleOpenCreate = () => {
@@ -178,6 +193,7 @@ const Empresa = () => {
         onCancel={() => setIsModalOpen(false)}
         onCreate={handleCreateEmpresa}
         regimenFiscal={regimenFiscal}
+        usosCfdi={usosCfdi}
       />
 
       {/* MODAL EDITAR */}
@@ -187,6 +203,7 @@ const Empresa = () => {
         onEdit={handleEditEmpresa}
         regimenFiscal={regimenFiscal}
         empresa={empresaToEdit}
+        usosCfdi={usosCfdi}
       />
 
       {/* MODAL CONFIRMACIÓN BORRADO */}

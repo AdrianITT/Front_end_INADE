@@ -265,7 +265,7 @@ const [metodoPagoGlobal, setMetodoPagoGlobal] = useState(null);
           if (field === 'precioPagar') {
             const totalNum = Number(newFact.precioTotal) || 0;
             const pagarNum = Number(value) || 0;
-            newFact.precioRestante = (totalNum - pagarNum).toString();
+            newFact.precioRestante = (totalNum - pagarNum).toFixed(2);
           }
   
           return newFact;
@@ -316,7 +316,7 @@ const [metodoPagoGlobal, setMetodoPagoGlobal] = useState(null);
         observaciones,
         fechaPago,
         formapago: formaPagoGlobal,     // <-- del estado global
-        metodopago: metodoPagoGlobal,   // <-- del estado global
+        metodopago: 2,   // <-- del estado global
       };
   
       // 3) Crear ComprobantePago

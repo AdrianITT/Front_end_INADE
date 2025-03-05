@@ -181,7 +181,7 @@ const EditarCliente = () => {
           </Col>
         </Row>
 
-        {/* Campo para seleccionar UsoCfdi */}
+        {/* Campo para seleccionar UsoCfdi 
         <Row gutter={16}>
           <Col span={12}>
             <Form.Item
@@ -198,7 +198,7 @@ const EditarCliente = () => {
               </Select>
             </Form.Item>
           </Col>
-        </Row>
+        </Row>*/}
 
         <div className="editar-cliente-buttons">
           <Button type="primary" htmlType="submit">
