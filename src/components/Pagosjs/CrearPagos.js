@@ -582,27 +582,6 @@ const handleRemoveConcepto = (facturaId, e) => {
               </Form.Item>
             </Col>
           </Row>
-
-          <Row gutter={16}>
-            <Col span={24}>
-              <Form.Item label="Método de pago">
-                <Select
-                  placeholder="Selecciona método de pago"
-                  style={{ width: 250 }}
-                  loading={loadingMetodos}
-                  value={metodoPagoGlobal}
-                  onChange={(value) => setMetodoPagoGlobal(value)}
-                  dropdownStyle={{ borderRadius: 8 }}
-                >
-                  {metodosPago.map((mp) => (
-                    <Option key={mp.id} value={mp.id}>
-                      {`${mp.codigo} - ${mp.descripcion}`}
-                    </Option>
-                  ))}
-                </Select>
-              </Form.Item>
-            </Col>
-          </Row>
           {facturas.map((factura, index) => (
             <Card
               key={factura.id}
