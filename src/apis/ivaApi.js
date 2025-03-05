@@ -1,10 +1,5 @@
-import axios from "axios";
 import { Api_Host } from "./api";
 
-const Iva_Api= axios.create({
-     baseURL: Api_Host.defaults.baseURL+'/iva/'
-})
+export const getAllIva = () => Api_Host.get('/iva/');
 
-export const getAllIva=()=>Iva_Api.get('/');
-
-export const getIvaById = async (id) => Iva_Api.get(`/${id}/`);
+export const getIvaById = async (id) => Api_Host.get(`/iva/${id}/`);

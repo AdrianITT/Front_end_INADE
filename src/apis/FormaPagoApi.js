@@ -1,17 +1,12 @@
-import axios from "axios";
 import { Api_Host } from "./api";
 
+// Usar Api_Host para todas las solicitudes
+export const getAllFormaPago = () => Api_Host.get('/formapago/');
 
-const FormaPago_Api= axios.create({
-     baseURL: Api_Host.defaults.baseURL+'/formapago/'
-})
+export const createFormaPago = (data) => Api_Host.post('/formapago/', data);
 
-export const getAllFormaPago=()=> FormaPago_Api.get('/');
+export const deleteFormaPago = (id) => Api_Host.delete(`/formapago/${id}/`);
 
-export const createFormaPago=(data)=> FormaPago_Api.post('/', data);
+export const updateFormaPago = async (id, data) => Api_Host.put(`/formapago/${id}/`, data);
 
-export const deleteFormaPago =(id)=>FormaPago_Api.delete(`/${id}/`);
-
-export const updateFormaPago = async (id, data) => FormaPago_Api.put(`/${id}/`,data)
-
-export const getFormaPagoaById = async (id) => FormaPago_Api.get(`/${id}/`);
+export const getFormaPagoById = async (id) => Api_Host.get(`/formapago/${id}/`);

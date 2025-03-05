@@ -1,52 +1,28 @@
-import axios from "axios";
 import { Api_Host } from "./api";
 
+// Factura_Api usa Api_Host, que ya incluye el token en el header
+export const getAllFactura = () => Api_Host.get('/factura/');
 
-const Factura_Api= axios.create({
-     baseURL: Api_Host.defaults.baseURL+'/factura/'
-})
+export const createFactura = (data) => Api_Host.post('/factura/', data);
 
-export const getAllFactura=()=> Factura_Api.get('/');
+export const deleteFactura = (id) => Api_Host.delete(`/factura/${id}/`);
 
-export const createFactura=(data)=> Factura_Api.post('/', data);
+export const updateFactura = async (id, data) => Api_Host.put(`/factura/${id}/`, data);
 
-export const deleteFactura =(id)=>Factura_Api.delete(`/${id}/`);
-
-export const updateFactura = async (id, data) => Factura_Api.put(`/${id}/`,data)
-
-export const getFacturaById = async (id) => Factura_Api.get(`/${id}/`);
+export const getFacturaById = async (id) => Api_Host.get(`/factura/${id}/`);
 
 
-//new
-const FacturaPDF_Api= axios.create({
-     baseURL: Api_Host.defaults.baseURL+'/factura-data/'
-})
-
+// Para PDF - FacturaPDF_Api
 export const createPDFfactura = async (id) => {
      try {
-       const response = await FacturaPDF_Api.get(`/${id}/`);
+       const response = await Api_Host.get(`/factura-data/${id}/`);
        console.log("✅ PDF generado con éxito:", response);
-       console.log("✅ PDF generado con éxito:", response.data);
-       return response.data; // Devuelve los datos si la solicitud fue exitosa
+       return response.data;
      } catch (error) {
-       if (error.response) {
-         // El servidor respondió con un código de estado diferente de 2xx
-         console.error("❌ Error en la respuesta de la API:", error.response.status);
-         console.error("📄 Detalles del error:", error.response.data);
-       } else if (error.request) {
-         // La solicitud fue hecha pero no hubo respuesta
-         console.error("⚠️ No hubo respuesta del servidor:", error.request);
-       } else {
-         // Algo sucedió al configurar la solicitud
-         console.error("🔍 Error en la configuración de la solicitud:", error.message);
-       }
-       throw error; // Relanza el error para manejarlo en el componente que lo llama
+       console.error("❌ Error generando PDF:", error);
+       throw error;
      }
-   };
+};
 
-   const FacturaPDFdescarga_Api= axios.create({
-     baseURL: Api_Host.defaults.baseURL+'/factura-pdf/'
-});
-
-export const getFacturPDFaById = async (id) => FacturaPDFdescarga_Api.get(`/${id}/`);
-
+// Para descarga del PDF - FacturaPDFdescarga_Api
+export const getFacturPDFaById = async (id) => Api_Host.get(`/factura-pdf/${id}/`);

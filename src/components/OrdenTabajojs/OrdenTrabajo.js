@@ -6,7 +6,7 @@ import { getAllOrdenesTrabajo } from "../../apis/OrdenTrabajoApi";
 import { getCotizacionById } from "../../apis/CotizacionApi";
 import { getClienteById } from "../../apis/ClienteApi";
 import { getEstadoById } from "../../apis/EstadoApi";
-import { getReceptorByI } from "../../apis/ResectorApi";
+import { getReceptorById } from "../../apis/ResectorApi";
 import { getAllEmpresas } from "../../apis/EmpresaApi";
 
 const Generarorden = () => {
@@ -35,7 +35,7 @@ const Generarorden = () => {
           ordenes.map(async (orden) => {
             const [cotizacionResponse, receptorResponse, estadoResponse] = await Promise.all([
               getCotizacionById(orden.cotizacion),
-              getReceptorByI(orden.receptor),
+              getReceptorById(orden.receptor),
               getEstadoById(orden.estado),
             ]);
 

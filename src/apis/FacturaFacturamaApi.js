@@ -1,17 +1,8 @@
-import axios from "axios";
 import { Api_Host } from "./api";
 
+// Usar Api_Host en lugar de crear nuevas instancias de axios
+export const createFacturaFacturama = (data) => Api_Host.post('/factura-data/', data);
 
-const factura_Api= axios.create({
-     baseURL: Api_Host.defaults.baseURL+'/factura-data/'
-})
-export const createFacturaFacturama=(data)=> factura_Api.post('/', data);
+export const getAllfacturafacturama = async () => Api_Host.get('/facturafacturama/');
 
-
-const facturafacturama_Api= axios.create({
-     baseURL: Api_Host.defaults.baseURL+'/facturafacturama/'
-})
-
-export const getAllfacturafacturama = async () => facturafacturama_Api.get('/');
-
-export const getfacturafacturamaById = async (id) => facturafacturama_Api.get(`/${id}/`);
+export const getfacturafacturamaById = async (id) => Api_Host.get(`/facturafacturama/${id}/`);

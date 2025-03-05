@@ -1,16 +1,9 @@
-import axios from "axios";
 import { Api_Host } from "./api";
 
+export const getAllInfoOrdenTrabajo = () => Api_Host.get('/infoordentrabajo/');
 
+export const updateInfoOrdenTrabajo = (id, data) => Api_Host.put(`/infoordentrabajo/${id}/`, data);
 
-const InfoOrdenTrabajo_Api= axios.create({
-     baseURL: Api_Host.defaults.baseURL+'/infoordentrabajo/',
-});
+export const getInfoOrdenTrabajoById = (id) => Api_Host.get(`/infoordentrabajo/${id}/`);
 
-export const getAllInfoOrdenTrabajo=()=>InfoOrdenTrabajo_Api.get('/');
-
-export const updateInfoOrdenTrabajo=(id,data)=>InfoOrdenTrabajo_Api.put(`/${id}/`,data);
-
-export const getInfoOrdenTrabajoById = async (id) => InfoOrdenTrabajo_Api.get(`/${id}/`);
-
-export const crearInfoOrdenTrabajo =(data)=> InfoOrdenTrabajo_Api.post('/', data);
+export const crearInfoOrdenTrabajo = (data) => Api_Host.post('/infoordentrabajo/', data);

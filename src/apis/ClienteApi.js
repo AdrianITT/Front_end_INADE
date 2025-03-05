@@ -1,19 +1,7 @@
-import axios from "axios";
 import { Api_Host } from "./api";
 
-
-const Cliente_Api= axios.create({
-     baseURL: Api_Host.defaults.baseURL+'/cliente/'
-})
-
-export const getAllCliente=()=> Cliente_Api.get('/');
-
-export const createCliente=(data)=> Cliente_Api.post('/', data);
-
-export const deleteCliente =(id)=>Cliente_Api.delete(`/${id}/`);
-
-export const updateCliente = async (id, data) => Cliente_Api.put(`/${id}/`,data)
-
-export const getClienteById = async (id) => Cliente_Api.get(`/${id}/`);
-
-
+export const getAllCliente = () => Api_Host.get('/cliente/');
+export const createCliente = (data) => Api_Host.post('/cliente/', data);
+export const deleteCliente = (id) => Api_Host.delete(`/cliente/${id}/`);
+export const updateCliente = (id, data) => Api_Host.put(`/cliente/${id}/`, data);
+export const getClienteById = (id) => Api_Host.get(`/cliente/${id}/`);

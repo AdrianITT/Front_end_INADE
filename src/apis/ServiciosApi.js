@@ -1,33 +1,27 @@
-import axios from "axios";
 import { Api_Host } from "./api";
 
+export const getAllServicio = () => Api_Host.get('/servicio/');
 
-const Servicio_Api= axios.create({
-     baseURL: Api_Host.defaults.baseURL+'/servicio/',
-});
+export const deleteServicio = (id) => Api_Host.delete(`/servicio/${id}/`);
 
-export const getAllServicio=()=>Servicio_Api.get('/');
-
-export const deleteServicio=(id)=>Servicio_Api.delete(`/${id}/`);
-
-export const createServicio= async (data)=>{
-     try{
-          const response = await Servicio_Api.post('/',data);
-          return response.data;
-     }catch(error){
-          console.error("Error al crear servicio:", error);
-          throw error;
-     }
-}
+export const createServicio = async (data) => {
+    try {
+        const response = await Api_Host.post('/servicio/', data);
+        return response.data;
+    } catch (error) {
+        console.error("Error al crear servicio:", error.response?.data || error.message);
+        throw error;
+    }
+};
 
 export const updateServicio = async (id, data) => {
-          try{
-          const response = await Servicio_Api.put(`/${id}/`,data)
-          return response.data;  
-          }catch(error){
-               console.error("Error al actualizar servicio:", error);
-               throw error;
-          }
-     }
+    try {
+        const response = await Api_Host.put(`/servicio/${id}/`, data);
+        return response.data;
+    } catch (error) {
+        console.error("Error al actualizar servicio:", error.response?.data || error.message);
+        throw error;
+    }
+};
 
-export const getServicioById = async (id) => Servicio_Api.get(`/${id}/`);
+export const getServicioById = async (id) => Api_Host.get(`/servicio/${id}/`);

@@ -1,12 +1,7 @@
-import axios from "axios";
 import { Api_Host } from "./api";
 
+export const getAllComprobantepagoFactura = () => Api_Host.get('/comprobantepagofactura/');
 
-const ComprobantepagoFactura_Api= axios.create({
-     baseURL: Api_Host.defaults.baseURL+'/comprobantepagofactura/'
-})
+export const createComprobantepagoFactura = (data) => Api_Host.post('/comprobantepagofactura/', data);
 
-export const getAllComprobantepagoFactura=()=> ComprobantepagoFactura_Api.get('/');
-
-export const createComprobantepagoFactura=(data)=> ComprobantepagoFactura_Api.post('/', data);
-export const getComprobantepagoFacturaByFactura=(id)=>ComprobantepagoFactura_Api.get(`/${id}/`);
+export const getComprobantepagoFacturaByFactura = (id) => Api_Host.get(`/comprobantepagofactura/${id}/`);

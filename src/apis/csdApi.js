@@ -1,23 +1,30 @@
-import axios from "axios";
 import { Api_Host } from "./api";
 
+export const getAllCSD = () => Api_Host.get('/certificadosellodigital/');
 
-const CSD_Api= axios.create({
-     baseURL: Api_Host.defaults.baseURL+'/certificadosellodigital/'
-})
-const cargarCSD_Api= axios.create({
-     baseURL: Api_Host.defaults.baseURL+'/carga-csd/'
-})
+export const createCSD = (data) => Api_Host.post('/certificadosellodigital/', data);
 
-export const getAllCSD=()=> CSD_Api.get('/');
+export const deleteCSD = (id) => Api_Host.delete(`/certificadosellodigital/${id}/`);
 
-export const createCSD=(data)=> CSD_Api.post('/', data);
+export const updateCSD = async (id, data) => {
+    try {
+        const response = await Api_Host.put(`/certificadosellodigital/${id}/`, data);
+        return response.data;
+    } catch (error) {
+        console.error("Error al actualizar CSD:", error.response?.data || error.message);
+        throw error;
+    }
+};
 
-export const deleteCSD =(id)=>CSD_Api.delete(`/${id}/`);
+export const getCSDById = async (id) => Api_Host.get(`/certificadosellodigital/${id}/`);
 
-export const updateCSD = async (id, data) => CSD_Api.put(`/${id}/`,data)
-
-export const getCSDById = async (id) => CSD_Api.get(`/${id}/`);
-
-//
-export const FacturamaCSD= async(id) => cargarCSD_Api.get(`/${id}/`)
+// Cargar CSD desde otro endpoint
+export const FacturamaCSD = async (id) => {
+    try {
+        const response = await Api_Host.get(`/carga-csd/${id}/`);
+        return response.data;
+    } catch (error) {
+        console.error("Error al cargar CSD:", error.response?.data || error.message);
+        throw error;
+    }
+};

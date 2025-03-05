@@ -1,9 +1,4 @@
-import axios from "axios";
 import { Api_Host } from "./api";
 
-const TipoMoneda_Api= axios.create({
-     baseURL: Api_Host.defaults.baseURL+'/tipomoneda/'
-})
-
-export const getAllTipoMoneda=()=> TipoMoneda_Api.get('/');
-export const getTipoMonedaById = async (id) => TipoMoneda_Api.get(`/${id}/`);
+export const getAllTipoMoneda = () => Api_Host.get('/tipomoneda/');
+export const getTipoMonedaById = (id) => Api_Host.get(`/tipomoneda/${id}/`);

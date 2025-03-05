@@ -1,16 +1,17 @@
-import axios from "axios";
 import { Api_Host } from "./api";
 
-const User_Api = axios.create({
-  baseURL: Api_Host.defaults.baseURL + "/user/",
-});
+// Obtener todos los usuarios
+export const getAllUser = () => Api_Host.get("/user/");
 
-export const getAllUser = () => User_Api.get("/");
+// Obtener un usuario por ID
+export const getUserById = (id) => Api_Host.get(`/user/${id}/`);
 
-export const getUserById = (id) => User_Api.get(`/${id}/`);
+// Actualizar un usuario (usando PATCH)
+export const updateUser = (id, data) => Api_Host.patch(`/user/${id}/`, data);
 
-export const updateUser = (id, data) => User_Api.patch(`/${id}/`, data); // Ahora usa PATCH
+// Crear un nuevo usuario
+export const createUser = (data) => Api_Host.post("/user/", data);
 
-export const createUser = (data) => User_Api.post("/", data);
-
-export const deleteUser = (id) => User_Api.delete(`/${id}/`);
+// Eliminar un usuario
+export const deleteUser = (id) => Api_Host.delete(`/user/${id}/`);
+ 

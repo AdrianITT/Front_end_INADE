@@ -1,27 +1,17 @@
-import axios from "axios";
 import { Api_Host } from "./api";
 
-
-const CotizacionServicio_Api= axios.create({
-     baseURL: Api_Host.defaults.baseURL+'/cotizacionservicio/'
-})
-
-export const getAllCotizacionServicio=()=>CotizacionServicio_Api.get('/');
-
-export const createCotizacionServicio=(data)=>CotizacionServicio_Api.post('/',data);
-
-export const getCotizacionServiciosByCotizacion =(data)=>CotizacionServicio_Api.get('/',data)
-
-//export const updateCotizacionServicio=(id, data)=>CotizacionServicio_Api.put(`/${id}/`,data);
+export const getAllCotizacionServicio = () => Api_Host.get('/cotizacionservicio/');
+export const createCotizacionServicio = (data) => Api_Host.post('/cotizacionservicio/', data);
+export const getCotizacionServiciosByCotizacion = (data) => Api_Host.get('/cotizacionservicio/', data);
 
 export const updateCotizacionServicio = async (id, data) => {
-     try {
-         const response = await CotizacionServicio_Api.put(`/${id}/`, data);
-         return response.data;
-     } catch (error) {
-         console.error("Error en updateCotizacionServicio:", error.response?.data || error.message);
-         throw error;
-     }
- };
+  try {
+    const response = await Api_Host.put(`/cotizacionservicio/${id}/`, data);
+    return response.data;
+  } catch (error) {
+    console.error("Error en updateCotizacionServicio:", error.response?.data || error.message);
+    throw error;
+  }
+};
 
- export const deleteCotizacionServicio=(id)=>CotizacionServicio_Api.delete(`/${id}/`);
+export const deleteCotizacionServicio = (id) => Api_Host.delete(`/cotizacionservicio/${id}/`);

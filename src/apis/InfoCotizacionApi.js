@@ -1,15 +1,9 @@
-import axios from "axios";
 import { Api_Host } from "./api";
 
+export const getAllInfoCotizacion = () => Api_Host.get('/infocotizacion/');
 
-const InfoCotizacion_Api= axios.create({
-     baseURL: Api_Host.defaults.baseURL+'/infocotizacion/'
-})
+export const updateInfoCotizacion = (id, data) => Api_Host.put(`/infocotizacion/${id}/`, data);
 
-export const getAllInfoCotizacion=()=>InfoCotizacion_Api.get('/');
+export const crearInfoCotizacion = (data) => Api_Host.post('/infocotizacion/', data);
 
-export const updateInfoCotizacion=(id,data)=>InfoCotizacion_Api.put(`/${id}/`,data);
-
-export const crearInfoCotizacion =(data)=>InfoCotizacion_Api.post( data);
-
-export const getInfoCotizacionById=(id)=>InfoCotizacion_Api.get(`/${id}/`);
+export const getInfoCotizacionById = (id) => Api_Host.get(`/infocotizacion/${id}/`);

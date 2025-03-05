@@ -8,12 +8,11 @@ import { getClienteById } from "../../apis/ClienteApi";
 import { getEmpresaById } from "../../apis/EmpresaApi";
 import { getServicioById } from "../../apis/ServiciosApi";
 import { getCotizacionById } from "../../apis/CotizacionApi";
-import { getReceptorByI } from "../../apis/ResectorApi";
-import {  getAllOrdenesTrabajoServicio } from "../../apis/OrdenTabajoServiciosApi";
+import { getReceptorById } from "../../apis/ResectorApi";
+import { getAllOrdenesTrabajoServicio } from "../../apis/OrdenTabajoServiciosApi";
 import { getMetodoById } from "../../apis/MetodoApi";
 import { Api_Host } from "../../apis/api";
 import { getEstadoById } from "../../apis/EstadoApi";
-import { Color } from "antd/es/color-picker";
 
 const DetalleOrdenTrabajo = () => {
   const { orderId } = useParams();
@@ -56,7 +55,7 @@ const DetalleOrdenTrabajo = () => {
         setEmpresa(responseEmpresa.data);
   
         // 5. Receptor
-        const responseReceptor = await getReceptorByI(header.receptor);
+        const responseReceptor = await getReceptorById(header.receptor);
         setRecep(responseReceptor.data);
         
   

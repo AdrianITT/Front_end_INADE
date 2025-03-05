@@ -8,7 +8,7 @@ import { getAllOrganizacion, updateOrganizacion } from "../../apis/organizaciona
 import { getAllRegimenFiscal } from "../../apis/Regimenfiscla";
 import { updateInfoOrdenTrabajo,getInfoOrdenTrabajoById, crearInfoOrdenTrabajo } from "../../apis/infoordentrabajoApi";
 import { getInfoCotizacionById, updateInfoCotizacion, crearInfoCotizacion } from "../../apis/InfoCotizacionApi";
-import { updateMarcaAgua,createMaraAgua } from "../../apis/MarcaDeAguaApi";
+import { updateMarcaAgua,createMarcaAgua } from "../../apis/MarcaDeAguaApi";
 import {ObtenerOrganizacion} from "../obtenerOrganizacion/ObtenerOrganizacion";
 import { updateInfoSistema,getInfoSistemaById } from "../../apis/InfoSistemaApi";
 import { getAllTipoMoneda } from "../../apis/Moneda";
@@ -259,7 +259,7 @@ useEffect(() => {
             await updateMarcaAgua(marcaDeAguaId, formData);
           } else {
             // Si no hay imagen, crear una nueva
-            const response = await createMaraAgua(formData);
+            const response = await createMarcaAgua(formData);
             marcaDeAguaId = response.data.id;
           }
         }
@@ -341,7 +341,7 @@ useEffect(() => {
                 } else {
                     // 🆕 Si no hay imagen, crear una nueva
                     console.log("Subiendo nueva imagen...");
-                    const response = await createMaraAgua(formData);
+                    const response = await createMarcaAgua(formData);
                     marcaDeAguaId = response.data.id;
                 }
             }

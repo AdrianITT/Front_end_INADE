@@ -1,12 +1,5 @@
-import axios from "axios";
 import { Api_Host } from "./api";
 
-const OrdenesTrabajoServico_Api= axios.create({
-     baseURL: Api_Host.defaults.baseURL+'/ordentrabajoservicio/'
-})
-
-export const getAllOrdenesTrabajoServicio=()=>OrdenesTrabajoServico_Api.get('/');
-
-export const createOrdenTrabajoServico=(data)=>OrdenesTrabajoServico_Api.post('/',data);
-
-export const getOrdenTrabajoServiciosByOrden=(id)=>OrdenesTrabajoServico_Api.get(`/${id}/`);
+export const getAllOrdenesTrabajoServicio = () => Api_Host.get('/ordentrabajoservicio/');
+export const createOrdenTrabajoServico = (data) => Api_Host.post('/ordentrabajoservicio/', data);
+export const getOrdenTrabajoServiciosByOrden = (id) => Api_Host.get(`/ordentrabajoservicio/${id}/`);
