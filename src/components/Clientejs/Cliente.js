@@ -44,7 +44,7 @@ const Cliente = () => {
       // Se formatean los clientes: se calcula un flag "incompleto" si faltan datos
       const clientesFormateados = clientesFiltrados.map((cliente) => {
         const datosIncompletos =
-          !cliente.nombrePila || !cliente.apPaterno || !cliente.UsoCfdi || !cliente.empresa;
+          !cliente.nombrePila || !cliente.apPaterno || !cliente.empresa;
         return {
           key: cliente.id,
           Cliente: `${cliente.nombrePila || "Sin nombre"} ${cliente.apPaterno || ""} ${cliente.apMaterno || ""}`,
@@ -141,6 +141,7 @@ const Cliente = () => {
         codigoPostal: formValues.codigoPostal,
         estado: formValues.estado,
         organizacion: organizationId,
+        UsoCfdi: formValues.UsoCfdi,
       };
       try {
         const createEmpresaResponse = await createEmpresas(empresaData);
@@ -161,7 +162,7 @@ const Cliente = () => {
       fax: formValues.fax || "No disponible",
       empresa: empresaId,
       titulo: formValues.titulo,
-      UsoCfdi: formValues.UsoCfdi || 3,
+      //UsoCfdi: formValues.UsoCfdi || 3,
     };
   
     if (!clienteData.nombrePila || !clienteData.apPaterno || !clienteData.correo || !clienteData.empresa) {
@@ -340,15 +341,6 @@ const Cliente = () => {
                   ))}
                 </Select>
               </Form.Item>
-              <Form.Item label="Uso CFDI:" name="UsoCfdi">
-                <Select placeholder="Selecciona un Uso CFDI">
-                  {usosCfdi.map((uso) => (
-                    <Select.Option key={uso.id} value={uso.id}>
-                      {uso.codigo} - {uso.descripcion}
-                    </Select.Option>
-                  ))}
-                </Select>
-              </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item
@@ -450,6 +442,15 @@ const Cliente = () => {
                   >
                     <Input placeholder="Estado" />
                   </Form.Item>
+                  <Form.Item label="Uso CFDI:" name="UsoCfdi">
+                <Select placeholder="Selecciona un Uso CFDI">
+                  {usosCfdi.map((uso) => (
+                    <Select.Option key={uso.id} value={uso.id}>
+                      {uso.codigo} - {uso.descripcion}
+                    </Select.Option>
+                  ))}
+                </Select>
+              </Form.Item>
                 </Col>
               </Row>
             </div>
