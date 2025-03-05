@@ -239,8 +239,8 @@ const PaymentCards = ({ idFactura, correoCliente }) => {
             >
               <p>
                 <CalendarOutlined style={{ marginRight: '8px' }} />
-                Fecha de Pago: {new Date(pago.fechaPago).toLocaleString()}
-              </p>
+                Fecha de Pago: {new Date(pago.fechaPago).toLocaleString('es-MX', { timeZone: 'UTC' })}
+                </p>
               <p>
                 <DollarOutlined style={{ marginRight: '8px' }} />
                 Monto Total: ${parseFloat(pago.montototal).toFixed(2)}
