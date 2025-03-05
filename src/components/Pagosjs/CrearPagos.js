@@ -39,14 +39,14 @@ const CrearPagos = () => {
   const [selectedClient, setSelectedClient] = useState(null);
 
   // Estado para almacenar la lista de métodos de pago
-  const [metodosPago, setMetodosPago] = useState([]);
+  const [, setMetodosPago] = useState([]);
   // Estado para indicar si se están cargando los métodos
-  const [loadingMetodos, setLoadingMetodos] = useState(false);
+  const [, setLoadingMetodos] = useState(false);
 
   // Estados globales fuera del array de facturas:
 const [fechaSolicitada, setFechaSolicitada] = useState(null);
 const [formaPagoGlobal, setFormaPagoGlobal] = useState('');
-const [metodoPagoGlobal, setMetodoPagoGlobal] = useState(null);
+//const [metodoPagoGlobal, setMetodoPagoGlobal] = useState(null);
 
 
   // Estado local para el formulario de facturas
@@ -170,7 +170,7 @@ const [metodoPagoGlobal, setMetodoPagoGlobal] = useState(null);
         
 
         // Filtrar facturas cuyos "ordenTrabajo" estén en ordenIds
-        const facturasFiltradas = facturasRes.data.filter(factura => ordenIds.includes(factura.ordenTrabajo));
+        const facturasFiltradas = facturasRes.data.filter(factura => ordenIds.includes(factura.ordenTrabajo)&& Number(factura.importe) > 0);
         console.log('Facturas filtradas (sin filtro de cliente):', facturasFiltradas);
 
                 // Después de filtrar las facturas base:
@@ -352,11 +352,11 @@ const handleModalOk = () => {
 };
   
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [descuento, setDescuento] = useState(0);  // Descuento en %
-  const [iva, setIva] = useState(0);             // IVA en %
-  const [servicios, setServicios] = useState([]); // Lista de cotizacionServicio filtrados
-  const [subtotal, setSubtotal] = useState(0);
-  const [total, setTotal] = useState(0);
+  const [, setDescuento] = useState(0);  // Descuento en %
+  const [, setIva] = useState(0);             // IVA en %
+  //const [servicios, setServicios] = useState([]); // Lista de cotizacionServicio filtrados
+  const [, setSubtotal] = useState(0);
+  const [, setTotal] = useState(0);
 
   useEffect(() => {
     if (!cotizacionId) return; // Si no hay cotizacionId, no hacemos nada
