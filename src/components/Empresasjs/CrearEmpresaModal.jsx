@@ -1,11 +1,26 @@
 // CreateEmpresaModal.jsx
-import React from 'react';
+import React, {useState,useEffect} from 'react';
 import { Modal, Form, Input, Select, Row, Col } from 'antd';
 import './Empresa.css';
+import { getAllUsoCDFI } from "../../apis/UsocfdiApi";
 
 
 const CreateEmpresaModal = ({ visible, onCancel, onCreate, regimenFiscal }) => {
   const [form] = Form.useForm();
+  const [usosCfdi, setUsosCfdi] = useState([]);
+  useEffect(() => {
+    const fetchUsosCfdi = async () => {
+      try {
+        const response = await getAllUsoCDFI();
+        setUsosCfdi(response.data);
+      } catch (error) {
+        console.error("Error al obtener usos CFDI:", error);
+      }
+    };
+    fetchUsosCfdi();
+  }, []);
+  
+    
 
   const handleOk = async () => {
     try {
@@ -62,13 +77,15 @@ const CreateEmpresaModal = ({ visible, onCancel, onCreate, regimenFiscal }) => {
                 ))}
               </Select>
             </Form.Item>
-            <Form.Item
-              label="Condiciones de pago:"
-              name="condicionPago"
-              rules={[{ required: true, message: 'Condición requerida' }]}
-            >
-              <Input />
-            </Form.Item>
+            <Form.Item label="Uso CFDI:" name="UsoCfdi">
+                <Select placeholder="Selecciona un Uso CFDI">
+                  {usosCfdi.map((uso) => (
+                    <Select.Option key={uso.id} value={uso.id}>
+                      {uso.codigo} - {uso.descripcion}
+                    </Select.Option>
+                  ))}
+                </Select>
+              </Form.Item>
           </Col>
 
           <Col span={12}>

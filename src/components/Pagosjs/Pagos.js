@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Table, Button, Input, Space } from "antd";
+import React, { useState, useEffect} from "react";
+import { Table, Button} from "antd";
 import { Link } from "react-router-dom";
-import { SearchOutlined } from "@ant-design/icons";
 import { getAllComprobantepago } from "../../apis/PagosApi";
 import { getAllComprobantepagoFactura } from "../../apis/ComprobantePagoFacturaApi";
 
@@ -25,10 +24,6 @@ const Pagos = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
 
-    // Para el filtro personalizado
-    const [searchText, setSearchText] = useState("");       // Texto que ingresa el usuario
-    const [searchedColumn, setSearchedColumn] = useState(""); // Columna a la que se aplica
-    const searchInputRef = useRef(null);
 
   // Función para formatear la fecha a "año/día/mes"
   const formatToYDM = (isoDateString) => {
@@ -40,18 +35,6 @@ const Pagos = () => {
     return `${year}/${day}/${month}`; // Formato: año/día/mes
   };
 
-    // Función que se llama cuando el usuario da clic en "Buscar" o presiona Enter
-    const handleSearch = (selectedKeys, confirm, dataIndex) => {
-      confirm(); // Aplica el filtro
-      setSearchText(selectedKeys[0]); // Guardamos el texto buscado
-      setSearchedColumn(dataIndex);   // Guardamos la columna que se filtra
-    };
-  
-    // Función para limpiar el filtro y el input
-    const handleReset = (clearFilters) => {
-      clearFilters();
-      setSearchText("");
-    };
   
 
   // Definición de columnas de la tabla usando el diccionario
