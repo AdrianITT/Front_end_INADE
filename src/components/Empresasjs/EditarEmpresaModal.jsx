@@ -4,7 +4,7 @@ import { Modal, Form, Input, Select, Row, Col } from 'antd';
 import './Empresa.css';
 
 
-const EditEmpresaModal = ({ visible, onCancel, onEdit, regimenFiscal, empresa }) => {
+const EditEmpresaModal = ({ visible, onCancel, onEdit, regimenFiscal, empresa,usosCfdi }) => {
   const [form] = Form.useForm();
 
   // Cuando cambie la empresa a editar, setear los valores iniciales
@@ -20,7 +20,8 @@ const EditEmpresaModal = ({ visible, onCancel, onEdit, regimenFiscal, empresa })
         colonia: empresa.colonia,
         ciudad: empresa.ciudad,
         codigoPostal: empresa.codigoPostal,
-        estado: empresa.estado
+        estado: empresa.estado,
+        UsoCfdi:empresa.UsoCfdi,
       });
     }
   }, [empresa, form]);
@@ -83,12 +84,14 @@ const EditEmpresaModal = ({ visible, onCancel, onEdit, regimenFiscal, empresa })
                 ))}
               </Select>
             </Form.Item>
-            <Form.Item
-              label="Condición de Pago:"
-              name="condicionPago"
-              rules={[{ required: true, message: 'Condición requerida' }]}
-            >
-              <Input />
+          <Form.Item label="Uso CFDI:" name="UsoCfdi">
+              <Select placeholder="Selecciona un Uso CFDI">
+                {usosCfdi.map((uso) => (
+                  <Select.Option key={uso.id} value={uso.id}>
+                    {uso.codigo} - {uso.descripcion}
+                  </Select.Option>
+                ))}
+              </Select>
             </Form.Item>
           </Col>
           <Col span={12}>

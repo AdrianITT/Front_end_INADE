@@ -1,24 +1,12 @@
 // CreateEmpresaModal.jsx
-import React, {useState,useEffect} from 'react';
+import React from 'react';
 import { Modal, Form, Input, Select, Row, Col } from 'antd';
 import './Empresa.css';
-import { getAllUsoCDFI } from "../../apis/UsocfdiApi";
 
 
-const CreateEmpresaModal = ({ visible, onCancel, onCreate, regimenFiscal }) => {
+const CreateEmpresaModal = ({ visible, onCancel, onCreate, regimenFiscal,usosCfdi }) => {
   const [form] = Form.useForm();
-  const [usosCfdi, setUsosCfdi] = useState([]);
-  useEffect(() => {
-    const fetchUsosCfdi = async () => {
-      try {
-        const response = await getAllUsoCDFI();
-        setUsosCfdi(response.data);
-      } catch (error) {
-        console.error("Error al obtener usos CFDI:", error);
-      }
-    };
-    fetchUsosCfdi();
-  }, []);
+
   
     
 
