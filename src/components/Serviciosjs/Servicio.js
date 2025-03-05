@@ -130,7 +130,7 @@ const Servicio = () => {
       };
 
       // Verificar si todos los datos necesarios están presentes
-      if (!values.metodos || !values.unidadCfdi || !values.claveCfdi || !values.objetoImpuesto) {
+      if (!values.metodos || !values.unidadCfdi || !values.claveCfdi ) {
         message.error("Por favor, complete todos los campos obligatorios.");
         return;
       }
@@ -167,12 +167,11 @@ const Servicio = () => {
       const values = await formEdit.validateFields();
       const dataToSend = {
         ...values,
-        
         estado: values.estado || 5,
       };
       
       // Verifica si los campos necesarios están presentes
-      if ( !values.unidadCfdi || !values.claveCfdi || !values.objetoImpuesto) {
+      if ( !values.unidadCfdi || !values.claveCfdi ) {
         message.error("Por favor, complete todos los campos obligatorios.");
         return;
       }
@@ -480,7 +479,7 @@ const handleConfirmDeleteService = async () => {
                     </Select.Option>
                   ))}
                 </Select>
-              </Form.Item>
+              </Form.Item>{/* 
               <Form.Item label="Objeto impuesto:" name="objetoImpuesto" rules={[{ required: true }]}>
                 <Select>
               {objetoimpuesto.map((oi)=>(
@@ -490,7 +489,17 @@ const handleConfirmDeleteService = async () => {
                     </Select.Option>
                   ))}
                   </Select>
-              </Form.Item>
+              </Form.Item>*/}
+                  <Form.Item label="Método:" name="metodos" rules={[{ required: true }]}>
+                  <Select placeholder="Selecciona un método">
+                  {metodos.map((metodo)=>(
+                    <Select.Option key={metodo.id}
+                    value={metodo.id}>
+                      {metodo.codigo}
+                    </Select.Option>
+                  ))}
+                  </Select>
+                </Form.Item>{/* 
               <Form.Item name="crearServicio" valuePropName="checked">
                 <Checkbox onChange={(e) => setShowInput(e.target.checked)}>Crear Metodo</Checkbox>
               </Form.Item>
@@ -509,7 +518,7 @@ const handleConfirmDeleteService = async () => {
                   ))}
                   </Select>
                 </Form.Item>
-              )}
+              )}*/}
 
             </Col>
           </Row>
@@ -600,7 +609,7 @@ const handleConfirmDeleteService = async () => {
                     </Select.Option>
                   ))}
                 </Select>
-              </Form.Item>
+              </Form.Item>{/*
               <Form.Item label="Objeto impuesto:" name="objetoImpuesto" rules={[{ required: true }]}>
                 <Select>
                   {objetoimpuesto.map((oi) => (
@@ -609,7 +618,7 @@ const handleConfirmDeleteService = async () => {
                     </Select.Option>
                   ))}
                 </Select>
-              </Form.Item>
+              </Form.Item> */}
               <Form.Item label="Método:" name="metodos" rules={[{ required: true }]}>
                   <Select placeholder="Selecciona un método">
                   {metodos.map((metodo)=>(
