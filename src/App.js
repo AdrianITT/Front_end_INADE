@@ -28,7 +28,7 @@ const App = () => {
   useEffect(() => {
     const fetchCount = async () => {
       try {
-        console.log("Obteniendo cotizaciones...");
+
         // Obtén el ID de la organización del usuario desde localStorage
         const organizationId = parseInt(localStorage.getItem("organizacion_id"), 10);
 

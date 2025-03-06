@@ -49,7 +49,7 @@ const EditarCotizacion = () => {
             try {
               const response = await getCotizacionById(id);
               const cotizacion = response.data;
-              console.log("Cotización obtenida:", cotizacion);
+              //console.log("Cotización obtenida:", cotizacion);
         
               setCotizacionData(cotizacion);
               setFechaSolicitada(dayjs(cotizacion.fechaSolicitud));  // ✅ Asignamos fecha correctamente
@@ -60,18 +60,18 @@ const EditarCotizacion = () => {
         
               // Obtener servicios relacionados con la cotización
               const cotizacionServicios = cotizacion.servicios;
-              console.log("Servicios de la cotización:", cotizacionServicios);
+              //console.log("Servicios de la cotización:", cotizacionServicios);
         
               const cotizacionServicioResponse = await getAllCotizacionServicio();
               const cotizacionServicioRecords = cotizacionServicioResponse.data;
-              console.log("Registros de Cotización Servicio:", cotizacionServicioRecords);
+              //console.log("Registros de Cotización Servicio:", cotizacionServicioRecords);
         
               // Filtramos los registros que pertenecen a esta cotización
               const filteredCotizacionServicios = cotizacionServicioRecords.filter(
                 (record) => Number(record.cotizacion) === Number(id)
               );
         
-              console.log("Registros filtrados de Cotización Servicio:", filteredCotizacionServicios);
+              //console.log("Registros filtrados de Cotización Servicio:", filteredCotizacionServicios);
         
               // Obtener información detallada de cada servicio en la cotización
               const serviciosConDetalles = await Promise.all(
@@ -91,7 +91,7 @@ const EditarCotizacion = () => {
                 })
               );
         
-              console.log("Servicios con detalles:", serviciosConDetalles);
+              //console.log("Servicios con detalles:", serviciosConDetalles);
               setConceptos(serviciosConDetalles);
             } catch (error) {
               console.error("Error al obtener la cotización", error);
@@ -242,7 +242,7 @@ const EditarCotizacion = () => {
                   }
                 : concepto
             );
-            console.log("Conceptos actualizados:", updatedConceptos);
+            //console.log("Conceptos actualizados:", updatedConceptos);
             setConceptos(updatedConceptos);
           }
         };
@@ -300,7 +300,7 @@ const EditarCotizacion = () => {
           if (concepto.id) {
             try {
               await deleteCotizacionServicio(concepto.id);
-              console.log(`Servicio ${concepto.id} eliminado`);
+              //console.log(`Servicio ${concepto.id} eliminado`);
             } catch (error) {
               console.error(`Error al eliminar servicio ${concepto.id}:`, error);
               throw error;
@@ -345,8 +345,8 @@ const EditarCotizacion = () => {
           };
     
           try {
-            console.log(`🔹 Actualizando servicio existente (ID: ${concepto.id})...`);
-            console.log("Datos a enviar:", data);
+            //console.log(`🔹 Actualizando servicio existente (ID: ${concepto.id})...`);
+            //console.log("Datos a enviar:", data);
             return await updateCotizacionServicio(concepto.id, data);
           } catch (error) {
             console.error(`❌ Error al actualizar servicio ${concepto.id}:`, error.response?.data || error.message);
@@ -391,10 +391,10 @@ const EditarCotizacion = () => {
     };
     
       
-      
+      /*
      useEffect(() => {
           console.log("Estado de conceptos después de la actualización: =>", conceptos);
-        }, [conceptos]);
+        }, [conceptos]);*/
    
      return (
        <div className="cotizacion-container">

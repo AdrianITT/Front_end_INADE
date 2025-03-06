@@ -418,7 +418,7 @@ const handleModalOk = () => {
   
     const fetchCotiData = async () => {
       try {
-        console.log('cotizacionId: ',cotizacionId);
+        //console.log('cotizacionId: ',cotizacionId);
         // 1) Obtener la cotización
         const cotiRes = await getCotizacionById(cotizacionId);
         const coti = cotiRes.data;

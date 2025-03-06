@@ -47,9 +47,10 @@ const CargarCSD = () => {
       }
 
       // Verificar los datos enviados (opcional)
+      /*
       for (let pair of formData.entries()) {
         console.log(pair[0] + ": ", pair[1]);
-      }
+      }*/
 
       // Enviar los datos a la API
       const response = await createCSD(formData);
@@ -61,7 +62,7 @@ const CargarCSD = () => {
         const responseCSD = await axios.get(
           `${Api_Host.defaults.baseURL}/carga-csd/${organizationId}/`
         );
-        console.log("📌 Datos del CSD recién creado:", responseCSD.data);
+        //console.log("📌 Datos del CSD recién creado:", responseCSD.data);
       } else {
         throw new Error("⚠ Error en la carga del CSD.");
       }

@@ -110,7 +110,7 @@ const fetchInfoConfiguracionSistema = useCallback(async (id) => {
         const response = await getInfoSistemaById(id);
         const configuracion = response.data;
         if (configuracion) {
-            console.log("Configuración obtenida:", configuracion);
+            //console.log("Configuración obtenida:", configuracion);
             setInfConfiguracion(configuracion);
             formConfiguracion.setFieldsValue({
                 tipoMoneda: configuracion.tipoMoneda || undefined,
@@ -127,7 +127,7 @@ const fetchInfoConfiguracionSistema = useCallback(async (id) => {
 const fetchTipoMoneda = useCallback(async () => {
     try {
         const response = await getAllTipoMoneda();
-        console.log("Monedas obtenidas:", response.data);
+        //console.log("Monedas obtenidas:", response.data);
         setTipoMoneda(response.data);
     } catch (error) {
         console.error("Error al obtener tipos de moneda", error);
@@ -138,7 +138,7 @@ const fetchTipoMoneda = useCallback(async () => {
 const fetchIva = useCallback(async () => {
     try {
         const response = await getAllIva();
-        console.log("IVA obtenido:", response.data);
+        //console.log("IVA obtenido:", response.data);
         setIva(response.data);
     } catch (error) {
         console.error("Error al obtener tasas de IVA", error);
@@ -164,12 +164,12 @@ useEffect(() => {
   };
 
   const onFinish = async (values) => {
-    console.log("Datos enviados:", values);
+    //console.log("Datos enviados:", values);
     
     setLoading(true);
     try {
-      console.log("Datos enviados:", values);
-      console.log("🚀 Enviando actualización de organización ID:", userOrganizationId);
+      //console.log("Datos enviados:", values);
+      //console.log("🚀 Enviando actualización de organización ID:", userOrganizationId);
   
       const datosAEnviar = {
         ...organizaciones, // Mantener los datos actuales
@@ -193,7 +193,7 @@ useEffect(() => {
   
       // 🛑 Si el usuario seleccionó un nuevo logo, creamos un FormData
       if (values.logo && values.logo.file) {
-        console.log("📂 Nuevo logo seleccionado:", values.logo.file.originFileObj);
+        //console.log("📂 Nuevo logo seleccionado:", values.logo.file.originFileObj);
   
         formData = new FormData();
         formData.append("logo", values.logo.file.originFileObj);
@@ -208,7 +208,7 @@ useEffect(() => {
         delete datosAEnviar.logo;
       }
   
-      console.log("📤 Enviando datos a la API:", formData || datosAEnviar);
+      //console.log("📤 Enviando datos a la API:", formData || datosAEnviar);
       
       // 📌 Enviar como FormData si hay un archivo, de lo contrario JSON
       if (formData) {
@@ -217,12 +217,11 @@ useEffect(() => {
         });
         setIsSuccessModalVisible(true);
       } else {
-        console.log("HW");
         await updateOrganizacion(userOrganizationId, datosAEnviar);
         setIsSuccessModalVisible(true);
       }
   
-      console.log("Datos enviados:", values);
+
       setLoading(false);
       
       message.success("Datos de organización actualizados correctamente");
@@ -314,15 +313,12 @@ useEffect(() => {
         setLoading(true);
         let marcaDeAguaId = null; 
 
-        console.log("📁 Archivo recibido en values:", values.marcaDeAgua);
-
         // Obtener cotización actual si existe
         if (organizaciones?.infoCotizacion) {
             const responseCotizacion = await getInfoCotizacionById(organizaciones.infoCotizacion);
             marcaDeAguaId = responseCotizacion.data.imagenMarcaAgua || null;
         }
 
-        console.log("ID de marca de agua actual antes de actualizar:", marcaDeAguaId);
 
         // 📌 **Extraer la imagen correctamente**
         if (values.marcaDeAgua && values.marcaDeAgua.length > 0) {
@@ -332,15 +328,12 @@ useEffect(() => {
                 const formData = new FormData();
                 formData.append("imagen", fileObj);
 
-                console.log("📤 Enviando FormData:", formData);
 
                 if (marcaDeAguaId) {
                     // 🔄 Si ya hay imagen, actualizarla
-                    console.log("Actualizando imagen con ID:", marcaDeAguaId);
                     await updateMarcaAgua(marcaDeAguaId, formData);
                 } else {
                     // 🆕 Si no hay imagen, crear una nueva
-                    console.log("Subiendo nueva imagen...");
                     const response = await createMarcaAgua(formData);
                     marcaDeAguaId = response.data.id;
                 }
@@ -359,7 +352,6 @@ useEffect(() => {
             imagenMarcaAgua: marcaDeAguaId,
         };
 
-        console.log("Payload a enviar:", payload);
 
         if (!organizaciones?.infoCotizacion) {
             // Crear nueva cotización
@@ -378,7 +370,6 @@ useEffect(() => {
             setIsSuccessModalVisible(true);
         } else {
             // Actualizar cotización existente
-            console.log("Actualizando cotización con ID:", organizaciones.infoCotizacion);
             await updateInfoCotizacion(organizaciones.infoCotizacion, payload);
             setIsSuccessModalVisible(true);
             message.success("Cotización actualizada correctamente");
@@ -412,7 +403,6 @@ const handleGuardarConfiguracionSistema = async (values) => {
         ...organizaciones,
         infoConfiguracionSistema: nuevaConfiguracion.id,
       });
-      console.log("📌 Respuesta de updateOrganizacion:", updateOrganizacion);
 
       // Actualizamos el estado de la organización con la nueva configuración
       setOrganizaciones((prev)=>({
@@ -431,9 +421,7 @@ const handleGuardarConfiguracionSistema = async (values) => {
     // Recargamos la información actualizada
     const responseConfiguracion = await getInfoSistemaById(organizaciones.infoSistema);
     setInfConfiguracion(responseConfiguracion.data);
-    console.log(responseConfiguracion.data);
     formConfiguracion.setFieldsValue(responseConfiguracion.data);
-    console.log(formConfiguracion);
     setIsSuccessModalVisible(true);
   } catch (error) {
     console.error("Error al actualizar la configuración del sistema", error);

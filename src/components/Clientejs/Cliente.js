@@ -85,7 +85,7 @@ const Cliente = () => {
 
   // Cargar títulos (puedes extraer esto a un hook si se requiere)
   useEffect(() => {
-    console.log('catalogo: ', catalogosLoading)
+
     const fetchTitulos = async () => {
       try {
         const response = await getAllTitulo();

@@ -233,7 +233,7 @@ const CrearPreCotizaciones = () => {
       // Si el cliente o la empresa ya existen, mostrar un error y detener el proceso
       if (clienteExistente) {
         message.error("El cliente ya existe.");
-        console.log('el cliente existe');
+        //console.log('el cliente existe');
         const textCont='el Cliente ya existe';
         error(textCont);
         return;
@@ -242,7 +242,7 @@ const CrearPreCotizaciones = () => {
       if (empresaExistente) {
         
         message.error("La empresa ya existe.");
-        console.log('la empresa ya existe');
+        //console.log('la empresa ya existe');
         const textEmpresa='La empresa ya existe';
         error(textEmpresa);
         return;
@@ -270,7 +270,7 @@ const CrearPreCotizaciones = () => {
       if (response.status === 201 || response.status === 200) {
         const preCotizacionId = response.data.id;
   
-        console.log("✅ Pre-cotización creada con ID:", preCotizacionId);
+        //console.log("✅ Pre-cotización creada con ID:", preCotizacionId);
   
         // ✅ 2. Insertar los servicios de la Pre-Cotización
         const serviciosPromises = conceptos.map(async (concepto) => {
@@ -287,11 +287,11 @@ const CrearPreCotizaciones = () => {
             servicio: concepto.servicio,
           };
   
-          console.log("📤 Enviando servicio:", servicioData);
+          //console.log("📤 Enviando servicio:", servicioData);
   
           return createServicioPreCotizacion(servicioData)
             .then((res) => {
-              console.log(`✅ Servicio ${concepto.servicio} agregado con éxito.`);
+              //console.log(`✅ Servicio ${concepto.servicio} agregado con éxito.`);
             })
             .catch((err) => {
               console.error(`❌ Error al agregar servicio ${concepto.servicio}:`, err.response?.data || err);
@@ -310,7 +310,7 @@ const CrearPreCotizaciones = () => {
       console.error("❌ Error al crear la pre-cotización y servicios:", error);
   
       if (error.response) {
-        console.log("Detalles del error:", error.response.data);
+        //console.log("Detalles del error:", error.response.data);
         message.error(`Error: ${JSON.stringify(error.response.data)}`);
       } else {
         message.error("Error al enviar los datos. Revisa la consola para más detalles.");

@@ -52,7 +52,7 @@ const PaymentCards = ({ idFactura, correoCliente }) => {
     try {
       await getAllFacturaPagosFacturama(pagoId);
     } catch (error) {
-      console.log("Se recibió un error del servidor (500), pero se ignora:", error);
+      //console.log("Se recibió un error del servidor (500), pero se ignora:", error);
     } finally {
       setPagos((prevPagos) =>
         prevPagos.map((pago) =>
@@ -67,7 +67,7 @@ const PaymentCards = ({ idFactura, correoCliente }) => {
   const descargarPDF = async (pago) => {
     try {
       const pdfUrl = `${Api_Host.defaults.baseURL}/complemento-pdf/${pago.id}/`;
-      console.log("📌 URL generada:", pdfUrl);
+      //console.log("📌 URL generada:", pdfUrl);
 
       const response = await fetch(pdfUrl, {
         method: "GET",

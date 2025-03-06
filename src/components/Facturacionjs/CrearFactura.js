@@ -81,12 +81,12 @@ const CrearFactura = () => {
   const fetchMonedaInfo = async (ordenTrabajoId) => {
         try {
           const ordenTrabajo = await getOrdenTrabajoById(ordenTrabajoId);
-          console.log("Orden de trabajo:", ordenTrabajo.data);
+          //console.log("Orden de trabajo:", ordenTrabajo.data);
           const cotizacion = await getCotizacionById(ordenTrabajo.data.cotizacion);
-          console.log("Cotización:", cotizacion.data);
+          //console.log("Cotización:", cotizacion.data);
           setDescuento(cotizacion.data.descuento);
           const tipoMoneda = await getTipoMonedaById(cotizacion.data.tipoMoneda);
-          console.log("Tipo de moneda:", tipoMoneda.data);
+          //console.log("Tipo de moneda:", tipoMoneda.data);
           setMoneda({ codigo: tipoMoneda.data.codigo, descripcion: tipoMoneda.data.descripcion });
       
         } catch (error) {
@@ -241,7 +241,7 @@ const CrearFactura = () => {
       try {
           const response = await getAllServicio();
           setServiciosList(response.data);
-          console.log("Servicios:", response.data);
+          //console.log("Servicios:", response.data);
       } catch (error) {
           console.error("Error al obtener los Servicios", error);
           message.error("Error al obtener los Servicios.");
@@ -262,7 +262,7 @@ const CrearFactura = () => {
       const cotizacionServiciosFiltrados = responseCotizacionServicio.data.filter(
         (cotiServ) => cotiServ.cotizacion === cotizacionId
       );
-      console.log('cotizacionServiciosFiltrados: ',cotizacionServiciosFiltrados);
+      //console.log('cotizacionServiciosFiltrados: ',cotizacionServiciosFiltrados);
       // 🟢 Asegurar que `serviciosList` tenga datos antes de usarlo
       let listaServicios = serviciosList;
       if (listaServicios.length === 0) {
@@ -360,7 +360,7 @@ const obtenerIva = async (ivaIdParam = 1) => {
       const response = await createFactura( datosFactura);
       const facturaId = response.data.id; // Suponiendo que la API retorna el ID en response.data.id
       message.success("Factura creada con éxito");
-      console.log("Factura creada:", response.data);
+      //console.log("Factura creada:", response.data);
       navigate(`/detallesfactura/${facturaId}`);
   } catch (error) {
       console.error("Error al crear la factura:", error);

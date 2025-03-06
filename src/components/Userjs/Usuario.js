@@ -83,7 +83,6 @@ const Usuario = () => {
         rol: values.rol,
         organizacion: organizationId,
       };
-      console.log("Datos enviados al backend:", userData);  // Depuración
       const response = await createUser(userData);
       const newUser = response.data;
 
