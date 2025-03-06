@@ -91,19 +91,27 @@ const DetallesFactura = () => {
     },
   ];
 
-  useEffect(() => {
-    const fetchFacturaPagos = async () => {
-      try {
-        const response = await getAllFacturaPagos(id);
-        if (response.data && response.data.pagos) {
-          setFacturaPagos(response.data.pagos);
-        }
-      } catch (error) {
-        console.error("Error al obtener los pagos", error);
+  const refreshPagos = async () => {
+    try {
+      const response = await getAllFacturaPagos(id);
+      if (response.data && response.data.pagos && response.data.pagos.length > 0) {
+        const ultimoPago = response.data.pagos[response.data.pagos.length - 1];
+        setFacturaPagos(ultimoPago);
+        //console.log("Último pago actualizado:", ultimoPago);
+      } else {
+        setFacturaPagos({}); // O lo que corresponda si no hay pagos
+        console.log("No hay pagos registrados.");
       }
-    };
-    fetchFacturaPagos();
+    } catch (error) {
+      console.error("Error al refrescar los pagos:", error);
+    }
+  };
+  
+  useEffect(() => {
+    refreshPagos();
   }, [id]);
+  
+  
 
   useEffect(() => {
     const fetchTipoCambio = async () => {
@@ -590,10 +598,12 @@ const handDuoModal=()=>{
   );
 
 
-//const TotalS=importeTotal;
-//useEffect(() => {console.log('Importe total', TotalS)}, [TotalS]);
-const totalPagado = facturaPagos.reduce((acc, pago) => acc + Number(pago.montopago), 0);
-const montoRestante = importeTotal - totalPagado;
+
+const montoRestante =facturaPagos.montototal-facturaPagos.montopago;
+//console.log('facturaPagos: ',facturaPagos)
+//console.log('importeTotal: ',importeTotal);
+//console.log('totalPagado: ',totalPagado);
+//console.log('montoRestante: ',montoRestante);
 
 
   return (
@@ -703,7 +713,7 @@ const montoRestante = importeTotal - totalPagado;
               </Link>
             </div>
           )}
-          <PaymentCards idFactura={id} correoCliente={cliente?.correo} />
+          <PaymentCards idFactura={id} correoCliente={cliente?.correo} refreshPagos={refreshPagos}/>
         </Tabs.TabPane>
 
       </Tabs>

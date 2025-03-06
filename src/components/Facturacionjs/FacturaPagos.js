@@ -12,7 +12,7 @@ import { getAllFacturaPagosFacturama } from '../../apis/PagosFacturamaApi';
 import { deleteComprobantepago } from '../../apis/PagosApi';
 import { Api_Host } from "../../apis/api";
 
-const PaymentCards = ({ idFactura, correoCliente }) => {
+const PaymentCards = ({ idFactura, correoCliente,refreshPagos }) => {
   const [pagos, setPagos] = useState([]);
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
   const [pagoToDelete, setPagoToDelete] = useState(null);
@@ -107,6 +107,9 @@ const PaymentCards = ({ idFactura, correoCliente }) => {
       setIsDeleteModalVisible(false);
       setPagoToDelete(null);
       await fetchPagos();
+      if (typeof refreshPagos === "function") {
+        refreshPagos();
+      }
     } catch (error) {
       console.error("Error al eliminar el complemento de pago:", error);
       message.error("Hubo un error al eliminar el complemento de pago");
