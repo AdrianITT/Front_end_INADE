@@ -255,6 +255,13 @@ const Factura = () => {
           />
         </Space>
       </div>
+      <div style={{ display: "flex",justifyContent: "center",marginBottom: "20px"  }}>
+        <Link to="/generar_orden">
+        <Button type="primary">
+          Crear Factura
+        </Button>
+        </Link>
+      </div>
       {/* Se usa rowClassName para resaltar las filas missing */}
       <Table
         dataSource={filteredData}
