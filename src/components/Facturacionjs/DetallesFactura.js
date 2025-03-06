@@ -12,6 +12,7 @@ import { getClienteById } from "../../apis/ClienteApi";
 import { getEmpresaById } from "../../apis/EmpresaApi";
 import { Api_Host } from "../../apis/api";
 import PaymentCards from "../Facturacionjs/FacturaPagos"
+import { getAllFacturaPagos } from "../../apis/FacturaPagosApi";
 //import axios from "axios";
 import { getAllOrdenesTrabajoServicio } from "../../apis/OrdenTabajoServiciosApi";
 import { getAllCotizacionServicio } from "../../apis/CotizacionServicioApi";
@@ -51,6 +52,7 @@ const DetallesFactura = () => {
   const [resultMessage, setResultMessage] = useState("");
   const [resultStatus, setResultStatus] = useState("success"); // Puede ser "success" o "error"
   const [modalOpen, setModalOpen] = useState(false);
+  const [facturaPagos, setFacturaPagos] = useState([]);
   
 
   const esUSD = moneda.codigo === "USD";
@@ -89,6 +91,19 @@ const DetallesFactura = () => {
     },
   ];
 
+  useEffect(() => {
+    const fetchFacturaPagos = async () => {
+      try {
+        const response = await getAllFacturaPagos(id);
+        if (response.data && response.data.pagos) {
+          setFacturaPagos(response.data.pagos);
+        }
+      } catch (error) {
+        console.error("Error al obtener los pagos", error);
+      }
+    };
+    fetchFacturaPagos();
+  }, [id]);
 
   useEffect(() => {
     const fetchTipoCambio = async () => {
@@ -119,6 +134,7 @@ const DetallesFactura = () => {
         setFactura(null);
       }
     };
+
     
 
     const verificarFacturaFacturama = async () => {
@@ -576,6 +592,9 @@ const handDuoModal=()=>{
 
 //const TotalS=importeTotal;
 //useEffect(() => {console.log('Importe total', TotalS)}, [TotalS]);
+const totalPagado = facturaPagos.reduce((acc, pago) => acc + Number(pago.montopago), 0);
+const montoRestante = importeTotal - totalPagado;
+
 
   return (
     <Spin spinning={loading}>
@@ -668,23 +687,25 @@ const handDuoModal=()=>{
         </Tabs.TabPane>
         <Tabs.TabPane tab="Pago" key="2">
           <p>Historial de la factura</p> 
+          {montoRestante > 0 && (
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px'}}>
-             <Link to={`/CrearPagos/${id}`}>
-            <Button
-              type="primary"
-              style={{
-                backgroundColor: '#52c41a',
-                borderColor: '#52c41a',
-                borderRadius: 8,
-              }}
-            >
-              Crear pagos
-            </Button></Link> 
+              <Link to={`/CrearPagos/${id}`}>
+                <Button
+                  type="primary"
+                  style={{
+                    backgroundColor: '#52c41a',
+                    borderColor: '#52c41a',
+                    borderRadius: 8,
+                  }}
+                >
+                  Crear pagos
+                </Button>
+              </Link>
             </div>
-          
+          )}
           <PaymentCards idFactura={id} correoCliente={cliente?.correo} />
-
         </Tabs.TabPane>
+
       </Tabs>
 
       <Modal
