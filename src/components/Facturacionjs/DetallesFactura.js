@@ -580,7 +580,7 @@ const handDuoModal=()=>{
   return (
     <Spin spinning={loading}>
     <div style={{ padding: "20px" }}>
-      <h2><center>Factura {ordenCodigo}</center></h2>
+      <h2><center>Factura {id} - {ordenCodigo}</center></h2>
       <Tabs defaultActiveKey="1">
         <Tabs.TabPane tab="Información" key="1">
           <Row gutter={16}>
@@ -590,6 +590,7 @@ const handDuoModal=()=>{
                   <Col span={12}>
                     <>
                     <Descriptions column={1}>
+                      <Descriptions label="Folio">{id}</Descriptions>
                     <Descriptions.Item label="Fecha">{factura.fechaExpedicion}</Descriptions.Item>
                     <Descriptions.Item label="Forma de Pago">Tarjeta</Descriptions.Item>
                     <Descriptions.Item label="Método de Pago">Transferencia</Descriptions.Item>

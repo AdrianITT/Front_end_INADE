@@ -84,9 +84,8 @@ const Cotizar = () => {
             rowClassName={(record) => (record.incompleto ? "row-incompleto" : "")}
             bordered
             pagination={{
-              pageSize: 5,
+              pageSize: 10,
               showSizeChanger: true,
-              pageSizeOptions: ["5", "10", "20"],
             }}
           />
 

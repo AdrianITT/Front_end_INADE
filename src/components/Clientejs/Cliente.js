@@ -258,27 +258,7 @@ const Cliente = () => {
                   key: "1",
                   children: <ClienteTable clientes={clientes} showAlertModal={showAlertModal} />,
                 },
-                {
-                  label: "Clientes Inactivos",
-                  key: "2",
-                  children: (
-                    <Table
-                      dataSource={clientes.filter((c) => !c.activo)}
-                      columns={[
-                        { title: "#", dataIndex: "key", key: "key" },
-                        { title: "Cliente", dataIndex: "Cliente", key: "Cliente" },
-                        { title: "Empresa", dataIndex: "Empresa", key: "Empresa" },
-                        { title: "Correo", dataIndex: "Correo", key: "Correo" },
-                      ]}
-                      bordered
-                      pagination={{
-                        pageSize: 5,
-                        showSizeChanger: true,
-                        pageSizeOptions: ["3", "5", "10"],
-                      }}
-                    />
-                  ),
-                },
+
               ]}
             />
           </div>
