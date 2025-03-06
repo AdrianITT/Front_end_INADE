@@ -125,8 +125,8 @@ const DetallesFactura = () => {
       try {
         const response = await getAllfacturafacturama();
 
-    console.log("📄 Datos recibidos:", response.data);
-    console.log("🔍 ID a buscar:", id);
+    //console.log("📄 Datos recibidos:", response.data);
+    //console.log("🔍 ID a buscar:", id);
 
     if (!id) {
       console.warn("⚠ El ID es inválido.");
@@ -140,7 +140,7 @@ const DetallesFactura = () => {
 
     const facturasFiltradas = response.data.filter(factura => factura.factura === parseInt(id, 10));
 
-    console.log("📝 Facturas filtradas:", facturasFiltradas);
+    //console.log("📝 Facturas filtradas:", facturasFiltradas);
 
     setFacturaExiste(facturasFiltradas.length > 0);
       } catch (error) {
@@ -286,7 +286,7 @@ const DetallesFactura = () => {
           })
         );
     
-        console.log("✅ Servicios con detalles:", serviciosConDetalles.filter(Boolean));
+        //console.log("✅ Servicios con detalles:", serviciosConDetalles.filter(Boolean));
         setServicios(serviciosConDetalles.filter(Boolean));
       } catch (error) {
         console.error("❌ Error al obtener los servicios:", error);
@@ -344,7 +344,7 @@ const DetallesFactura = () => {
   
       // Obtener el porcentaje del IVA
       const ivaResponse = await getIvaById(ivaId);
-      console.log("iva: ",ivaResponse);
+      //console.log("iva: ",ivaResponse);
       const porcentajeIvaCotizacion = ivaResponse.data?.porcentaje || 0;
   
       setPorcentajeIVA(porcentajeIvaCotizacion); // Guardamos el porcentaje de IVA
@@ -385,14 +385,14 @@ const DetallesFactura = () => {
   const handleCrearFactura = async () => {
     setLoading(true);
     try {
-      console.log(id);
+      //console.log(id);
       const response = await createPDFfactura(id);
-      console.log("📄 Respuesta de la API:", response);
+      //console.log("📄 Respuesta de la API:", response);
   
       // Verificar si la respuesta tiene la propiedad `success`
       if (response && response.success) {
         setFacturaExiste(true);
-        console.log("✅ Factura creada exitosamente en FacturaFacturama.", response);
+        //console.log("✅ Factura creada exitosamente en FacturaFacturama.", response);
         setResultMessage("Factura creada con éxito.");
         setResultStatus("success");
       } else {
@@ -411,7 +411,7 @@ const DetallesFactura = () => {
   const handleDownloadPDF = async (id) => {
     try {
       const pdfUrl = `${Api_Host.defaults.baseURL}/factura-pdf/${id}/`;
-      console.log("📌 URL generada:", pdfUrl);
+      //console.log("📌 URL generada:", pdfUrl);
       //window.open(pdfUrl);
   
       // Realizar la solicitud para obtener el archivo PDF
@@ -448,7 +448,7 @@ const DetallesFactura = () => {
   const handleDownloadXML = async (id) => {
     try {
       const xmlUrl = `${Api_Host.defaults.baseURL}/factura-xml/${id}/`;
-      console.log("📌 URL generada para XML:", xmlUrl);
+      //console.log("📌 URL generada para XML:", xmlUrl);
   
       // Realizar la solicitud para obtener el archivo XML
       const response = await fetch(xmlUrl, {
@@ -574,8 +574,8 @@ const handDuoModal=()=>{
   );
 
 
-const TotalS=importeTotal;
-useEffect(() => {console.log('Importe total', TotalS)}, [TotalS]);
+//const TotalS=importeTotal;
+//useEffect(() => {console.log('Importe total', TotalS)}, [TotalS]);
 
   return (
     <Spin spinning={loading}>

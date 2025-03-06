@@ -10,7 +10,7 @@ const EditarServicio = () => {
   const navigate = useNavigate();
 
   const onFinish = (values) => {
-    console.log("Formulario enviado:", values);
+    //console.log("Formulario enviado:", values);
     // Aquí puedes manejar los datos del formulario
   };
 

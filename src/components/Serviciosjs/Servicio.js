@@ -304,7 +304,7 @@ const handleConfirmDeleteService = async () => {
   };
 
   const handleCancelAlert = () => {
-    console.log("Cancelado");
+
     setIsModalVisible(false);
   };
 

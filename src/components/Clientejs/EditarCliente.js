@@ -74,8 +74,6 @@ const EditarCliente = () => {
       updatedValues.empresa = clienteData.empresa;  // Aseguramos que el id de empresa no cambie
       updatedValues.UsoCfdi = values.UsoCfdi || clienteData.UsoCfdi || 3;  // Si no se proporciona, se usa el valor original o por defecto
 
-      console.log("Datos enviados a la API:", updatedValues);  // Depuración para verificar el formato
-
       await updateCliente(clienteId, updatedValues);  // Llama a la API para actualizar los datos
       
       // Mostrar modal de éxito

@@ -46,14 +46,14 @@ const GenerarOrdenTrabajo = () => {
       try {
         // Obtener los datos de la cotización
         const cotizacionResponse = await getCotizacionById(cotizacionId);  
-        console.log("Cotización ID:", cotizacionResponse.data.id); // Ver el ID de la cotización
+        //console.log("Cotización ID:", cotizacionResponse.data.id); // Ver el ID de la cotización
         const cotizacionServicios = cotizacionResponse.data.servicios; // Servicios de la cotización
-        console.log("Servicios de la cotización:", cotizacionServicios); // Ver los servicios de la cotización
+        //console.log("Servicios de la cotización:", cotizacionServicios); // Ver los servicios de la cotización
     
         // Obtener todos los registros de cotizacionServicio
         const cotizacionServicioResponse = await getCotizacionServiciosByCotizacion(cotizacionId);
         const cotizacionServicioRecords = cotizacionServicioResponse.data;
-        console.log("Registros de Cotización Servicio:", cotizacionServicioRecords); 
+        //console.log("Registros de Cotización Servicio:", cotizacionServicioRecords); 
     
         cotizacionServicioRecords.forEach((record, index) => {
         });
@@ -63,7 +63,7 @@ const GenerarOrdenTrabajo = () => {
           (record) => Number(record.cotizacion) === Number(cotizacionId)
         );
     
-        console.log("Registros filtrados de Cotización Servicio:", filteredCotizacionServicios);
+        //console.log("Registros filtrados de Cotización Servicio:", filteredCotizacionServicios);
     
         // Obtener los servicios basados en los registros filtrados
         const servicios = await Promise.all(
@@ -81,7 +81,7 @@ const GenerarOrdenTrabajo = () => {
         );
     
         // Log de los servicios con la cantidad
-        console.log("Servicios con cantidad:", servicios);
+        //console.log("Servicios con cantidad:", servicios);
     
         // Finalmente, guardar los servicios en el estado o hacer lo necesario
         setServicios(servicios);
@@ -93,17 +93,17 @@ const GenerarOrdenTrabajo = () => {
       try {
         const cotizacionResponse = await getCotizacionById(cotizacionId); 
         const clienteId = cotizacionResponse.data.cliente; 
-        console.log("ID del cliente de la cotización:", clienteId);
+        //console.log("ID del cliente de la cotización:", clienteId);
     
         // Obtener los datos del cliente
         const clienteResponse = await getAllCliente(clienteId);
-        console.log("Datos del cliente obtenido:", clienteResponse.data);
+        //console.log("Datos del cliente obtenido:", clienteResponse.data);
         
         const clienteData = Array.isArray(clienteResponse.data) 
           ? clienteResponse.data.find(c => c.id === clienteId) 
           : clienteResponse.data;
     
-        console.log("Cliente seleccionado:", clienteData);
+        //console.log("Cliente seleccionado:", clienteData);
     
         if (clienteData) {
           setCliente(clienteData); 
@@ -111,15 +111,15 @@ const GenerarOrdenTrabajo = () => {
           // Verificar si `empresa` existe en los datos del cliente
           if (clienteData.empresa) {
             const empresaId = clienteData.empresa;  
-            console.log("ID de la empresa asociado al cliente:", empresaId);
+            //console.log("ID de la empresa asociado al cliente:", empresaId);
     
             // Obtener todas las empresas
             const empresasResponse = await getAllEmpresas();
-            console.log("Empresas disponibles:", empresasResponse.data);
+            //console.log("Empresas disponibles:", empresasResponse.data);
     
             // Buscar la empresa del cliente
             const empresaRelacionada = empresasResponse.data.find(emp => emp.id === empresaId);
-            console.log("Empresa relacionada con el cliente:", empresaRelacionada);
+            //console.log("Empresa relacionada con el cliente:", empresaRelacionada);
     
             if (empresaRelacionada) {
               setEmpresa(empresaRelacionada);
@@ -213,7 +213,7 @@ const GenerarOrdenTrabajo = () => {
 
       // Crear el receptor
       const response = await createReceptor(receptorData);
-      console.log(response.data);
+      //console.log(response.data);
       message.success("Receptor creado correctamente");
 
       // Actualiza la lista de receptores
