@@ -177,6 +177,11 @@ const Factura = () => {
   // Columnas de la tabla con filtros
   const columns = [
     {
+      title: "Folio",
+      dataIndex: "id",
+      key: "id",
+    },
+    {
       title: "Código Orden de Trabajo",
       dataIndex: "codigoOrdenTrabajo",
       key: "codigoOrdenTrabajo",
@@ -255,7 +260,7 @@ const Factura = () => {
         dataSource={filteredData}
         columns={columns}
         bordered
-        pagination={{ pageSize: 5 }}
+        pagination={{ pageSize: 10 }}
         loading={loading}
         rowClassName={(record) => (record.missing && record.recent) ? "highlighted-row" : ""}
       />

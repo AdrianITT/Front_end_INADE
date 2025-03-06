@@ -152,7 +152,7 @@ const facturasConMontorestanteCero = useMemo(() => {
                 // Actualizamos el cliente seleccionado
                 setSelectedClient(cotizacion.cliente);
                 // Preseleccionar la factura en el formulario (por ejemplo, en el primer item)
-                setFacturas(prev => {
+                /*setFacturas(prev => {
                   // Actualiza el primer item para que su propiedad "factura" sea el id encontrado
                   if (prev.length > 0) {
                     return prev.map((item, index) =>
@@ -160,7 +160,7 @@ const facturasConMontorestanteCero = useMemo(() => {
                     );
                   }
                   return prev;
-                });
+                });*/
               }
             }
           }
