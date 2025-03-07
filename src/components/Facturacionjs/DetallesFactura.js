@@ -99,7 +99,7 @@ const DetallesFactura = () => {
         setFacturaPagos(ultimoPago);
         //console.log("Último pago actualizado:", ultimoPago);
       } else {
-        setFacturaPagos({}); // O lo que corresponda si no hay pagos
+        setFacturaPagos(null); // O lo que corresponda si no hay pagos
         console.log("No hay pagos registrados.");
       }
     } catch (error) {
@@ -110,7 +110,9 @@ const DetallesFactura = () => {
   useEffect(() => {
     refreshPagos();
   }, [id]);
+  const hasPagos = facturaPagos !== null;
   
+
   
 
   useEffect(() => {
@@ -599,7 +601,9 @@ const handDuoModal=()=>{
 
 
 
-const montoRestante =facturaPagos.montototal-facturaPagos.montopago;
+const montoRestante =hasPagos 
+? facturaPagos.montototal - facturaPagos.montopago 
+: 0;
 //console.log('facturaPagos: ',facturaPagos)
 //console.log('importeTotal: ',importeTotal);
 //console.log('totalPagado: ',totalPagado);
@@ -642,7 +646,7 @@ const montoRestante =facturaPagos.montototal-facturaPagos.montopago;
               </Card>
             </Col>
             <Col span={8}>
-              {facturaExiste === false ? (
+              {facturaExiste   === 0 ? (
                 <Flex gap="small" wrap>
                   <Alert
                     message="Informational Notes"
@@ -697,7 +701,7 @@ const montoRestante =facturaPagos.montototal-facturaPagos.montopago;
         </Tabs.TabPane>
         <Tabs.TabPane tab="Pago" key="2">
           <p>Historial de la factura</p> 
-          {montoRestante > 0 && (
+          {(!hasPagos || (hasPagos && montoRestante > 0)) && (
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px'}}>
               <Link to={`/CrearPagos/${id}`}>
                 <Button
