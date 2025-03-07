@@ -1,11 +1,11 @@
 import React, { useState, useMemo } from "react";
 import { Button, Input, Upload, Form, Typography, Alert, message, Modal } from "antd";
-import { UploadOutlined } from "@ant-design/icons";
-import { Link } from "react-router-dom";
+import { UploadOutlined, ArrowLeftOutlined } from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { Api_Host } from "../../apis/api";
 import { createCSD } from "../../apis/csdApi";
-import Button1 from "../ComponetButton/Button-1";
+
 import "./CargarCSD.css";
 
 const { Title } = Typography;
@@ -16,6 +16,7 @@ const CargarCSD = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [confirmationText, setConfirmationText] = useState("");
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const navigate = useNavigate();
 
   // Obtener el ID de la organización una sola vez desde localStorage
   const organizationId = useMemo(
@@ -111,7 +112,7 @@ const CargarCSD = () => {
 
   return (
     <div className="csd-container">
-      <Button1 />
+      <Button type="text" className="back-button" onClick={()=>navigate("/configuracionorganizacion")}><ArrowLeftOutlined /></Button>
 
       <Title level={3} className="csd-title">
         Cargar Certificado de Sello Digital (CSD)

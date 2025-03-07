@@ -15,7 +15,7 @@ const EditarServicio = () => {
   };
 
   const handleCancel = () => {
-    navigate(-1); // Navega a la página anterior
+    navigate("/servicio"); // Navega a la página anterior
   };
 
   return (
