@@ -646,7 +646,7 @@ const montoRestante =hasPagos
               </Card>
             </Col>
             <Col span={8}>
-              {facturaExiste   === 0 ? (
+              {facturaExiste   === false   ? (
                 <Flex gap="small" wrap>
                   <Alert
                     message="Informational Notes"
