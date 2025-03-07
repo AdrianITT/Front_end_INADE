@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Form, Input, Button, Select, message } from "antd";
+import { Form, Input, Button, Select, message, Modal } from "antd";
 import { useNavigate, useParams } from "react-router-dom";
 import { getUserById, updateUser } from "../../apis/UserApi";
 import { getAllRol } from "../../apis/RolApi";
@@ -62,7 +62,7 @@ const EditarUsuario = () => {
   
       await updateUser(id, userData);  // Ahora este método hace un PATCH
       message.success("Usuario actualizado exitosamente");
-      navigate(-1);
+      navigate("/usuario");
     } catch (error) {
       console.error("Error al actualizar usuario", error.response?.data);
       message.error("Error al actualizar usuario");
@@ -71,7 +71,7 @@ const EditarUsuario = () => {
   
 
   const handleCancelar = () => {
-    navigate(-1);
+    navigate("/usuario");
   };
 
   if (!user) {

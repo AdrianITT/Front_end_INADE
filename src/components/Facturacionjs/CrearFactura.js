@@ -493,7 +493,7 @@ const obtenerIva = async (ivaIdParam = 1) => {
           <Button
             type="danger"
             style={{ backgroundColor: "#f5222d", borderColor: "#f5222d" }}
-            onClick={() => navigate(-1)}
+            onClick={() => navigate(`/DetalleOrdenTrabajo/${id}`)}
           >
             Cancelar
           </Button>
