@@ -35,6 +35,8 @@ const PaymentCards = ({ idFactura, correoCliente,refreshPagos }) => {
           isPDFVisible: p.facturama_id !== null,
         }));
         setPagos(pagosConFlag);
+      }else {
+        setPagos([]);
       }
     } catch (error) {
       console.error("Error al obtener los pagos:", error);
@@ -52,7 +54,7 @@ const PaymentCards = ({ idFactura, correoCliente,refreshPagos }) => {
     try {
       await getAllFacturaPagosFacturama(pagoId);
     } catch (error) {
-      //console.log("Se recibió un error del servidor (500), pero se ignora:", error);
+      console.log("Se recibió un error del servidor (500), pero se ignora:", error);
     } finally {
       setPagos((prevPagos) =>
         prevPagos.map((pago) =>
