@@ -306,23 +306,37 @@ const RegistroCotizacion = () => {
             </Row>
             <Row gutter={16}>
               <Col span={12}>
-                <Form.Item
-                  label="Servicio"
-                  name={['conceptos', index, 'servicio']}
-                  rules={[{ required: true, message: 'Por favor selecciona el servicio.' }]}
-                >
-                  <Select
-                    placeholder="Selecciona un servicio"
-                    value={concepto.servicio || undefined}
-                    onChange={(value) => handleServicioChange(concepto.id, value)}
-                  >
-                    {obtenerServiciosDisponibles(concepto.id).map((servicio) => (
-                      <Select.Option key={servicio.id} value={servicio.id}>
-                        {servicio.nombreServicio}
-                      </Select.Option>
-                    ))}
-                  </Select>
-                </Form.Item>
+              <Form.Item
+                label="Servicio"
+                name={['conceptos', index, 'servicio']}
+                rules={[{ required: true, message: 'Por favor selecciona el servicio.' }]}
+              >
+                <Select
+                  showSearch
+                  placeholder="Selecciona un servicio"
+                  style={{ width: '100%' }}
+                  // La búsqueda la basamos en la prop "label"
+                  optionFilterProp="label"
+                  // Filtra los resultados mientras el usuario escribe
+                  filterOption={(input, option) =>
+                    (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                  }
+                  // Ordena alfabéticamente los resultados mostrados
+                  filterSort={(optionA, optionB) =>
+                    (optionA?.label ?? '').toLowerCase().localeCompare(
+                      (optionB?.label ?? '').toLowerCase()
+                    )
+                  }
+                  value={concepto.servicio || undefined}
+                  onChange={(value) => handleServicioChange(concepto.id, value)}
+                  // Aquí transformamos cada servicio en un objeto con { value, label }
+                  options={obtenerServiciosDisponibles(concepto.id).map(serv => ({
+                    value: serv.id,
+                    label: serv.nombreServicio,
+                  }))}
+                />
+              </Form.Item>
+
               </Col>
               <Col span={12}>
                 <Form.Item
