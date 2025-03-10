@@ -266,7 +266,7 @@ const EditarCotizacion = () => {
     };
 
      const handleAddConcepto = () => {
-          setConceptos([...conceptos, { id: conceptos.length + 1, servicio: "", cantidad: 1, precio: 0, descripcion: "" }]);
+          setConceptos([...conceptos, { id: null, servicio: "", cantidad: 1, precio: 0, descripcion: "" }]);
         };
    
      const { subtotal, descuentoValor, subtotalConDescuento, iva, total } = calcularTotales();
@@ -322,7 +322,7 @@ const EditarCotizacion = () => {
           const servicioId = parseInt(concepto.servicio, 10);
           const servicioYaEnCotizacion = idsServiciosEnCotizacion.includes(servicioId);
     
-          if (servicioYaEnCotizacion) {
+          if (concepto.id) {
             serviciosExistentes.push(concepto);
           } else {
             nuevosServicios.push(concepto);
