@@ -11,6 +11,10 @@ import { getAllServicio } from "../../apis/ServiciosApi";
 import { createCotizacion } from "../../apis/CotizacionApi";
 import { createCotizacionServicio } from "../../apis/CotizacionServicioApi";
 import { getInfoSistema } from "../../apis/InfoSistemaApi";
+import { getAllClaveCDFI } from "../../apis/ClavecdfiApi";
+import { getAllUnidadCDFI } from "../../apis/unidadcdfiApi";
+import { getAllMetodo} from "../../apis/MetodoApi";
+import {createServicio} from "../../apis/ServiciosApi";
 
 const { TextArea } = Input;
 
@@ -30,6 +34,14 @@ const RegistroCotizacion = () => {
   const [descuento, setDescuento] = useState(0);
   const [tipoCambioDolar, setTipoCambioDolar] = useState(1);
   const [form] = Form.useForm();
+  // Nueva variable de estado para el modal de "Nuevo Servicio"
+  const [isNuevoServicioModalVisible, setIsNuevoServicioModalVisible] = useState(false);
+  const [unidad, setUnidad] = useState([]);
+  const [clavecdfi, setClavecdfi] = useState([]);
+  const [metodos, setMetodos] = useState([]);
+
+  const [formNuevoServicio] = Form.useForm();
+
 
   // Obtener el tipo de cambio del dólar
   useEffect(() => {
@@ -44,6 +56,45 @@ const RegistroCotizacion = () => {
     };
     fetchTipoCambio();
   }, []);
+
+  const fetchServicios = async () => {
+    try {
+      const response = await getAllServicio();
+      //console.log("Servicios recibidos:", response.data);
+      // Filtra los que no tengan `id`
+      const validServices = Array.isArray(response.data)
+        ? response.data.filter(s => s && s.id)
+        : [];
+      setServicios(validServices);
+    } catch (error) {
+      console.error("Error al cargar los servicios", error);
+    }
+  };
+
+  useEffect(() => {
+    const fetchDatosModal = async () => {
+      try {
+        const claveResponse = await getAllClaveCDFI();
+        setClavecdfi(claveResponse.data);
+      } catch (error) {
+        console.error("Error al cargar claves CFDI", error);
+      }
+      try {
+        const unidadResponse = await getAllUnidadCDFI();
+        setUnidad(unidadResponse.data);
+      } catch (error) {
+        console.error("Error al cargar unidades CFDI", error);
+      }
+      try {
+        const metodosResponse = await getAllMetodo();
+        setMetodos(metodosResponse.data);
+      } catch (error) {
+        console.error("Error al cargar métodos", error);
+      }
+    };
+    fetchDatosModal();
+  }, []);
+  
 
   const handleFechaSolicitadaChange = (date) => {
     setFechaSolicitada(date);
@@ -89,14 +140,8 @@ const RegistroCotizacion = () => {
         console.error('Error al cargar los IVA', error);
       }
     };
-    const fetchServicios = async () => {
-      try {
-        const response = await getAllServicio();
-        setServicios(response.data);
-      } catch (error) {
-        console.error("Error al cargar los servicios", error);
-      }
-    };
+
+    
     fetchIva();
     fetchTipoMoneda();
     fetchServicios();
@@ -147,11 +192,14 @@ const RegistroCotizacion = () => {
     // Obtener los servicios que no han sido seleccionados
     const obtenerServiciosDisponibles = (conceptoId) => {
       const serviciosSeleccionados = conceptos
-        .filter((c) => c.id !== conceptoId) // Excluye el concepto actual para permitir cambiarlo
-        .map((c) => c.servicio); // Obtiene los servicios ya seleccionados
+        .filter((c) => c.id !== conceptoId)
+        .map((c) => c.servicio);
     
-      return servicios.filter((servicio) => !serviciosSeleccionados.includes(servicio.id));
+      return servicios.filter((servicio) =>
+        !serviciosSeleccionados.includes(servicio.id)
+      );
     };
+    
 
   const calcularTotales = () => {
     const subtotal = conceptos.reduce((acc, curr) => acc + curr.cantidad * curr.precioFinal, 0);
@@ -293,6 +341,11 @@ const RegistroCotizacion = () => {
         </Form.Item>
 
         <Divider>Agregar Conceptos</Divider>
+        <div style={{ padding: '10px' }}>
+        <Button size="large" onClick={() => setIsNuevoServicioModalVisible(true)}>
+          Crear un Nuevo Servicio
+        </Button>
+        </div>
         {conceptos.map((concepto, index) => (
         <div key={concepto.id}>
           <Card>
@@ -400,9 +453,12 @@ const RegistroCotizacion = () => {
           </Card>
         </div>
           ))}
-        <Button type="primary" onClick={handleAddConcepto} style={{ marginBottom: "16px" }}>
-          Añadir Concepto
-        </Button>
+          <div style={{ padding: '20px' }}>
+            <Button type="primary" onClick={handleAddConcepto} style={{ marginBottom: "16px" }}>
+              Añadir Concepto
+            </Button>
+          </div>
+        
 
         <div className="cotizacion-totals-buttons">
           <div className="cotizacion-totals">
@@ -434,6 +490,131 @@ const RegistroCotizacion = () => {
         <Result status="success"
         title="¡Se creó exitosamente!"></Result>
       </Modal>
+
+      {/* Modal de Información (ya existente) */}
+      <Modal
+        title="Crear Nuevo Servicio"
+        open={isNuevoServicioModalVisible}
+        onOk={async () => {
+          try {
+            const values = await formNuevoServicio.validateFields();
+            // Llamar a la API para crear el servicio
+            const response = await createServicio(values);
+            message.success("Nuevo servicio creado");
+            // Actualizar la lista de servicios (agregando el nuevo)
+            setServicios([...servicios, response.data]);
+            formNuevoServicio.resetFields();
+            setIsNuevoServicioModalVisible(false);
+          } catch (error) {
+            console.error("Error al crear el servicio", error);
+            message.error("Error al crear el servicio");
+          }
+        }}
+        onCancel={() => {
+          setIsNuevoServicioModalVisible(false);
+          formNuevoServicio.resetFields();
+        }}
+        okText="Guardar"
+        cancelText="Cancelar"
+      >
+        <Result status="success" title="¡Se creó exitosamente!" />
+      </Modal>
+
+      {/* Nuevo Modal para crear un servicio */}
+      <Modal
+  title="Crear Nuevo Servicio"
+  open={isNuevoServicioModalVisible}
+  onOk={async () => {
+    try {
+      const values = await formNuevoServicio.validateFields();
+      const dataToSend = { ...values, estado: values.estado || 5 };
+
+      if (!values.unidadCfdi || !values.claveCfdi) {
+        message.error("Por favor, complete todos los campos obligatorios.");
+        return;
+      }
+
+      const response = await createServicio(dataToSend);
+      message.success("Nuevo servicio creado");
+
+      fetchServicios();
+      formNuevoServicio.resetFields();
+      setIsNuevoServicioModalVisible(false);
+    } catch (error) {
+      console.error("Error al crear el servicio", error);
+      message.error("Error al crear el servicio");
+    }
+  }}
+  onCancel={() => {
+    setIsNuevoServicioModalVisible(false);
+    formNuevoServicio.resetFields();
+  }}
+  okText="Guardar"
+  cancelText="Cancelar"
+>
+  <Form form={formNuevoServicio} className="modal-form" layout="vertical">
+    <Row gutter={16}>
+      <Col span={12}>
+        <Form.Item
+          label="Nombre del Servicio"
+          name="nombreServicio"
+          rules={[{ required: true, message: "Por favor ingrese un nombre" }]}
+        >
+          <Input placeholder="Nombre del servicio o concepto" />
+        </Form.Item>
+        <Form.Item
+          label="Precio unitario"
+          name="precio"
+          rules={[{ required: true, message: "Por favor ingrese un precio" }]}
+        >
+          <Input type="number" placeholder="Precio sugerido" />
+        </Form.Item>
+        <Form.Item
+          label="Unidad CFDI"
+          name="unidadCfdi"
+          rules={[{ required: true, message: "Por favor seleccione una unidad" }]}
+        >
+          <Select>
+            {unidad.map((u) => (
+              <Select.Option key={u.id} value={u.id}>
+                {u.codigo} - {u.nombre}
+              </Select.Option>
+            ))}
+          </Select>
+        </Form.Item>
+      </Col>
+      <Col span={12}>
+        <Form.Item
+          label="Clave CFDI"
+          name="claveCfdi"
+          rules={[{ required: true, message: "Por favor seleccione una clave" }]}
+        >
+          <Select>
+            {clavecdfi.map((clave) => (
+              <Select.Option key={clave.id} value={clave.id}>
+                {clave.codigo} - {clave.nombre}
+              </Select.Option>
+            ))}
+          </Select>
+        </Form.Item>
+        <Form.Item
+          label="Método"
+          name="metodos"
+          rules={[{ required: true, message: "Por favor seleccione un método" }]}
+        >
+          <Select placeholder="Selecciona un método">
+            {metodos.map((metodo) => (
+              <Select.Option key={metodo.id} value={metodo.id}>
+                {metodo.codigo}
+              </Select.Option>
+            ))}
+          </Select>
+        </Form.Item>
+      </Col>
+    </Row>
+  </Form>
+</Modal>
+
 
     </div>
   );
