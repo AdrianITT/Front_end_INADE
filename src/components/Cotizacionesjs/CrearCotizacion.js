@@ -565,10 +565,21 @@ const RegistroCotizacion = () => {
         <Form.Item
           label="Precio unitario"
           name="precio"
-          rules={[{ required: true, message: "Por favor ingrese un precio" }]}
+          rules={[
+            { required: true, message: "Por favor ingrese un precio" },
+            {
+              validator: (_, value) => {
+                if (value < 0) {
+                  return Promise.reject("El precio no puede ser negativo");
+                }
+                return Promise.resolve();
+              },
+            },
+          ]}
         >
-          <Input type="number" placeholder="Precio sugerido" />
+          <Input type="number" min={0} placeholder="Precio sugerido" />
         </Form.Item>
+
         <Form.Item
           label="Unidad CFDI"
           name="unidadCfdi"
