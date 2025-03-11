@@ -1,6 +1,6 @@
 // Empresa.jsx
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Button, Modal, message } from 'antd';
+import { Button, Modal, message, Spin } from 'antd';
 import { ExclamationCircleOutlined } from '@ant-design/icons';
 import './Empresa.css';
 
@@ -32,12 +32,15 @@ const Empresa = () => {
 
   // Estados para formulario
   const [regimenFiscal, setRegimenFiscal] = useState([]);
+  const [loading, setLoading] = useState(false);
+
 
   // NUEVO: Estado para almacenar los usos CFDI
   const [usosCfdi, setUsosCfdi] = useState([]);
 
   // Cargar lista de empresas
   const loadEmpresas = useCallback(async () => {
+    setLoading(true);
     try {
       const res = await getAllEmpresas();
       const allData = res.data || [];
@@ -63,6 +66,8 @@ const Empresa = () => {
       setEmpresas(dataTabla);
     } catch (error) {
       console.error("Error al cargar las empresas:", error);
+    } finally {
+      setLoading(false); // Desactiva el spinner, haya o no error
     }
   }, []);
 
@@ -171,7 +176,7 @@ const Empresa = () => {
   };
 
   return (
-    <div>
+    <div><Spin spinning={loading} tip="Cargando datos...">
       <div className="content-center">
         <h1>Empresas</h1>
       </div>
@@ -227,7 +232,7 @@ const Empresa = () => {
       >
         <p>¡La operación se ha realizado correctamente!</p>
       </Modal>
-    </div>
+    </Spin></div>
   );
 };
 
