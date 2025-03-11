@@ -71,27 +71,60 @@ const EditEmpresaModal = ({ visible, onCancel, onEdit, regimenFiscal, empresa,us
             >
               <Input />
             </Form.Item>
-            <Form.Item
-              label="Regimen fiscal:"
-              name="regimenFiscal"
-              rules={[{ required: true, message: 'Régimen requerido' }]}
-            >
-              <Select>
+            <Form.Item 
+            label="Regimen fiscal:" 
+            name="regimenFiscal"
+            rules={[{ required: true, message: 'Régimen requerido' }]}>
+              <Select
+                  showSearch
+                  placeholder="Selecciona un Régimen fiscal"
+                  optionFilterProp="label"
+                  filterOption={(input, option) =>
+                    (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
+                  }
+                  filterSort={(optionA, optionB) =>
+                    (optionA?.label ?? "").toLowerCase().localeCompare(
+                      (optionB?.label ?? "").toLowerCase()
+                    )
+                  }
+                  >
                 {regimenFiscal.map((regimen) => (
-                  <Select.Option key={regimen.id} value={regimen.id}>
+                  <Select.Option 
+                    key={regimen.id} 
+                    value={regimen.id}
+                    label={`${regimen.codigo} - ${regimen.nombre}`}
+                  >
                     {regimen.codigo} - {regimen.nombre}
                   </Select.Option>
                 ))}
               </Select>
             </Form.Item>
-          <Form.Item label="Uso CFDI:" name="UsoCfdi">
-              <Select placeholder="Selecciona un Uso CFDI">
-                {usosCfdi.map((uso) => (
-                  <Select.Option key={uso.id} value={uso.id}>
-                    {uso.codigo} - {uso.descripcion}
-                  </Select.Option>
-                ))}
-              </Select>
+            <Form.Item 
+            label="Uso CFDI:" 
+            name="UsoCfdi">
+            <Select
+                showSearch
+                placeholder="Selecciona un Uso CFDI"
+                optionFilterProp="label"
+                filterOption={(input, option) =>
+                  (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
+                }
+                filterSort={(optionA, optionB) =>
+                  (optionA?.label ?? "").toLowerCase().localeCompare(
+                    (optionB?.label ?? "").toLowerCase()
+                  )
+                }
+              >
+              {usosCfdi.map((uso) => (
+                <Select.Option 
+                  key={uso.id} 
+                  value={uso.id}
+                  label={`${uso.codigo} - ${uso.descripcion}`}
+                >
+                  {uso.codigo} - {uso.descripcion}
+                </Select.Option>
+              ))}
+            </Select>
             </Form.Item>
           </Col>
           <Col span={12}>

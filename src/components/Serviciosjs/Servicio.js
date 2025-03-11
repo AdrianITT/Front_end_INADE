@@ -33,6 +33,13 @@ const Servicio = () => {
   const [isSuccessModalVisible, setIsSuccessModalVisible] = useState(false);
   const [successMessage, setSuccessMessage] = useState(""); // Mensaje dinámico
   //const [searchServicios, setSearchServicios] = useState("");
+  // Al inicio del componente, declara el estado y la función
+const [metodoSeleccionado, setMetodoSeleccionado] = useState(null);
+
+const handleMetodoChange = (value) => {
+  setMetodoSeleccionado(value);
+};
+
 
   // Usar useEffect para obtener los servicios cuando el componente se monte
   useEffect(() => {
@@ -458,11 +465,28 @@ const handleConfirmDeleteService = async () => {
               <Form.Item label="Precio unitario:" name="precio" rules={[{ required: true, message: "Por favor ingrese un precio" }]}>
                 <Input placeholder="Precio sugerido" />
               </Form.Item>
-              <Form.Item label="Unidad cfdi:" name="unidadCfdi" rules={[{ required: true }]}>
-                <Select>
+              <Form.Item label="Unidad cfdi:" 
+              name="unidadCfdi" 
+              rules={[{ required: true }]}>
+                <Select
+                showSearch
+                placeholder="Selecciona la unidad CFDI"
+                optionFilterProp="label"
+                filterOption={(input, option) =>
+                  (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
+                }
+                filterSort={(optionA, optionB) =>
+                  (optionA?.label ?? "").toLowerCase().localeCompare(
+                    (optionB?.label ?? "").toLowerCase()
+                  )
+                }
+                >
                   {unidad.map((unidadudfi)=>(
-                    <Select.Option key={unidadudfi.id}
-                    value={unidadudfi.id}>
+                    <Select.Option 
+                    key={unidadudfi.id}
+                    value={unidadudfi.id}
+                    label={`${unidadudfi.codigo} - ${unidadudfi.nombre}`}
+                    >
                       {unidadudfi.codigo}-{unidadudfi.nombre}
                     </Select.Option>
                   ))}
@@ -470,16 +494,36 @@ const handleConfirmDeleteService = async () => {
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item label="Clave cfdi:" name="claveCfdi" rules={[{ required: true }]}>
-                <Select>
-                {clavecdfi.map((clave)=>(
-                    <Select.Option key={clave.id}
-                    value={clave.id}>
-                      {clave.codigo}-{clave.nombre}
+            <Form.Item
+                label="Clave cfdi:" 
+                name="claveCfdi" 
+                rules={[{ required: true, message: "Por favor selecciona una clave CFDI." }]}
+              >
+                <Select
+                  showSearch
+                  placeholder="Selecciona la clave CFDI"
+                  optionFilterProp="label"
+                  filterOption={(input, option) =>
+                    (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
+                  }
+                  filterSort={(optionA, optionB) =>
+                    (optionA?.label ?? "").toLowerCase().localeCompare(
+                      (optionB?.label ?? "").toLowerCase()
+                    )
+                  }
+                >
+                  {clavecdfi.map((clave) => (
+                    <Select.Option 
+                      key={clave.id}
+                      value={clave.id}
+                      label={`${clave.codigo} - ${clave.nombre}`}
+                    >
+                      {clave.codigo} - {clave.nombre}
                     </Select.Option>
                   ))}
                 </Select>
-              </Form.Item>{/* 
+              </Form.Item>
+              {/* 
               <Form.Item label="Objeto impuesto:" name="objetoImpuesto" rules={[{ required: true }]}>
                 <Select>
               {objetoimpuesto.map((oi)=>(
@@ -490,16 +534,27 @@ const handleConfirmDeleteService = async () => {
                   ))}
                   </Select>
               </Form.Item>*/}
-                  <Form.Item label="Método:" name="metodos" rules={[{ required: true }]}>
-                  <Select placeholder="Selecciona un método">
-                  {metodos.map((metodo)=>(
-                    <Select.Option key={metodo.id}
-                    value={metodo.id}>
-                      {metodo.codigo}
-                    </Select.Option>
-                  ))}
-                  </Select>
-                </Form.Item>{/* 
+              <Form.Item
+                label="Método"
+                name="metodos"
+                rules={[{ required: true, message: "Por favor seleccione un método" }]}
+              >
+                <Select
+                  placeholder="Selecciona un método"
+                  showSearch
+                  optionFilterProp="label"
+                  filterOption={(input, option) =>
+                    (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
+                  }
+                  value={metodoSeleccionado || undefined}
+                  onChange={handleMetodoChange}
+                  options={metodos.map((metodo) => ({
+                    value: metodo.id,
+                    label: metodo.codigo,
+                  }))}
+                />
+              </Form.Item>
+{/* 
               <Form.Item name="crearServicio" valuePropName="checked">
                 <Checkbox onChange={(e) => setShowInput(e.target.checked)}>Crear Metodo</Checkbox>
               </Form.Item>
@@ -590,10 +645,26 @@ const handleConfirmDeleteService = async () => {
               <Form.Item label="Precio unitario:" name="precio" rules={[{ required: true, message: "Por favor ingrese un precio" }]}>
                 <Input placeholder="Precio sugerido" />
               </Form.Item>
-              <Form.Item label="Unidad cfdi:" name="unidadCfdi" rules={[{ required: true }]}>
-                <Select>
+              <Form.Item label="Unidad cfdi:" name="unidadCfdi" rules={[{ required: true, message: 'Por favor selecciona una unidad CFDI.' }]}>
+                <Select
+                  showSearch
+                  placeholder="Selecciona una unidad CFDI"
+                  optionFilterProp="label"
+                  filterOption={(input, option) =>
+                    (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
+                  }
+                  filterSort={(optionA, optionB) =>
+                    (optionA?.label ?? "").toLowerCase().localeCompare(
+                      (optionB?.label ?? "").toLowerCase()
+                    )
+                  }
+                >
                   {unidad.map((unidadudfi) => (
-                    <Select.Option key={unidadudfi.id} value={unidadudfi.id}>
+                    <Select.Option 
+                      key={unidadudfi.id} 
+                      value={unidadudfi.id}
+                      label={`${unidadudfi.codigo} - ${unidadudfi.nombre}`}
+                    >
                       {unidadudfi.codigo}-{unidadudfi.nombre}
                     </Select.Option>
                   ))}
@@ -601,15 +672,32 @@ const handleConfirmDeleteService = async () => {
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item label="Clave cfdi:" name="claveCfdi" rules={[{ required: true }]}>
-                <Select>
-                  {clavecdfi.map((clave) => (
-                    <Select.Option key={clave.id} value={clave.id}>
-                      {clave.codigo}-{clave.nombre}
-                    </Select.Option>
-                  ))}
-                </Select>
-              </Form.Item>{/*
+            <Form.Item label="Clave cfdi:" name="claveCfdi" rules={[{ required: true, message: 'Por favor selecciona una clave CFDI.' }]}>
+              <Select
+                showSearch
+                placeholder="Selecciona una clave CFDI"
+                optionFilterProp="label"
+                filterOption={(input, option) =>
+                  (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
+                }
+                filterSort={(optionA, optionB) =>
+                  (optionA?.label ?? "").toLowerCase().localeCompare(
+                    (optionB?.label ?? "").toLowerCase()
+                  )
+                }
+              >
+                {clavecdfi.map((clave) => (
+                  <Select.Option 
+                    key={clave.id} 
+                    value={clave.id}
+                    label={`${clave.codigo} - ${clave.nombre}`}
+                  >
+                    {clave.codigo}-{clave.nombre}
+                  </Select.Option>
+                ))}
+              </Select>
+            </Form.Item>
+              {/*
               <Form.Item label="Objeto impuesto:" name="objetoImpuesto" rules={[{ required: true }]}>
                 <Select>
                   {objetoimpuesto.map((oi) => (
@@ -619,16 +707,31 @@ const handleConfirmDeleteService = async () => {
                   ))}
                 </Select>
               </Form.Item> */}
-              <Form.Item label="Método:" name="metodos" rules={[{ required: true }]}>
-                  <Select placeholder="Selecciona un método">
-                  {metodos.map((metodo)=>(
-                    <Select.Option key={metodo.id}
-                    value={metodo.id}>
+              <Form.Item label="Método:" name="metodos" rules={[{ required: true, message: 'Por favor selecciona un método.' }]}>
+                <Select
+                  placeholder="Selecciona un método"
+                  showSearch
+                  optionFilterProp="label"
+                  filterOption={(input, option) =>
+                    (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
+                  }
+                  filterSort={(optionA, optionB) =>
+                    (optionA?.label ?? "").toLowerCase().localeCompare(
+                      (optionB?.label ?? "").toLowerCase()
+                    )
+                  }
+                >
+                  {metodos.map((metodo) => (
+                    <Select.Option 
+                      key={metodo.id} 
+                      value={metodo.id}
+                      label={metodo.codigo}
+                    >
                       {metodo.codigo}
                     </Select.Option>
                   ))}
-                  </Select>
-                </Form.Item>
+                </Select>
+              </Form.Item>
             </Col>
           </Row>
         </Form>

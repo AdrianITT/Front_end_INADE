@@ -621,21 +621,36 @@ const handleRemoveConcepto = (facturaId, e) => {
 
           <Row gutter={16}>
             <Col span={24}>
-              <Form.Item label="Forma de pago">
-                <Select
-                  placeholder="Selecciona la forma de pago"
-                  value={formaPagoGlobal || undefined}
-                  onChange={(value) => setFormaPagoGlobal(value)}
-                  loading={loadingFormasPago}
-                  dropdownStyle={{ borderRadius: 8 }}
-                >
-                  {formasPagoData.map((fp) => (
-                    <Option key={fp.id} value={fp.id}>
-                      {`${fp.codigo} - ${fp.descripcion}`}
-                    </Option>
-                  ))}
-                </Select>
-              </Form.Item>
+            <Form.Item label="Forma de pago">
+              <Select
+                placeholder="Selecciona la forma de pago"
+                showSearch
+                optionFilterProp="label"
+                filterOption={(input, option) =>
+                  (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
+                }
+                filterSort={(optionA, optionB) =>
+                  (optionA?.label ?? "").toLowerCase().localeCompare(
+                    (optionB?.label ?? "").toLowerCase()
+                  )
+                }
+                value={formaPagoGlobal || undefined}
+                onChange={(value) => setFormaPagoGlobal(value)}
+                loading={loadingFormasPago}
+                dropdownStyle={{ borderRadius: 8 }}
+              >
+                {formasPagoData.map((fp) => (
+                  <Option
+                    key={fp.id}
+                    value={fp.id}
+                    label={`${fp.codigo} - ${fp.descripcion}`}
+                  >
+                    {`${fp.codigo} - ${fp.descripcion}`}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+
             </Col>
           </Row>
           {facturas.map((factura, index) => (

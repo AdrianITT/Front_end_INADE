@@ -33,6 +33,7 @@ const RegistroCotizacion = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [descuento, setDescuento] = useState(0);
   const [tipoCambioDolar, setTipoCambioDolar] = useState(1);
+  const [metodoSeleccionado, setMetodoSeleccionado] = useState(null);
   const [form] = Form.useForm();
   // Nueva variable de estado para el modal de "Nuevo Servicio"
   const [isNuevoServicioModalVisible, setIsNuevoServicioModalVisible] = useState(false);
@@ -202,6 +203,10 @@ const RegistroCotizacion = () => {
       return servicios.filter((servicio) =>
         !serviciosSeleccionados.includes(servicio.id)
       );
+    };
+
+    const handleMetodoChange = (value) => {
+      setMetodoSeleccionado(value);
     };
     
 
@@ -628,47 +633,85 @@ const RegistroCotizacion = () => {
               <Input type="number" min={0} placeholder="Precio sugerido" />
             </Form.Item>
 
-            <Form.Item
-              label="Unidad CFDI"
-              name="unidadCfdi"
-              rules={[{ required: true, message: "Por favor seleccione una unidad" }]}
-            >
-              <Select>
-                {unidad.map((u) => (
-                  <Select.Option key={u.id} value={u.id}>
-                    {u.codigo} - {u.nombre}
-                  </Select.Option>
-                ))}
-              </Select>
-            </Form.Item>
+              <Form.Item label="Unidad cfdi:" 
+              name="unidadCfdi" 
+              rules={[{ required: true }]}>
+                <Select
+                showSearch
+                placeholder="Selecciona la unidad CFDI"
+                optionFilterProp="label"
+                filterOption={(input, option) =>
+                  (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
+                }
+                filterSort={(optionA, optionB) =>
+                  (optionA?.label ?? "").toLowerCase().localeCompare(
+                    (optionB?.label ?? "").toLowerCase()
+                  )
+                }
+                >
+                  {unidad.map((unidadudfi)=>(
+                    <Select.Option 
+                    key={unidadudfi.id}
+                    value={unidadudfi.id}
+                    label={`${unidadudfi.codigo} - ${unidadudfi.nombre}`}
+                    >
+                      {unidadudfi.codigo}-{unidadudfi.nombre}
+                    </Select.Option>
+                  ))}
+                </Select>
+              </Form.Item>
           </Col>
           <Col span={12}>
             <Form.Item
-              label="Clave CFDI"
-              name="claveCfdi"
-              rules={[{ required: true, message: "Por favor seleccione una clave" }]}
-            >
-              <Select>
-                {clavecdfi.map((clave) => (
-                  <Select.Option key={clave.id} value={clave.id}>
-                    {clave.codigo} - {clave.nombre}
-                  </Select.Option>
-                ))}
-              </Select>
-            </Form.Item>
+                label="Clave cfdi:" 
+                name="claveCfdi" 
+                rules={[{ required: true, message: "Por favor selecciona una clave CFDI." }]}
+              >
+                <Select
+                  showSearch
+                  placeholder="Selecciona la clave CFDI"
+                  optionFilterProp="label"
+                  filterOption={(input, option) =>
+                    (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
+                  }
+                  filterSort={(optionA, optionB) =>
+                    (optionA?.label ?? "").toLowerCase().localeCompare(
+                      (optionB?.label ?? "").toLowerCase()
+                    )
+                  }
+                >
+                  {clavecdfi.map((clave) => (
+                    <Select.Option 
+                      key={clave.id}
+                      value={clave.id}
+                      label={`${clave.codigo} - ${clave.nombre}`}
+                    >
+                      {clave.codigo} - {clave.nombre}
+                    </Select.Option>
+                  ))}
+                </Select>
+              </Form.Item>  
             <Form.Item
               label="Método"
               name="metodos"
               rules={[{ required: true, message: "Por favor seleccione un método" }]}
             >
-              <Select placeholder="Selecciona un método">
-                {metodos.map((metodo) => (
-                  <Select.Option key={metodo.id} value={metodo.id}>
-                    {metodo.codigo}
-                  </Select.Option>
-                ))}
-              </Select>
+              <Select
+                placeholder="Selecciona un método"
+                showSearch
+                optionFilterProp="label"
+                filterOption={(input, option) =>
+                  (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
+                }
+                value={metodoSeleccionado || undefined}
+                onChange={handleMetodoChange}
+                options={metodos.map((metodo) => ({
+                  value: metodo.id,
+                  label: metodo.codigo,
+                }))}
+              />
             </Form.Item>
+
           </Col>
         </Row>
       </Form>
