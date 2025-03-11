@@ -435,19 +435,35 @@ const Cliente = () => {
               </Row>
             </div>
           ) : (
-            <Form.Item
-              label="Empresa:"
-              name="empresa"
-              rules={[{ required: true, message: "Por favor selecciona una empresa o crea una nueva." }]}
+          <Form.Item
+            label="Empresa:"
+            name="empresa"
+            rules={[{ required: true, message: "Por favor selecciona una empresa o crea una nueva." }]}
+          >
+            <Select
+              placeholder="Selecciona una empresa"
+              showSearch
+              optionFilterProp="label"
+              filterOption={(input, option) =>
+                (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+              }
+              filterSort={(optionA, optionB) =>
+                (optionA?.label ?? '').toLowerCase().localeCompare(
+                  (optionB?.label ?? '').toLowerCase()
+                )
+              }
             >
-              <Select placeholder="Selecciona una empresa">
-                {empresas.map((empresa) => (
-                  <Select.Option key={empresa.id} value={empresa.id}>
-                    {empresa.nombre}
-                  </Select.Option>
-                ))}
-              </Select>
-            </Form.Item>
+              {empresas.map((empresa) => (
+                <Select.Option 
+                  key={empresa.id} 
+                  value={empresa.id}
+                  label={empresa.nombre}
+                >
+                  {empresa.nombre}
+                </Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
           )}
         </Form>
       </Modal>

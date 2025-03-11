@@ -535,6 +535,12 @@ const CotizacionPureva=()=>{
          <Input placeholder="Ingrese el estado." />
          </Form.Item>
        </div>
+       <Alert
+      message="Warning"
+      description="Solo Imagenes con la extencion PNG."
+      type="warning"
+      showIcon
+    /><br/>
    
        <div className="left-column">
          <Form.Item label="Logo Actual:" name="logo">
@@ -644,6 +650,12 @@ const CotizacionPureva=()=>{
           valuePropName="fileList"
           getValueFromEvent={(e) => e?.fileList}
         >
+          <Alert
+            message="Warning"
+            description="Solo Imagenes con la extencion PNG."
+            type="warning"
+            showIcon
+          /><br/>
           <Upload beforeUpload={() => false} maxCount={1}>
             <Button icon={<UploadOutlined />}>Seleccionar archivo</Button>
           </Upload>
@@ -688,6 +700,12 @@ const CotizacionPureva=()=>{
           valuePropName="fileList"
           getValueFromEvent={(e) => e?.fileList}
         >
+        <Alert
+          message="Warning"
+          description="Solo Imagenes con la extencion PNG."
+          type="warning"
+          showIcon
+        /><br/>
           <Upload beforeUpload={() => false} maxCount={1}>
             <Button icon={<UploadOutlined />}>Seleccionar archivo</Button>
           </Upload>

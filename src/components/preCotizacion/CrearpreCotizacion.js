@@ -471,22 +471,38 @@ const CrearPreCotizaciones = () => {
             </Row>
             <Row gutter={16}>
               <Col span={12}>
-                <Form.Item 
+              <Form.Item 
                 label="Servicio" 
                 name={['conceptos', index, 'servicio']}
-                rules={[{ required: true, message: 'Por favor selecciona el servicio.' }]}>
+                rules={[{ required: true, message: 'Por favor selecciona el servicio.' }]}
+              >
                 <Select
-                    placeholder="Selecciona un servicio"
-                    value={concepto.servicio || undefined}
-                    onChange={(value) => handleServicioChange(concepto.id, value)}
-                  >
-                    {obtenerServiciosDisponibles(concepto.id).map((servicio) => (
-                      <Select.Option key={servicio.id} value={servicio.id}>
-                        {servicio.nombreServicio}
-                      </Select.Option>
-                    ))}
-                  </Select>
-                </Form.Item>
+                  placeholder="Selecciona un servicio"
+                  showSearch
+                  optionFilterProp="label"
+                  filterOption={(input, option) =>
+                    (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                  }
+                  filterSort={(optionA, optionB) =>
+                    (optionA?.label ?? '').toLowerCase().localeCompare(
+                      (optionB?.label ?? '').toLowerCase()
+                    )
+                  }
+                  value={concepto.servicio || undefined}
+                  onChange={(value) => handleServicioChange(concepto.id, value)}
+                >
+                  {obtenerServiciosDisponibles(concepto.id).map((servicio) => (
+                    <Select.Option 
+                      key={servicio.id} 
+                      value={servicio.id} 
+                      label={servicio.nombreServicio}
+                    >
+                      {servicio.nombreServicio}
+                    </Select.Option>
+                  ))}
+                </Select>
+              </Form.Item>
+
               </Col>
               <Col span={12}>
                 <Form.Item 
