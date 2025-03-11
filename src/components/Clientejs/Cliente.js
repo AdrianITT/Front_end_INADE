@@ -355,14 +355,61 @@ const Cliente = () => {
                   >
                     <Input placeholder="Ingresa el Nombre de la Empresa" />
                   </Form.Item>
-                  <Form.Item label="Régimen fiscal:" name="regimenFiscal">
-                    <Select placeholder="Selecciona el régimen fiscal">
-                      {regimenFiscal.map((reg) => (
-                        <Select.Option key={reg.id} value={reg.id}>
-                          {reg.codigo} - {reg.nombre}
+
+                  <Form.Item 
+                  label="Regimen fiscal:" 
+                  name="regimenFiscal"
+                  rules={[{ required: true, message: 'Régimen requerido' }]}>
+                    <Select
+                        showSearch
+                        placeholder="Selecciona un Régimen fiscal"
+                        optionFilterProp="label"
+                        filterOption={(input, option) =>
+                          (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
+                        }
+                        filterSort={(optionA, optionB) =>
+                          (optionA?.label ?? "").toLowerCase().localeCompare(
+                            (optionB?.label ?? "").toLowerCase()
+                          )
+                        }
+                        >
+                      {regimenFiscal.map((regimen) => (
+                        <Select.Option 
+                          key={regimen.id} 
+                          value={regimen.id}
+                          label={`${regimen.codigo} - ${regimen.nombre}`}
+                        >
+                          {regimen.codigo} - {regimen.nombre}
                         </Select.Option>
                       ))}
                     </Select>
+                  </Form.Item>
+                  <Form.Item 
+                  label="Uso CFDI:" 
+                  name="UsoCfdi">
+                  <Select
+                      showSearch
+                      placeholder="Selecciona un Uso CFDI"
+                      optionFilterProp="label"
+                      filterOption={(input, option) =>
+                        (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
+                      }
+                      filterSort={(optionA, optionB) =>
+                        (optionA?.label ?? "").toLowerCase().localeCompare(
+                          (optionB?.label ?? "").toLowerCase()
+                        )
+                      }
+                    >
+                    {usosCfdi.map((uso) => (
+                      <Select.Option 
+                        key={uso.id} 
+                        value={uso.id}
+                        label={`${uso.codigo} - ${uso.descripcion}`}
+                      >
+                        {uso.codigo} - {uso.descripcion}
+                      </Select.Option>
+                    ))}
+                  </Select>
                   </Form.Item>
                   <Form.Item
                     label="RFC:"
@@ -370,13 +417,6 @@ const Cliente = () => {
                     rules={[{ required: true, message: "Por favor ingresa el RFC." }]}
                   >
                     <Input placeholder="Ingrese RFC" />
-                  </Form.Item>
-                  <Form.Item
-                    label="Condiciones pago:"
-                    name="condicionPago"
-                    rules={[{ required: true, message: "Por favor ingresa la condición de pago." }]}
-                  >
-                    <Input placeholder="Condición de pago" />
                   </Form.Item>
                 </Col>
                 <Col span={12}>
@@ -422,15 +462,6 @@ const Cliente = () => {
                   >
                     <Input placeholder="Estado" />
                   </Form.Item>
-                  <Form.Item label="Uso CFDI:" name="UsoCfdi">
-                <Select placeholder="Selecciona un Uso CFDI">
-                  {usosCfdi.map((uso) => (
-                    <Select.Option key={uso.id} value={uso.id}>
-                      {uso.codigo} - {uso.descripcion}
-                    </Select.Option>
-                  ))}
-                </Select>
-              </Form.Item>
                 </Col>
               </Row>
             </div>

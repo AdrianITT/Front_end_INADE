@@ -678,21 +678,36 @@ const handleRemoveConcepto = (facturaId, e) => {
             </Row>
               <Row gutter={16}>
                 <Col span={24}>
-                  <Form.Item label="Factura">
-                    <Select
-                      placeholder="Selecciona una factura"
-                      value={factura.factura || undefined}
-                      onChange={(value) => handleSelectChange(factura.id, value)}
-                      loading={loadingFacturas}
-                      dropdownStyle={{ borderRadius: 8 }}
+                <Form.Item label="Factura">
+                <Select
+                  placeholder="Selecciona una factura"
+                  showSearch
+                  optionFilterProp="label"
+                  filterOption={(input, option) =>
+                    (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
+                  }
+                  filterSort={(optionA, optionB) =>
+                    (optionA?.label ?? "").toLowerCase().localeCompare(
+                      (optionB?.label ?? "").toLowerCase()
+                    )
+                  }
+                  value={factura.factura || undefined}
+                  onChange={(value) => handleSelectChange(factura.id, value)}
+                  loading={loadingFacturas}
+                  dropdownStyle={{ borderRadius: 8 }}
+                >
+                  {obtenerFacturasDisponibles(factura.id).map((f) => (
+                    <Select.Option
+                      key={f.id}
+                      value={f.id}
+                      label={`Factura ${f.id} - ${f.ordenTrabajo.codigo}`}
                     >
-                      {obtenerFacturasDisponibles(factura.id).map((f) => (
-                        <Option key={f.id} value={f.id}>
-                          {`Factura ${f.id}- ${f.ordenTrabajo.codigo}`}
-                        </Option>
-                      ))}
-                    </Select>
-                  </Form.Item>
+                      {`Factura ${f.id} - ${f.ordenTrabajo.codigo}`}
+                    </Select.Option>
+                  ))}
+                </Select>
+              </Form.Item>
+
                 </Col>
               </Row>
 

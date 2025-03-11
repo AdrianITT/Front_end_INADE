@@ -45,6 +45,8 @@ const CrearFactura = () => {
     const [moneda, setMoneda] = useState({ codigo: "", descripcion: "" });
     const [cotizacionId, setCotizacionId] = useState(null);
     //const [cotizacion, setcotizacionData]=useState(null);
+    const [formaPagoGlobal, setFormaPagoGlobal] = useState(null);
+    const [loadingFormasPago, setLoadingFormasPago] = useState(false);
 
 
     // Estados
@@ -424,15 +426,40 @@ const obtenerIva = async (ivaIdParam = 1) => {
                     ))}
                 </Select>
             </Form.Item>
-            <Form.Item label="Forma de Pago" name="formaPago" rules={[{ required: true, message: "Selecciona la Forma de Pago" }]}>
-                <Select placeholder="Selecciona forma de pago">
-                    {formaPagoList?.map((pago) => (
-                        <Option key={pago.id} value={pago.id}>
-                            {pago.codigo} - {pago.descripcion}
-                        </Option>
-                    ))}
+            <Form.Item
+                label="Forma de Pago"
+                name="formaPago"
+                rules={[{ required: true, message: "Selecciona la Forma de Pago" }]}
+              >
+                <Select
+                  placeholder="Selecciona forma de pago"
+                  showSearch
+                  optionFilterProp="label"
+                  filterOption={(input, option) =>
+                    (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
+                  }
+                  filterSort={(optionA, optionB) =>
+                    (optionA?.label ?? "").toLowerCase().localeCompare(
+                      (optionB?.label ?? "").toLowerCase()
+                    )
+                  }
+                  value={formaPagoGlobal || undefined}
+                  onChange={(value) => setFormaPagoGlobal(value)}
+                  loading={loadingFormasPago}
+                  dropdownStyle={{ borderRadius: 8 }}
+                >
+                  {formaPagoList?.map((pago) => (
+                    <Select.Option
+                      key={pago.id}
+                      value={pago.id}
+                      label={`${pago.codigo} - ${pago.descripcion}`}
+                    >
+                      {`${pago.codigo} - ${pago.descripcion}`}
+                    </Select.Option>
+                  ))}
                 </Select>
-            </Form.Item>
+              </Form.Item>
+
             <Form.Item label="Método de Pago" name="metodoPago" rules={[{ required: true, message: "Selecciona el Método de Pago" }]}>
                 <Select placeholder="Selecciona método de pago">
                     {metodoPagoList?.map((metodo) => (
