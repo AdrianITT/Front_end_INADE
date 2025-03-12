@@ -536,7 +536,7 @@ const CotizacionPureva=()=>{
          </Form.Item>
        </div>
        <Alert
-      message="Warning"
+      message="Advertencia"
       description="Solo Imagenes con la extencion PNG."
       type="warning"
       showIcon
@@ -651,7 +651,7 @@ const CotizacionPureva=()=>{
           getValueFromEvent={(e) => e?.fileList}
         >
           <Alert
-            message="Warning"
+            message="Advertencia"
             description="Solo Imagenes con la extencion PNG."
             type="warning"
             showIcon
@@ -701,7 +701,7 @@ const CotizacionPureva=()=>{
           getValueFromEvent={(e) => e?.fileList}
         >
         <Alert
-          message="Warning"
+          message="Advertencia"
           description="Solo Imagenes con la extencion PNG."
           type="warning"
           showIcon
