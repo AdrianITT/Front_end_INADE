@@ -15,10 +15,7 @@ import { getAllTipoMoneda } from "../../apis/Moneda";
 import { getAllIva } from "../../apis/ivaApi";
 import { Api_Host } from "../../apis/api";
 
-
 const { TextArea } = Input;
-
-
 
 const ConfiguraciónOrganizacion=()=>{
   const [fromOrdenTrabajo] = Form.useForm();
