@@ -85,7 +85,7 @@ const items = [
         key: 'Pre-Cotizaciones',
         label: (
           <Link to="/PreCotizacion" rel="noopener noreferrer">
-            Facturas
+            Pre-Cotizaciones
           </Link>
         ),
       },
