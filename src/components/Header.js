@@ -81,6 +81,14 @@ const items = [
           </Link>
         ),
       },
+      {
+        key: 'Pre-Cotizaciones',
+        label: (
+          <Link to="/PreCotizacion" rel="noopener noreferrer">
+            Pre-Cotizaciones
+          </Link>
+        ),
+      },
     ],
   },
   {

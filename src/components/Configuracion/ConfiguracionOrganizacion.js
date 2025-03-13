@@ -15,10 +15,7 @@ import { getAllTipoMoneda } from "../../apis/Moneda";
 import { getAllIva } from "../../apis/ivaApi";
 import { Api_Host } from "../../apis/api";
 
-
 const { TextArea } = Input;
-
-
 
 const ConfiguraciónOrganizacion=()=>{
   const [fromOrdenTrabajo] = Form.useForm();
@@ -536,7 +533,7 @@ const CotizacionPureva=()=>{
          </Form.Item>
        </div>
        <Alert
-      message="Warning"
+      message="Advertencia"
       description="Solo Imagenes con la extencion PNG."
       type="warning"
       showIcon
@@ -651,7 +648,7 @@ const CotizacionPureva=()=>{
           getValueFromEvent={(e) => e?.fileList}
         >
           <Alert
-            message="Warning"
+            message="Advertencia"
             description="Solo Imagenes con la extencion PNG."
             type="warning"
             showIcon
@@ -701,7 +698,7 @@ const CotizacionPureva=()=>{
           getValueFromEvent={(e) => e?.fileList}
         >
         <Alert
-          message="Warning"
+          message="Advertencia"
           description="Solo Imagenes con la extencion PNG."
           type="warning"
           showIcon

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import "./index.css";
+//import "./index.css";
+import "./App.css";
 import { Card, Col, Row, Badge, Space, Progress } from "antd";
 import { getAllCotizacion } from "./apis/CotizacionApi";
 import { getAllCliente } from "./apis/ClienteApi";
