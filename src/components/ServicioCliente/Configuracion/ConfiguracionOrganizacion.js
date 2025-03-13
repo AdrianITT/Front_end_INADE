@@ -531,6 +531,9 @@ const CotizacionPureva=()=>{
          <Form.Item label="Estado:" name="estado" required>
          <Input placeholder="Ingrese el estado." />
          </Form.Item>
+       <div className="button-container">
+         <Button type="primary" htmlType="submit" loading={loading}>Guardar configuración</Button>
+       </div>
        </div>
        <Alert
       message="Advertencia"
@@ -546,9 +549,6 @@ const CotizacionPureva=()=>{
           </Upload></Form.Item>
        </div>
    
-       <div className="button-container">
-         <Button type="primary" htmlType="submit" loading={loading}>Guardar configuración</Button>
-       </div>
      </Form>
    );
    
