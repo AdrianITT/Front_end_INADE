@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Form, Input, Button, Row, Col, Select, message, Modal, Result } from "antd";
+import { Form, Input, Button, Row, Col, Select, message, Modal, Result, Divider } from "antd";
 import { useNavigate, useParams } from "react-router-dom"; // Importa useNavigate
 import "./Cliente.css";
 import { updateCliente, getClienteById } from "../../../apis/ApisServicioCliente/ClienteApi";
@@ -178,7 +178,55 @@ const EditarCliente = () => {
             </Form.Item>
           </Col>
         </Row>
-
+        <Row gutter={30}>
+            <Divider>Direccion del cliente</Divider>
+              <Col span={12}>
+                <Form.Item
+                  label="Calle:"
+                  name="calleCliente"
+                  rules={[{ required: true, message: 'Calle requerida' }]}
+                >
+                  <Input />
+                </Form.Item>
+                <Form.Item
+                  label="Numero externo:"
+                  name="numeroCliente"
+                  rules={[{ required: true, message: 'Número requerido' }]}
+                >
+                  <Input />
+                </Form.Item>
+                <Form.Item
+                  label="Colonia:"
+                  name="coloniaCliente"
+                  rules={[{ required: true, message: 'Colonia requerida' }]}
+                >
+                  <Input />
+                </Form.Item>
+                  </Col>
+                  <Col span={12}>
+                <Form.Item
+                  label="Ciudad:"
+                  name="ciudadCliente"
+                  rules={[{ required: true, message: 'Ciudad requerida' }]}
+                >
+                  <Input />
+                </Form.Item>
+                <Form.Item
+                  label="Codigo Postal:"
+                  name="codigoPostalCliente"
+                  rules={[{ required: true, message: 'Código postal requerido' }]}
+                >
+                  <Input />
+                </Form.Item>
+                <Form.Item
+                  label="Estado:"
+                  name="estadoCliente"
+                  rules={[{ required: true, message: 'Estado requerido' }]}
+                >
+                  <Input />
+                </Form.Item>
+              </Col>
+          </Row>
         {/* Campo para seleccionar UsoCfdi 
         <Row gutter={16}>
           <Col span={12}>
