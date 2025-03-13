@@ -2,9 +2,9 @@ import React, { useEffect, useState } from "react";
 //import "./index.css";
 import "./App.css";
 import { Card, Col, Row, Badge, Space, Progress } from "antd";
-import { getAllCotizacion } from "./apis/CotizacionApi";
-import { getAllCliente } from "./apis/ClienteApi";
-import { getAllEmpresas } from "./apis/EmpresaApi";
+import { getAllCotizacion } from "./apis/ApisServicioCliente/CotizacionApi";
+import { getAllCliente } from "./apis/ApisServicioCliente/ClienteApi";
+import { getAllEmpresas } from "./apis/ApisServicioCliente/EmpresaApi";
 
 import {
   ReconciliationOutlined,

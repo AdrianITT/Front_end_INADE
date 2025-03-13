@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Form, Input, Button, Alert, Card, Spin } from "antd";
 import { useNavigate } from "react-router-dom";
-import Login_Api from "../../apis/LoginApi";
+import Login_Api from "../../apis/ApisServicioCliente/LoginApi";
 import "./Login.css";
 
 const Login = () => {
