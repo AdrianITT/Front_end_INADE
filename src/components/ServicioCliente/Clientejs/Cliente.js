@@ -1,6 +1,6 @@
 // src/components/Cliente.js
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { Tabs, Input, Button, Modal, Form, Spin, Table, Checkbox, Result, Row, Col, Select } from "antd";
+import { Tabs, Input, Button, Modal, Form, Spin, Table, Checkbox, Result, Row, Col, Select, Divider } from "antd";
 import StickyBox from "react-sticky-box";
 import { useNavigate } from "react-router-dom";
 import {ExclamationCircleOutlined } from "@ant-design/icons";
@@ -340,6 +340,55 @@ const Cliente = () => {
                 <Input placeholder="Fax" />
               </Form.Item>
             </Col>
+          </Row>
+          <Row gutter={30}>
+            <Divider>Direccion del cliente</Divider>
+              <Col span={12}>
+                <Form.Item
+                  label="Calle:"
+                  name="calleCliente"
+                  rules={[{ required: true, message: 'Calle requerida' }]}
+                >
+                  <Input />
+                </Form.Item>
+                <Form.Item
+                  label="Numero externo:"
+                  name="numeroCliente"
+                  rules={[{ required: true, message: 'Número requerido' }]}
+                >
+                  <Input />
+                </Form.Item>
+                <Form.Item
+                  label="Colonia:"
+                  name="coloniaCliente"
+                  rules={[{ required: true, message: 'Colonia requerida' }]}
+                >
+                  <Input />
+                </Form.Item>
+                  </Col>
+                  <Col span={12}>
+                <Form.Item
+                  label="Ciudad:"
+                  name="ciudadCliente"
+                  rules={[{ required: true, message: 'Ciudad requerida' }]}
+                >
+                  <Input />
+                </Form.Item>
+                <Form.Item
+                  label="Codigo Postal:"
+                  name="codigoPostalCliente"
+                  rules={[{ required: true, message: 'Código postal requerido' }]}
+                >
+                  <Input />
+                </Form.Item>
+                <Form.Item
+                  label="Estado:"
+                  name="estadoCliente"
+                  rules={[{ required: true, message: 'Estado requerido' }]}
+                >
+                  <Input />
+                </Form.Item>
+              </Col>
           </Row>
           <Form.Item name="createCompany" valuePropName="checked">
             <Checkbox onChange={handleCheckboxChange}>Crear empresa</Checkbox>

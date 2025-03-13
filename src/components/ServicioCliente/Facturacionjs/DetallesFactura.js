@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Card, Row, Col, Button, Table, Tabs, Dropdown, Menu, Modal, Select, Input, Form, DatePicker, Flex, Alert, Checkbox,message,Descriptions, Result, Spin  } from "antd";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link ,useNavigate } from "react-router-dom";
 import{FileTextTwoTone,MailTwoTone,FilePdfTwoTone,CloseCircleTwoTone, FileAddTwoTone} from "@ant-design/icons";
 import { getFacturaById, createPDFfactura } from "../../../apis/ApisServicioCliente/FacturaApi";
 import { getAllFormaPago } from "../../../apis/ApisServicioCliente/FormaPagoApi";
@@ -28,6 +28,7 @@ const { Option } = Select;
 
 const DetallesFactura = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [metodosPago, setMetodosPago] = useState([]);
   const [formasPago, setFormasPago] = useState([]);
   const [factura, setFactura] = useState([]);
@@ -53,6 +54,12 @@ const DetallesFactura = () => {
   const [resultStatus, setResultStatus] = useState("success"); // Puede ser "success" o "error"
   const [modalOpen, setModalOpen] = useState(false);
   const [facturaPagos, setFacturaPagos] = useState([]);
+  const [isSuccessModalVisible, setIsSuccessModalVisible] = useState(false);
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  // Texto dinámico que aparece dentro del Modal de éxito
+  const [modalText, setModalText] = useState(
+    "La factura ha sido cancelada. Serás redirigido al listado de facturas."
+  );
   
 
   const esUSD = moneda.codigo === "USD";
@@ -570,6 +577,8 @@ const handleCancelFactura = async () => {
       if (response.ok) {
           message.success("Factura cancelada exitosamente.");
           setVisibleCancelModal(false); // Cierra el modal tras la cancelación
+          // Muestra el modal de éxito
+          setIsSuccessModalVisible(true);
       } else {
           const result = await response.json();
           message.error(`Error al cancelar la factura: ${result.message || "Desconocido"}`);
@@ -609,6 +618,19 @@ const montoRestante =hasPagos
 //console.log('totalPagado: ',totalPagado);
 //console.log('montoRestante: ',montoRestante);
 
+  // Cuando el modal se abre, arranca un temporizador de 2s que lo cierra automáticamente
+  useEffect(() => {
+    let timer;
+    if (isSuccessModalVisible) {
+      // Inicia un temporizador para cerrar el modal y navegar
+      timer = setTimeout(() => {
+        setIsSuccessModalVisible(false);
+        navigate("/factura");
+      }, 2000);
+    }
+    // Limpia el temporizador al desmontar o cuando el modal cambia a false
+    return () => clearTimeout(timer);
+  }, [isSuccessModalVisible, navigate]);
 
   return (
     <Spin spinning={loading}>
@@ -834,6 +856,17 @@ const montoRestante =hasPagos
             title={<p style={{ color: resultStatus === "success" ? "green" : "red" }}>{resultMessage}</p>}
             />
         </Modal>
+        <Modal
+        title="Factura cancelada exitosamente"
+        visible={isSuccessModalVisible}
+        // Si no quieres ningún botón, puedes ocultarlos con estos props
+        footer={null}
+        // Evita que se cierre al hacer click fuera, si lo prefieres
+        maskClosable={false}
+        closable={false}
+      >
+        <p>La factura ha sido cancelada. Serás redirigido al listado de facturas en 2 segundos...</p>
+      </Modal>
             {/* 
         <Modal
           title={resultStatus === "success" ? "Éxito" : "Error"}

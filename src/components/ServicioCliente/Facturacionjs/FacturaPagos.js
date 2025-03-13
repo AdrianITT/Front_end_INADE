@@ -9,7 +9,7 @@ import {
 } from '@ant-design/icons';
 import { getAllFacturaPagos } from '../../../apis/ApisServicioCliente/FacturaPagosApi';
 import { getAllFacturaPagosFacturama } from '../../../apis/ApisServicioCliente/PagosFacturamaApi';
-import { deleteComprobantepago } from '../../../apis/ApisServicioCliente/PagosApi';
+import { deleteComprobantepago, DeleteComprobantePagoFacturama } from '../../../apis/ApisServicioCliente/PagosApi';
 import { Api_Host } from "../../../apis/api";
 
 const PaymentCards = ({ idFactura, correoCliente,refreshPagos }) => {
@@ -104,7 +104,10 @@ const PaymentCards = ({ idFactura, correoCliente,refreshPagos }) => {
   // Confirma eliminación del complemento
   const handleConfirmDeleteComplemento = async () => {
     try {
-      await deleteComprobantepago(pagoToDelete);
+      console.log("Complemento de pago eliminado exitosamente", pagoToDelete);
+      await DeleteComprobantePagoFacturama(pagoToDelete);
+      //await deleteComprobantepago(pagoToDelete);
+      
       message.success("Complemento de pago eliminado exitosamente");
       setIsDeleteModalVisible(false);
       setPagoToDelete(null);
