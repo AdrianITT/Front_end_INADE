@@ -44,7 +44,7 @@ const Cliente = () => {
       // Se formatean los clientes: se calcula un flag "incompleto" si faltan datos
       const clientesFormateados = clientesFiltrados.map((cliente) => {
         const datosIncompletos =
-          !cliente.nombrePila || !cliente.apPaterno || !cliente.empresa;
+          !cliente.nombrePila || !cliente.apPaterno || !cliente.empresa||!cliente.codigoPostalCliente;
         return {
           key: cliente.id,
           Cliente: `${cliente.nombrePila || "Sin nombre"} ${cliente.apPaterno || ""} ${cliente.apMaterno || ""}`,
@@ -162,10 +162,15 @@ const Cliente = () => {
       fax: formValues.fax || "No disponible",
       empresa: empresaId,
       titulo: formValues.titulo,
-      //UsoCfdi: formValues.UsoCfdi || 3,
+      calleCliente: formValues.calleCliente,
+      numeroCliente: formValues.numeroCliente,
+      coloniaCliente: formValues.coloniaCliente,
+      ciudadCliente: formValues.ciudadCliente,
+      codigoPostalCliente: formValues.codigoPostalCliente,
+      estadoCliente: formValues.estadoCliente,
     };
   
-    if (!clienteData.nombrePila || !clienteData.apPaterno || !clienteData.correo || !clienteData.empresa) {
+    if (!clienteData.nombrePila || !clienteData.apPaterno || !clienteData.correo || !clienteData.empresa|| !clienteData.codigoPostalCliente) {
       console.error("Faltan campos obligatorios para crear el cliente");
       return null;
     }
