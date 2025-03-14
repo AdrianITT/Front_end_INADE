@@ -45,7 +45,7 @@ export const useCotizacionesData = (organizationId) => {
 
         // Determinamos si hay datos incompletos en el cliente o la empresa
         const clienteIncompleto =
-          !cliente.nombrePila || !cliente.apPaterno || !cliente.correo ;
+          !cliente.nombrePila || !cliente.apPaterno || !cliente.correo|| !cliente.codigoPostalCliente;
         const empresaIncompleta =
           !empresa.nombre || !empresa.rfc || !empresa.calle || !empresa.numero || !empresa.colonia;
 
