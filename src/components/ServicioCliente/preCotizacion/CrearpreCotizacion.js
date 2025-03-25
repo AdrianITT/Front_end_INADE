@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import "../Cotizacionesjs/Crearcotizacion.css";
 //import "./Crearcotizacion.css";
-import { Form, Input, Button, Row, Col, Select, Checkbox, Divider, message, DatePicker, Card, Modal,Alert } from "antd";
+import { Form, Input, Button, Row, Col, Select, Checkbox, Divider, message, DatePicker, Card, Modal, Alert } from "antd";
 import dayjs from "dayjs";
 import { useParams, useNavigate } from "react-router-dom";
 import { getAllTipoMoneda } from "../../../apis/ApisServicioCliente/Moneda";
