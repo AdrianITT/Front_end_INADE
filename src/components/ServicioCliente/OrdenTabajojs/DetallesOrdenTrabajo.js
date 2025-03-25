@@ -96,11 +96,9 @@ const DetalleOrdenTrabajo = () => {
           // Obtén el servicio (tabla "servicio")
           const servResp = await getServicioById(rel.servicio);
           const servData = servResp.data;
-
           // (Opcional) Si requieres el método, puedes obtenerlo:
           const metodoResp = await getMetodoById(servData.metodos);
           const metodoData = metodoResp.data;
-
           // Unificamos la información en un solo objeto
           return {
             idServicio: rel.servicio, // Agregamos el id del servicio proveniente de ordenTrabajoServicio
@@ -109,12 +107,16 @@ const DetalleOrdenTrabajo = () => {
             cantidad: rel.cantidad,                   // Datos de la tabla "ordenTrabajoServicio"
             notas: rel.descripcion,                   // Datos de la tabla "ordenTrabajoServicio"
             metodo: metodoData.codigo,                // Si deseas mostrar el método
+            uid: rel.id,
           };
         });
-  
-        // 8. Ejecutar todas las promesas y asignar a servicesData
         const combinedData = await Promise.all(combinedPromises);
+
         setServicesData(combinedData);
+        //console.log("Servicios:", dataWithUID);
+        // 8. Ejecutar todas las promesas y asignar a servicesData
+        //const combinedData = await Promise.all(combinedPromises);
+        //setServicesData(combinedData);
   
       } catch (error) {
         console.error("Error al obtener la información:", error);
@@ -251,7 +253,7 @@ const DetalleOrdenTrabajo = () => {
         columns={columnasServicios}
         bordered
         pagination={false}
-        rowKey={(record) => record.idServicio}// O si tu record tiene id
+        rowKey={(record) => record.uid}// O si tu record tiene id
       />
 
       {/* Modal de confirmación para eliminación */}

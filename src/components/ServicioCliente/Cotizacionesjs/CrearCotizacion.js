@@ -195,7 +195,7 @@ const RegistroCotizacion = () => {
   };
 
     // Obtener los servicios que no han sido seleccionados
-    const obtenerServiciosDisponibles = (conceptoId) => {
+    {/*const obtenerServiciosDisponibles = (conceptoId) => {
       const serviciosSeleccionados = conceptos
         .filter((c) => c.id !== conceptoId)
         .map((c) => c.servicio);
@@ -203,7 +203,7 @@ const RegistroCotizacion = () => {
       return servicios.filter((servicio) =>
         !serviciosSeleccionados.includes(servicio.id)
       );
-    };
+    }; */}
 
     const handleMetodoChange = (value) => {
       setMetodoSeleccionado(value);
@@ -421,27 +421,17 @@ const RegistroCotizacion = () => {
                   showSearch
                   placeholder="Selecciona un servicio"
                   style={{ width: '100%' }}
-                  // La búsqueda la basamos en la prop "label"
-                  optionFilterProp="label"
-                  // Filtra los resultados mientras el usuario escribe
-                  filterOption={(input, option) =>
-                    (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-                  }
-                  // Ordena alfabéticamente los resultados mostrados
-                  filterSort={(optionA, optionB) =>
-                    (optionA?.label ?? '').toLowerCase().localeCompare(
-                      (optionB?.label ?? '').toLowerCase()
-                    )
-                  }
                   value={concepto.servicio || undefined}
                   onChange={(value) => handleServicioChange(concepto.id, value)}
-                  // Aquí transformamos cada servicio en un objeto con { value, label }
-                  options={obtenerServiciosDisponibles(concepto.id).map(serv => ({
-                    value: serv.id,
-                    label: serv.nombreServicio,
-                  }))}
-                />
+                >
+                  {servicios.map(serv => (
+                    <Select.Option key={serv.id} value={serv.id}>
+                      {serv.nombreServicio}
+                    </Select.Option>
+                  ))}
+                </Select>
               </Form.Item>
+
 
               </Col>
               <Col span={12}>

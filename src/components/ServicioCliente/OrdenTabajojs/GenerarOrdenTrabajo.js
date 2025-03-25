@@ -67,18 +67,16 @@ const GenerarOrdenTrabajo = () => {
     
         // Obtener los servicios basados en los registros filtrados
         const servicios = await Promise.all(
-          cotizacionServicios.map(async (servicioId) => {
-            const servicioResponse = await getServicioById(servicioId); // Obtener servicio por ID
-            const record = filteredCotizacionServicios.find(
-              (r) => r.servicio === servicioId
-            );
+          filteredCotizacionServicios.map(async (record) => {
+            const servicioResponse = await getServicioById(record.servicio);
             return {
               ...servicioResponse.data,
-              cantidad: record ? record.cantidad : 0, // Si no se encuentra, asigna cantidad = 0
-              descripcion: record ? record.descripcion : "",
+              cantidad: record.cantidad,
+              descripcion: record.descripcion,
             };
           })
         );
+        
     
         // Log de los servicios con la cantidad
         //console.log("Servicios con cantidad:", servicios);
@@ -194,13 +192,14 @@ const GenerarOrdenTrabajo = () => {
 
 
   // Función para manejar el cambio de cantidad o precio
-  const handleInputChange = (conceptoId, field, value) => {
-    setServicios((prevConceptos) =>
-      prevConceptos.map((concepto) =>
-        concepto.id === conceptoId ? { ...concepto, [field]: value } : concepto
-      )
-    );
+  const handleInputChange = (index, field, value) => {
+    setServicios((prev) => {
+      const newServicios = [...prev];
+      newServicios[index] = { ...newServicios[index], [field]: value };
+      return newServicios;
+    });
   };
+  
 
 
   const handleCreateReceptor = async (values) => {
@@ -335,9 +334,9 @@ const GenerarOrdenTrabajo = () => {
 
         <Divider>Agregar Conceptos</Divider>
         {servicios.map((concepto, index) => (
-          <div key={concepto.id}>
+          <div key={index}>
             <Card>
-              <h3>Concepto {concepto.id}</h3>
+              <h3>Concepto {index + 1}</h3>
               <div>            
               <Row justify="end">
                 <Checkbox onChange={() => handleRemoveConcepto(concepto.id)}>
@@ -375,7 +374,7 @@ const GenerarOrdenTrabajo = () => {
                     <Input
                       type="number"
                       min="1"
-                      onChange={(e) => handleInputChange(concepto.id, "cantidad", parseFloat(e.target.value))}
+                      onChange={(e) => handleInputChange(index, "cantidad", parseFloat(e.target.value))}
                     />
                   </Form.Item>
                 </Col>
@@ -394,7 +393,7 @@ const GenerarOrdenTrabajo = () => {
                     rows={2}
                     value={concepto.descripcion} // Muestra la descripción actual
                     onChange={(e) =>
-                      handleInputChange(concepto.id, "descripcion", e.target.value)
+                      handleInputChange(index, "descripcion", e.target.value)
                     }
                   />
                 </Form.Item>

@@ -75,21 +75,21 @@ const EditarCotizacion = () => {
         
               // Obtener información detallada de cada servicio en la cotización
               const serviciosConDetalles = await Promise.all(
-                cotizacionServicios.map(async (servicioId) => {
-                  const servicioResponse = await getServicioById(servicioId);
-                  const record = filteredCotizacionServicios.find((r) => r.servicio === servicioId);
+                filteredCotizacionServicios.map(async (record) => {
+                  const servicioResponse = await getServicioById(record.servicio);
                   return {
-                    id: record ? record.id : null,
-                    servicio: record.servicio, 
+                    id: record.id,
+                    servicio: record.servicio,
                     nombreServicio: servicioResponse.data.nombreServicio,
-                    cantidad: record ? record.cantidad : 0,
+                    cantidad: record.cantidad,
                     precio: parseFloat(servicioResponse.data.precio) || 0,
-                    descripcion: record ? record.descripcion : "",
+                    descripcion: record.descripcion,
                     cotizacion: record.cotizacion,
                     precioEditable: record ? record.precio : parseFloat(servicioResponse.data.precio) || 0,
                   };
                 })
               );
+              
         
               //console.log("Servicios con detalles:", serviciosConDetalles);
               setConceptos(serviciosConDetalles);

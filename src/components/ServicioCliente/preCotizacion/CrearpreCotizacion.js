@@ -591,9 +591,9 @@ const CrearPreCotizaciones = () => {
                   value={concepto.servicio || undefined}
                   onChange={(value) => handleServicioChange(concepto.id, value)}
                 >
-                  {obtenerServiciosDisponibles(concepto.id).map((servicio) => (
+                  {servicios.map((servicio, i) => (
                     <Select.Option 
-                      key={servicio.id} 
+                      key={`${servicio.id}-${i}`} 
                       value={servicio.id} 
                       label={servicio.nombreServicio}
                     >
