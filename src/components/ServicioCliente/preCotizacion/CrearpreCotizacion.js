@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import "../Cotizacionesjs/Crearcotizacion.css";
 //import "./Crearcotizacion.css";
-import { Form, Input, Button, Row, Col, Select, Checkbox, Divider, message, DatePicker, Card, Modal } from "antd";
+import { Form, Input, Button, Row, Col, Select, Checkbox, Divider, message, DatePicker, Card, Modal,Alert } from "antd";
 import dayjs from "dayjs";
 import { useParams, useNavigate } from "react-router-dom";
 import { getAllTipoMoneda } from "../../../apis/ApisServicioCliente/Moneda";
@@ -660,6 +660,11 @@ const CrearPreCotizaciones = () => {
         <Button type="primary" onClick={handleAddConcepto} style={{ marginBottom: "16px" }}>
           Añadir Concepto
         </Button>
+        <Alert
+            message="Pro favor de verificar que los datos sean correctos"
+            banner
+            closable
+          />
 
         <div className="cotizacion-totals-buttons">
           <div className="cotizacion-totals">
@@ -669,6 +674,17 @@ const CrearPreCotizaciones = () => {
             <p>IVA ({ivasData.find(iva => iva.id === ivaSeleccionado)?.porcentaje || 16}%): {iva.toFixed(2)} {tipoMonedaSeleccionada === 2 ? "USD" : "MXN"}</p>
             <p>Total: {total.toFixed(2)} {tipoMonedaSeleccionada === 2 ? "USD" : "MXN"}</p>
           </div>
+          <Alert
+            message="Pro favor de verificar que los datos sean correctos"
+            banner
+            closable
+          />
+          <Form.Item
+          name="confirmar"
+          valuePropName="checked"
+          rules={[{required:true, message: 'Por favor confirma que los datos son correctos.'}]}>
+            <Checkbox>Los datos son correctos</Checkbox>
+          </Form.Item>
           <div className="cotizacion-action-buttons">
             <div className="margin-button"><Button type="default" danger>Cancelar</Button></div>
             <div className="margin-button">
