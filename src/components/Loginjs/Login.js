@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Form, Input, Button, Alert, Card, Spin } from "antd";
+import { LockOutlined, UserOutlined } from '@ant-design/icons';
 import { useNavigate } from "react-router-dom";
 import Login_Api from "../../apis/ApisServicioCliente/LoginApi";
 import "./Login.css";
@@ -65,14 +66,14 @@ const Login = () => {
               name="user"
               rules={[{ required: true, message: "Por favor, ingrese su correo" }]}
             >
-              <Input />
+              <Input prefix={<UserOutlined />} placeholder="Username" />
             </Form.Item>
             <Form.Item
               label="Contraseña"
               name="password"
               rules={[{ required: true, message: "Por favor, ingrese su contraseña" }]}
             >
-              <Input.Password />
+              <Input.Password prefix={<LockOutlined />}placeholder="Password"/>
             </Form.Item>
             <Form.Item>
               <Button type="primary" htmlType="submit" block>
