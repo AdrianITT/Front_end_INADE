@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./Crearcotizacion.css";
-import { Form, Input, Button, Row, Col, Select, Checkbox, Divider, message, DatePicker, Card, Modal,Result } from "antd";
+import { Form, Input, Button, Row, Col, Select, Checkbox, Divider, message, DatePicker, Card, Modal,Result, InputNumber} from "antd";
 import dayjs from "dayjs";
 import { useParams, useNavigate } from "react-router-dom";
 import { getClienteById } from "../../../apis/ApisServicioCliente/ClienteApi";
@@ -439,11 +439,11 @@ const RegistroCotizacion = () => {
                   label="Cantidad de servicios"
                   rules={[{ required: true, message: 'Por favor ingresa la cantidad.' }]}
                 >
-                  <Input
-                    type="number"
+                  <InputNumber
+                    //type="number"
                     min="1"
                     value={concepto.cantidad}
-                    onChange={(e) => handleInputChange(concepto.id, "cantidad", parseInt(e.target.value))}
+                    onChange={(value) => handleInputChange(concepto.id, "cantidad", value)}
                   />
                 </Form.Item>
               </Col>
@@ -456,7 +456,7 @@ const RegistroCotizacion = () => {
                 >
                   <Input
                     disabled={true}
-                    type="number"
+                    //type="number"
                     min="0"
                     value={concepto.precio}
                   />
@@ -484,11 +484,11 @@ const RegistroCotizacion = () => {
 
                   rules={[{ required: true, message: 'Por favor ingresa el precio.' }]}
                 >
-                  <Input
-                    type="number"
+                  <InputNumber
+                    //type="number"
                     min="0"
                     value={concepto.precioFinal}
-                    onChange={(e) => handleInputChange(concepto.id, "precioFinal", parseFloat(e.target.value))}
+                    onChange={(value) => handleInputChange(concepto.id, "precioFinal", value)}
                   />
                 </Form.Item>
               </Col>
