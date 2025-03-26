@@ -170,7 +170,7 @@ const Cliente = () => {
       estadoCliente: formValues.estadoCliente,
     };
   
-    if (!clienteData.nombrePila || !clienteData.apPaterno || !clienteData.correo || !clienteData.empresa|| !clienteData.codigoPostalCliente) {
+    if (!clienteData.nombrePila || !clienteData.apPaterno || !clienteData.correo || !clienteData.empresa) {
       console.error("Faltan campos obligatorios para crear el cliente");
       return null;
     }
@@ -352,21 +352,21 @@ const Cliente = () => {
                 <Form.Item
                   label="Calle:"
                   name="calleCliente"
-                  rules={[{ required: true, message: 'Calle requerida' }]}
+                  //rules={[{ required: true, message: 'Calle requerida' }]}
                 >
                   <Input />
                 </Form.Item>
                 <Form.Item
                   label="Numero externo:"
                   name="numeroCliente"
-                  rules={[{ required: true, message: 'Número requerido' }]}
+                  //rules={[{ required: true, message: 'Número requerido' }]}
                 >
                   <Input />
                 </Form.Item>
                 <Form.Item
                   label="Colonia:"
                   name="coloniaCliente"
-                  rules={[{ required: true, message: 'Colonia requerida' }]}
+                  //rules={[{ required: true, message: 'Colonia requerida' }]}
                 >
                   <Input />
                 </Form.Item>
@@ -375,21 +375,21 @@ const Cliente = () => {
                 <Form.Item
                   label="Ciudad:"
                   name="ciudadCliente"
-                  rules={[{ required: true, message: 'Ciudad requerida' }]}
+                  //rules={[{ required: true, message: 'Ciudad requerida' }]}
                 >
                   <Input />
                 </Form.Item>
                 <Form.Item
                   label="Codigo Postal:"
                   name="codigoPostalCliente"
-                  rules={[{ required: true, message: 'Código postal requerido' }]}
+                  //rules={[{ required: true, message: 'Código postal requerido' }]}
                 >
                   <Input />
                 </Form.Item>
                 <Form.Item
                   label="Estado:"
                   name="estadoCliente"
-                  rules={[{ required: true, message: 'Estado requerido' }]}
+                  //rules={[{ required: true, message: 'Estado requerido' }]}
                 >
                   <Input />
                 </Form.Item>
