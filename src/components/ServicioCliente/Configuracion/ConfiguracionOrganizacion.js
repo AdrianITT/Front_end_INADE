@@ -679,7 +679,7 @@ const CotizacionPureva=()=>{
         layout="vertical"
         onFinish={handleGuardarOrdenTrabajo}
       >
-        <Form.Item label="Nombre formato:" name="nombreFormato" required>
+        <Form.Item label="Nombre del formato:" name="nombreFormato" required>
           <Input placeholder="Ingrese el nombre del formato de orden de trabajo." />
         </Form.Item>
         <Form.Item label="Versión:" name="version">
@@ -688,7 +688,7 @@ const CotizacionPureva=()=>{
         <Form.Item label="Emisión:" name="fechaEmision">
           <Input placeholder="Ingrese la fecha de emisión." />
         </Form.Item>
-        <Form.Item label="Título documento:" name="tituloDocumento">
+        <Form.Item label="Título del documento:" name="tituloDocumento">
           <Input placeholder="Ingrese el título del documento." />
         </Form.Item>
         <Form.Item

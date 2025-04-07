@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./Crearcotizacion.css";
-import { Form, Input, Button, Row, Col, Select, Checkbox, Divider, message, DatePicker, Card, Modal,Result } from "antd";
+import { Form, Input, Button, Row, Col, Select, Checkbox, Divider, message, DatePicker, Card, Modal,Result, InputNumber} from "antd";
 import dayjs from "dayjs";
 import { useParams, useNavigate } from "react-router-dom";
 import { getClienteById } from "../../../apis/ApisServicioCliente/ClienteApi";
@@ -195,7 +195,7 @@ const RegistroCotizacion = () => {
   };
 
     // Obtener los servicios que no han sido seleccionados
-    const obtenerServiciosDisponibles = (conceptoId) => {
+    {/*const obtenerServiciosDisponibles = (conceptoId) => {
       const serviciosSeleccionados = conceptos
         .filter((c) => c.id !== conceptoId)
         .map((c) => c.servicio);
@@ -203,7 +203,7 @@ const RegistroCotizacion = () => {
       return servicios.filter((servicio) =>
         !serviciosSeleccionados.includes(servicio.id)
       );
-    };
+    }; */}
 
     const handleMetodoChange = (value) => {
       setMetodoSeleccionado(value);
@@ -421,27 +421,17 @@ const RegistroCotizacion = () => {
                   showSearch
                   placeholder="Selecciona un servicio"
                   style={{ width: '100%' }}
-                  // La búsqueda la basamos en la prop "label"
-                  optionFilterProp="label"
-                  // Filtra los resultados mientras el usuario escribe
-                  filterOption={(input, option) =>
-                    (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-                  }
-                  // Ordena alfabéticamente los resultados mostrados
-                  filterSort={(optionA, optionB) =>
-                    (optionA?.label ?? '').toLowerCase().localeCompare(
-                      (optionB?.label ?? '').toLowerCase()
-                    )
-                  }
                   value={concepto.servicio || undefined}
                   onChange={(value) => handleServicioChange(concepto.id, value)}
-                  // Aquí transformamos cada servicio en un objeto con { value, label }
-                  options={obtenerServiciosDisponibles(concepto.id).map(serv => ({
-                    value: serv.id,
-                    label: serv.nombreServicio,
-                  }))}
-                />
+                >
+                  {servicios.map(serv => (
+                    <Select.Option key={serv.id} value={serv.id}>
+                      {serv.nombreServicio}
+                    </Select.Option>
+                  ))}
+                </Select>
               </Form.Item>
+
 
               </Col>
               <Col span={12}>
@@ -449,11 +439,11 @@ const RegistroCotizacion = () => {
                   label="Cantidad de servicios"
                   rules={[{ required: true, message: 'Por favor ingresa la cantidad.' }]}
                 >
-                  <Input
-                    type="number"
+                  <InputNumber
+                    //type="number"
                     min="1"
                     value={concepto.cantidad}
-                    onChange={(e) => handleInputChange(concepto.id, "cantidad", parseInt(e.target.value))}
+                    onChange={(value) => handleInputChange(concepto.id, "cantidad", value)}
                   />
                 </Form.Item>
               </Col>
@@ -466,7 +456,7 @@ const RegistroCotizacion = () => {
                 >
                   <Input
                     disabled={true}
-                    type="number"
+                    //type="number"
                     min="0"
                     value={concepto.precio}
                   />
@@ -494,11 +484,11 @@ const RegistroCotizacion = () => {
 
                   rules={[{ required: true, message: 'Por favor ingresa el precio.' }]}
                 >
-                  <Input
-                    type="number"
+                  <InputNumber
+                    //type="number"
                     min="0"
                     value={concepto.precioFinal}
-                    onChange={(e) => handleInputChange(concepto.id, "precioFinal", parseFloat(e.target.value))}
+                    onChange={(value) => handleInputChange(concepto.id, "precioFinal", value)}
                   />
                 </Form.Item>
               </Col>

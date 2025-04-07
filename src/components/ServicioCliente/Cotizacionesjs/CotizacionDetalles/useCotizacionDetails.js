@@ -89,20 +89,19 @@ export const useCotizacionDetails = (id) => {
           );
 
           // Combinar con cotServRes para obtener cantidades, precios, etc.
-          const serviciosConCantidad = serviciosFiltrados.map((servicio) => {
-            const cotServ = cotServRes.data.find(
-              (cs) =>
-                cs.servicio === servicio.id &&
-                cs.cotizacion === cotizacionData.id
-            );
+          const serviciosConCantidad = cotServRes.data
+          .filter(cs => cs.cotizacion === cotizacionData.id)
+          .map(cs => {
+            const servicioInfo = serviciosRes.data.find(s => s.id === cs.servicio);
             return {
-              ...servicio,
-              cantidad: cotServ ? cotServ.cantidad : 0,
-              precio: cotServ ? cotServ.precio : 0,
-              subtotal: cotServ ? cotServ.cantidad * cotServ.precio : 0,
-              descripcion: cotServ ? cotServ.descripcion : "Sin descripción",
+              ...servicioInfo,
+              cantidad: cs.cantidad,
+              precio: cs.precio,
+              subtotal: cs.cantidad * cs.precio,
+              descripcion: cs.descripcion || "Sin descripción",
             };
           });
+        
 
           setServicios(serviciosConCantidad);
 

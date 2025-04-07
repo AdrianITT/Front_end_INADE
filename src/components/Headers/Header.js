@@ -185,7 +185,7 @@ const Header = () => {
           {logoOrganizacion && logoOrganizacion.logo ? (
             <img alt="Logo de la Organización" src={logoOrganizacion.logo} style={{ height: '40px', marginRight: '8px' }} />
           ) : (
-            <img alt="INADE" style={{ height: '40px', marginRight: '8px' }} />
+            <img alt="LOGO" style={{ height: '40px', marginRight: '8px' }} />
           )}
         </div>
       </Link>

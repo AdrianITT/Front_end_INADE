@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./Crearcotizacion.css";
-import { Form, Input, Button, Row, Col, Select, Checkbox, Divider, message, DatePicker, Card, Modal, Result, Text } from "antd";
+import { Form, Input, Button, Row, Col, Select, Checkbox, Divider, message, DatePicker, Card, Modal, Result, Text,InputNumber } from "antd";
 import dayjs from "dayjs";
 import { useParams, useNavigate } from "react-router-dom";
 import { getCotizacionById, updateCotizacion } from "../../../apis/ApisServicioCliente/CotizacionApi";
@@ -75,21 +75,21 @@ const EditarCotizacion = () => {
         
               // Obtener información detallada de cada servicio en la cotización
               const serviciosConDetalles = await Promise.all(
-                cotizacionServicios.map(async (servicioId) => {
-                  const servicioResponse = await getServicioById(servicioId);
-                  const record = filteredCotizacionServicios.find((r) => r.servicio === servicioId);
+                filteredCotizacionServicios.map(async (record) => {
+                  const servicioResponse = await getServicioById(record.servicio);
                   return {
-                    id: record ? record.id : null,
-                    servicio: record.servicio, 
+                    id: record.id,
+                    servicio: record.servicio,
                     nombreServicio: servicioResponse.data.nombreServicio,
-                    cantidad: record ? record.cantidad : 0,
+                    cantidad: record.cantidad,
                     precio: parseFloat(servicioResponse.data.precio) || 0,
-                    descripcion: record ? record.descripcion : "",
+                    descripcion: record.descripcion,
                     cotizacion: record.cotizacion,
                     precioEditable: record ? record.precio : parseFloat(servicioResponse.data.precio) || 0,
                   };
                 })
               );
+              
         
               //console.log("Servicios con detalles:", serviciosConDetalles);
               setConceptos(serviciosConDetalles);
@@ -512,11 +512,11 @@ const EditarCotizacion = () => {
                          </Col>
                          <Col span={12}>
                            <Form.Item label="Cantidad de servicios" rules={[{ required: true, message: 'Por favor ingresa la cantidad.' }]}>
-                             <Input
-                               type="number"
+                             <InputNumber
+                               //type="number"
                                min="1"
                                value={concepto.cantidad}
-                               onChange={(e) => handleInputChange(concepto.id, "cantidad", parseInt(e.target.value))}
+                               onChange={(value) => handleInputChange(concepto.id, "cantidad", value)}
                              />
                            </Form.Item>
                          </Col>
@@ -526,7 +526,7 @@ const EditarCotizacion = () => {
                            <Form.Item label="Precio sugerido" rules={[{ required: true, message: 'Por favor ingresa el precio.' }]}>
                              <Input
                                disabled={true}
-                               type="number"
+                               //type="number"
                                min="0"
                                value={concepto.precio}
                              />
@@ -546,11 +546,11 @@ const EditarCotizacion = () => {
                        <Row gutter={16}>
                          <Col span={12}>
                            <Form.Item label="Precio final" rules={[{ required: true, message: 'Por favor ingresa el precio.' }]}>
-                             <Input
-                               type="number"
-                               min="0"
+                             <InputNumber
+                               //type="number"
+                               //min="0"
                                value={concepto.precioEditable}
-                               onChange={(e) => handleInputChange(concepto.id, "precioEditable", parseFloat(e.target.value))}
+                               onChange={(value) => handleInputChange(concepto.id, "precioEditable", value)}
                              />
                            </Form.Item>
                          </Col>
