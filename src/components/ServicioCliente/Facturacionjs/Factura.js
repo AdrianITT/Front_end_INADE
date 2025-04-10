@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { getAllFactura } from "../../../apis/ApisServicioCliente/FacturaApi";
+import { getAllFactura, getAllFacturaByOrganozacion } from "../../../apis/ApisServicioCliente/FacturaApi";
 import { getCotizacionById } from "../../../apis/ApisServicioCliente/CotizacionApi";
 import { getClienteById } from "../../../apis/ApisServicioCliente/ClienteApi";
 import { getEmpresaById } from "../../../apis/ApisServicioCliente/EmpresaApi";
@@ -23,67 +23,16 @@ const Factura = () => {
     const fetchFacturas = async () => {
       setLoading(true);
       try {
-        // 1. Obtener TODAS las facturas
-        const response = await getAllFactura();
-        const allFacturas = response.data || [];
+        const response = await getAllFacturaByOrganozacion(organizationId);
+        const rawFacturas = response.data || [];
 
-        // 2. Obtener los registros de Facturama
         const responseFacturama = await getAllfacturafacturama();
         const facturamaList = responseFacturama.data || [];
-        // Creamos un Set con los id de factura ya presentes en Facturama
         const facturamaIds = new Set(facturamaList.map(item => item.factura));
-
-        // Aquí guardaremos objetos con { factura, ordenData, cotiData, clienteData, empresaData }
-        const facturasFiltradas = [];
-
-        // 3. Recorrer cada factura para formar la cadena de relaciones
-        for (const factura of allFacturas) {
-          if (!factura.ordenTrabajo) continue; // Si no tiene orden, no la procesamos
-
-          try {
-            // a) Orden de Trabajo
-            const ordenRes = await getOrdenTrabajoById(factura.ordenTrabajo);
-            const ordenData = ordenRes.data;
-            if (!ordenData.cotizacion) continue;
-
-            // b) Cotización
-            const cotiRes = await getCotizacionById(ordenData.cotizacion);
-            const cotiData = cotiRes.data;
-            if (!cotiData.cliente) continue;
-
-            // c) Cliente
-            const clienteRes = await getClienteById(cotiData.cliente);
-            const clienteData = clienteRes.data;
-            if (!clienteData.empresa) continue;
-
-            // d) Empresa
-            const empresaRes = await getEmpresaById(clienteData.empresa);
-            const empresaData = empresaRes.data;
-            // e) Filtrar por organización
-            if (empresaData.organizacion === organizationId) {
-              facturasFiltradas.push({
-                factura,
-                ordenData,
-                cotiData,
-                clienteData,
-                empresaData,
-              });
-            }
-          } catch (err) {
-            console.error("Error en la cadena de relaciones", err);
-          }
-        }
-
-        // Fecha actual para la comparación
+  
         const currentDate = new Date();
-
-        // 4. Construir la data final para la tabla y marcar las facturas missing.
-        let facturasFinal = facturasFiltradas.map((item, index) => {
-          const { factura, ordenData, clienteData, empresaData } = item;
-          // Verificar si el id de la factura NO está en el set de Facturama
-          const missing = !facturamaIds.has(factura.id);
-          
-          // Convertir la fecha de expedición y formatearla
+  
+        const facturasProcesadas = rawFacturas.map((factura, index) => {
           const expedicionDate = factura.fechaExpedicion ? new Date(factura.fechaExpedicion) : null;
           const formattedFechaExpedicion = expedicionDate
             ? expedicionDate.toLocaleDateString("es-ES", {
@@ -92,60 +41,44 @@ const Factura = () => {
                 day: "2-digit",
               })
             : "Desconocida";
-          
-          // Calcular si es reciente (<= 4 días)
+            // 🔴 ¿Está faltante en Facturama?
+            const isMissing = !facturamaIds.has(factura.folio);
+  
           let recent = false;
           if (expedicionDate) {
             const diffDays = (currentDate - expedicionDate) / (1000 * 60 * 60 * 24);
             recent = diffDays < 4;
           }
-
+  
           return {
             key: index.toString(),
-            id: factura.id,
+            id: factura.folio,
+            codigoOrdenTrabajo: factura.codigoOrdenTrabajo,
+            nombreCliente: factura.cliente,
+            nombreEmpresa: factura.empresa,
             fechaExpedicion: formattedFechaExpedicion,
-            expedicionDate, // para comparar en el sort
-            codigoOrdenTrabajo: ordenData.codigo || "N/A",
-            nombreCliente: `${clienteData.nombrePila || ""} ${clienteData.apPaterno || ""}`.trim(),
-            nombreEmpresa: empresaData.nombre || "N/A",
-            missing,
-            recent, // true si es missing y reciente (<= 3 días)
+            expedicionDate,
+            recent,
+            missing: isMissing // Ya no lo necesitas si no estás comparando con Facturama
           };
         });
+        const hasRecentMissing = facturasProcesadas.some(item => item.missing && item.recent);
 
-        // 5. Revisar si existe alguna factura missing que sea reciente.
-        const hasRecentMissing = facturasFinal.some(item => item.missing && item.recent);
-
-        // Si existe al menos una factura missing y reciente, aplicar ordenamiento especial.
         if (hasRecentMissing) {
-          facturasFinal.sort((a, b) => {
-            // Prioridad:
-            // 0 => missing && recent
-            // 1 => missing && !recent
-            // 2 => no missing
+          facturasProcesadas.sort((a, b) => {
             const getPriority = (item) => {
-              if (item.missing) {
-                return item.recent ? 0 : 1;
-              }
+              if (item.missing) return item.recent ? 0 : 1;
               return 2;
             };
-
             const priorityA = getPriority(a);
             const priorityB = getPriority(b);
-            if (priorityA !== priorityB) {
-              return priorityA - priorityB;
-            }
-            // Si tienen la misma prioridad, opcionalmente se pueden ordenar por fecha
-            if (a.expedicionDate && b.expedicionDate) {
-              return a.expedicionDate - b.expedicionDate;
-            }
-            return 0;
+
+            return priorityA - priorityB || (a.expedicionDate - b.expedicionDate);
           });
         }
-        // En caso de no existir ninguna factura missing reciente, se deja el orden obtenido (orden "normal").
-
-        setData(facturasFinal);
-        setFilteredData(facturasFinal);
+  
+        setData(facturasProcesadas);
+        setFilteredData(facturasProcesadas);
       } catch (error) {
         console.error("Error al obtener facturas:", error);
         message.error("Error al cargar las facturas.");
@@ -153,9 +86,12 @@ const Factura = () => {
         setLoading(false);
       }
     };
-
-    fetchFacturas();
+  
+    if (organizationId) {
+      fetchFacturas();
+    }
   }, [organizationId]);
+  
 
   // Función para manejar la búsqueda en tiempo real
   const handleSearch = (value) => {
@@ -262,6 +198,14 @@ const Factura = () => {
         </Button>
         </Link>
       </div>
+      <div style={{ display: "flex",justifyContent: "center",marginBottom: "20px"  }}>
+      <Link to="/FacturaOTMultiples">
+        <Button type="primary">
+          Crear Factura de Multiples OT
+        </Button>
+        </Link>
+      </div>
+      
       {/* Se usa rowClassName para resaltar las filas missing */}
       <Table
         dataSource={filteredData}

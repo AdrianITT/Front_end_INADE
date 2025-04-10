@@ -218,17 +218,18 @@ const EditarCotizacion = () => {
 
         const handleServicioChange = (conceptoId, servicioId) => {
           // Verificar si el servicio ya está seleccionado en otro concepto
-          const servicioYaSeleccionado = conceptos.some(
+          /*const servicioYaSeleccionado = conceptos.some(
             (c) => c.servicio === servicioId && c.id !== conceptoId
-          );
+          ); 
         
           if (servicioYaSeleccionado) {
             message.warning("Este servicio ya está seleccionado en otro concepto.");
             return; // Evita que se agregue duplicado
-          }
+          }*/
         
           // Obtener el servicio seleccionado de la lista de servicios
           const servicioSeleccionado = servicios.find(servicio => servicio.id === servicioId);
+          console.log("Servicio seleccionado:", servicioSeleccionado);
         
           if (servicioSeleccionado) {
             const updatedConceptos = conceptos.map((concepto) =>
@@ -250,7 +251,7 @@ const EditarCotizacion = () => {
         
         
         
-
+/*
      const obtenerServiciosDisponibles = (conceptoId) => {
       const serviciosSeleccionados = conceptos
         .filter((c) => c.id !== conceptoId) // Excluye el concepto actual para permitir cambiarlo
@@ -264,6 +265,8 @@ const EditarCotizacion = () => {
           (servicio) => !serviciosSeleccionados.includes(servicio.id) &&
           !serviciosDeLaCotizacion.includes(servicio.id));
     };
+    
+     */
 
      const handleAddConcepto = () => {
           setConceptos([...conceptos, { id: null, servicio: "", cantidad: 1, precio: 0, descripcion: "" }]);
@@ -370,6 +373,7 @@ const EditarCotizacion = () => {
               descripcion: concepto.descripcion,
               cotizacion: parseInt(id, 10),
             };
+            console.log("📤 Enviando nuevo servicio:", data);
             return createCotizacionServicio(data);
           });
           const createServiciosResults = await Promise.allSettled(createServiciosPromises);
@@ -465,102 +469,121 @@ const EditarCotizacion = () => {
                    </Form.Item>
            
                    <Divider>Agregar Conceptos</Divider>
-                   {conceptos.map((concepto, index) => (
-                     <div key={index +1}><Card>
-                       <h3>Concepto {concepto.id}</h3>
-                       <Row justify="end">
-                         <div >
-                           <Checkbox checked={concepto.eliminar || false}
-                           onChange={(e) => handleToggleEliminar(concepto.id, e.target.checked)}>
-                             Eliminar
-                           </Checkbox>
-                         </div>
-                       </Row>
-                       <Row gutter={16}>
-                         <Col span={12}>
-                         <Form.Item
-                            label="Servicio"
-                            rules={[{ required: true, message: 'Por favor selecciona el servicio.' }]}
-                          >
-                            <Select
-                              placeholder="Selecciona un servicio"
-                              showSearch
-                              optionFilterProp="label"
-                              filterOption={(input, option) =>
-                                (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-                              }
-                              filterSort={(optionA, optionB) =>
-                                (optionA?.label ?? '').toLowerCase().localeCompare(
-                                  (optionB?.label ?? '').toLowerCase()
-                                )
-                              }
-                              value={concepto.nombreServicio || undefined}
-                              onChange={(value) => handleServicioChange(concepto.id, value)}
+                    {conceptos.map((concepto, index) => (
+                      <Card key={concepto.id} style={{ marginBottom: "24px", borderRadius: 12 }}>
+                        <Row justify="space-between" align="middle" style={{ marginBottom: "10px" }}>
+                          <Col>
+                            <h3 style={{ margin: 0 }}>🧾 Concepto {concepto.id}</h3>
+                          </Col>
+                          <Col>
+                            <Checkbox
+                              checked={concepto.eliminar || false}
+                              onChange={(e) => handleToggleEliminar(concepto.id, e.target.checked)}
                             >
-                              {obtenerServiciosDisponibles(concepto.id).map((servicio) => (
-                                <Select.Option
-                                  key={servicio.id}
-                                  value={servicio.id}
-                                  label={servicio.nombreServicio}
-                                >
-                                  {servicio.nombreServicio}
-                                </Select.Option>
-                              ))}
-                            </Select>
-                          </Form.Item>
+                              Eliminar
+                            </Checkbox>
+                          </Col>
+                        </Row>
 
-                         </Col>
-                         <Col span={12}>
-                           <Form.Item label="Cantidad de servicios" rules={[{ required: true, message: 'Por favor ingresa la cantidad.' }]}>
-                             <InputNumber
-                               //type="number"
-                               min="1"
-                               value={concepto.cantidad}
-                               onChange={(value) => handleInputChange(concepto.id, "cantidad", value)}
-                             />
-                           </Form.Item>
-                         </Col>
-                       </Row>
-                       <Row gutter={16}>
-                         <Col span={12}>
-                           <Form.Item label="Precio sugerido" rules={[{ required: true, message: 'Por favor ingresa el precio.' }]}>
-                             <Input
-                               disabled={true}
-                               //type="number"
-                               min="0"
-                               value={concepto.precio}
-                             />
-                           </Form.Item>
-                         </Col>
-                         <Col span={12}>
-                         <Form.Item label="Descripción">
-                              <TextArea
-                              rows={2}
-                              value={concepto.descripcion || ""}
-                              onChange={(e) => handleInputChange(concepto.id, "descripcion", e.target.value)}
-                              placeholder="Descripción del servicio"
+                        <Row gutter={24}>
+                          <Col span={8}>
+                            <Form.Item
+                              label="Servicio"
+                              rules={[{ required: true, message: 'Por favor selecciona el servicio.' }]}
+                            >
+                              <Select
+                                placeholder="Selecciona un servicio"
+                                showSearch
+                                optionFilterProp="label"
+                                value={concepto.servicio || undefined}
+                                onChange={(value) => handleServicioChange(concepto.id, value)}
+                                filterOption={(input, option) =>
+                                  (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                                }
+                                filterSort={(a, b) =>
+                                  (a?.label ?? '').toLowerCase().localeCompare((b?.label ?? '').toLowerCase())
+                                }
+                              >
+                                {servicios.map((servicio) => (
+                                  <Select.Option
+                                    key={servicio.id}
+                                    value={servicio.id}
+                                    label={servicio.nombreServicio}
+                                  >
+                                    {servicio.nombreServicio}
+                                  </Select.Option>
+                                ))}
+                              </Select>
+                            </Form.Item>
+                          </Col>
+
+                          <Col span={8}>
+                            <Form.Item
+                              label="Cantidad de servicios"
+                              rules={[{ required: true, message: 'Por favor ingresa la cantidad.' }]}
+                            >
+                              <InputNumber
+                                min={1}
+                                style={{ width: "100%" }}
+                                value={concepto.cantidad}
+                                onChange={(value) => handleInputChange(concepto.id, "cantidad", value)}
                               />
-                              </Form.Item>
-                         </Col>
-                       </Row>
-                       <Row gutter={16}>
-                         <Col span={12}>
-                           <Form.Item label="Precio final" rules={[{ required: true, message: 'Por favor ingresa el precio.' }]}>
-                             <InputNumber
-                               //type="number"
-                               //min="0"
-                               value={concepto.precioEditable}
-                               onChange={(value) => handleInputChange(concepto.id, "precioEditable", value)}
-                             />
-                           </Form.Item>
-                         </Col>
-                       </Row>
-                     </Card></div>
-                   ))}
-                    <Button type="primary" onClick={handleAddConcepto} style={{ marginBottom: "16px" }}>
-                     Añadir Concepto
-                   </Button>
-           
+                            </Form.Item>
+                          </Col>
+
+                          <Col span={8}>
+                            <Form.Item
+                              label="Precio sugerido"
+                              rules={[{ required: true, message: 'Por favor ingresa el precio.' }]}
+                            >
+                              <Input
+                                disabled
+                                value={concepto.precio}
+                                style={{ width: "100%" }}
+                              />
+                            </Form.Item>
+                          </Col>
+                        </Row>
+
+                        <Row gutter={24}>
+                          <Col span={8}>
+                            <Form.Item
+                              label="Precio final"
+                              rules={[{ required: true, message: 'Por favor ingresa el precio.' }]}
+                            >
+                              <InputNumber
+                                min={0}
+                                style={{ width: "100%" }}
+                                value={concepto.precioEditable}
+                                onChange={(value) => handleInputChange(concepto.id, "precioEditable", value)}
+                              />
+                            </Form.Item>
+                          </Col>
+
+                          <Col span={16}>
+                            <Form.Item
+                              label="Descripción"
+                              rules={[{ required: true, message: 'Por favor ingresa la descripción.' }]}
+                            >
+                              <TextArea
+                                rows={2}
+                                value={concepto.descripcion || ""}
+                                onChange={(e) => handleInputChange(concepto.id, "descripcion", e.target.value)}
+                                placeholder="Descripción del servicio"
+                              />
+                            </Form.Item>
+                          </Col>
+                        </Row>
+                      </Card>
+                    ))}
+
+                    <Button
+                      type="primary"
+                      onClick={handleAddConcepto}
+                      style={{ marginBottom: "16px", borderRadius: 8 }}
+                    >
+                      ➕ Añadir Concepto
+                    </Button>
                    <div className="cotizacion-totals-buttons">
                      <div className="cotizacion-totals">
                        <p>Subtotal: {subtotal.toFixed(2)} {tipoMonedaSeleccionada === 2 ? "USD" : "MXN"}</p>

@@ -177,6 +177,14 @@ const EditarCliente = () => {
               <Input placeholder="fax" />
             </Form.Item>
           </Col>
+          <Col span={12}>
+          <Form.Item
+            label="Sub - Division"
+            name="SubDivision"
+          >
+            <Input placeholder="subDivision" />
+          </Form.Item>
+          </Col>
         </Row>
         <Row gutter={30}>
             <Divider>Direccion del cliente</Divider>

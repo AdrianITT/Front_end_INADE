@@ -3,19 +3,21 @@ import React from "react";
 import { Table } from "antd";
 
 const columnsServicios = [
-  { title: "Servicio", dataIndex: "nombreServicio", key: "nombreServicio" },
+  { title: "Servicio", dataIndex: "servicioNombre", key: "servicioNombre" },
   { title: "Cantidad", dataIndex: "cantidad", key: "cantidad" },
   { title: "Precio Unitario", dataIndex: "precio", key: "precio" },
   { title: "Subtotal", dataIndex: "subtotal", key: "subtotal" },
+  { title: "Descripción", dataIndex: "descripcion", key: "descripcion" },
 ];
 
-const ServiciosTable = ({ servicios, factorConversion }) => {
-  // Aplica la conversión a los precios
+const ServiciosTable = ({ servicios = [], factorConversion = 1 }) => {
   const data = servicios.map((servicio) => ({
+    key: servicio.id,
     ...servicio,
-    precio: (servicio.precio / factorConversion).toFixed(2),
-    subtotal: (servicio.subtotal / factorConversion).toFixed(2),
+    precio: (parseFloat(servicio.precio) / factorConversion).toFixed(2),
+    subtotal: (parseFloat(servicio.subtotal) / factorConversion).toFixed(2),
   }));
+
   return (
     <Table
       dataSource={data}

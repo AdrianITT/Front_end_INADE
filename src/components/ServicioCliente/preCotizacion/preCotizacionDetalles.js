@@ -1,6 +1,6 @@
 import React, { useState, useEffect,useMemo} from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { MailTwoTone, CheckCircleTwoTone, FilePdfTwoTone, FormOutlined, DeleteOutlined } from "@ant-design/icons";
+import { MailTwoTone, CheckCircleTwoTone, FilePdfTwoTone, FormOutlined, DeleteOutlined,EditTwoTone  } from "@ant-design/icons";
 import { Card, Table, Row, Col, Typography, Spin, message, Menu,Dropdown,Button, Form, Checkbox, Input, Modal, Result, Popconfirm } from "antd";
 import { getPreCotizacionById,updatePrecotizacion, deletePrecotizar} from "../../../apis/ApisServicioCliente/precotizacionApi";
 import { getAllServicioPrecotizacion } from "../../../apis/ApisServicioCliente/ServiciosPrecotizacionApi";
@@ -9,6 +9,7 @@ import { getIvaById } from "../../../apis/ApisServicioCliente/ivaApi";
 import { Api_Host } from "../../../apis/api";
 import { getInfoSistema } from "../../../apis/ApisServicioCliente/InfoSistemaApi";
 import {getEstadoById} from "../../../apis/ApisServicioCliente/EstadoApi";
+import {getAllDataPrecotizacion} from "../../../apis/ApisServicioCliente/precotizacionApi";
 
 const { Title, Text } = Typography;
 
@@ -20,7 +21,7 @@ const PreCotizacionDetalles = () => {
   const [ivaPorcentaje, setIvaPorcentaje] = useState(null);
   const [tipoCambioDolar, setTipoCambioDolar] = useState(1);
   //const [serviciosPreCotizacion, setServiciosPreCotizacion] = useState([]);
-  const esUSD = cotizacionInfo?.tipoMoneda === 2; // Suponiendo que el ID 2 corresponde a USD
+  const esUSD = cotizacionInfo?.tipoMoneda?.id === 2; // Suponiendo que el ID 2 corresponde a USD
   const factorConversion = esUSD ? tipoCambioDolar : 1;
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isResultModalVisible, setIsResultModalVisible] = useState(false);
@@ -32,83 +33,27 @@ const PreCotizacionDetalles = () => {
   const navigate=useNavigate();
 
   useEffect(() => {
-    const fetchCotizacion = async () => {
+    const fetchData = async () => {
       try {
-        const response = await getPreCotizacionById(id);
-        setCotizacionInfo(response.data);
-        // ✅ Obtener el estado por su ID
-      if (response.data.estado) {
-          try {
-            const estadoResp = await getEstadoById(response.data.estado);
-            setEstadoNombre(estadoResp.data.nombre);
-          } catch (error) {
-            console.error("Error obteniendo el estado:", error);
-            setEstadoNombre("Desconocido"); // En caso de error
-          }
-        }
+        const response = await getAllDataPrecotizacion(id);
+        const data = response.data;
+        console.log("Pre-Cotización Detalles:", data);   
+  
+        setCotizacionInfo(data); // contiene empresa, cliente, moneda, iva, etc.
+        setServicios(data.precotizacionservicios); // contiene los servicios listos
+        setIvaPorcentaje(parseFloat(data.iva.porcentaje) || 0); // Ej. "0.00" -> 0
+  
       } catch (error) {
-        message.error("Error al obtener la pre-cotización.");
-        console.error("Error al obtener la pre-cotización:", error);
+        console.error("Error al obtener datos de la pre-cotización:", error);
+        message.error("Error al cargar los datos completos.");
+      } finally {
+        setLoading(false);
       }
     };
-
-    const fetchServicios = async () => {
-     try {
-       // Obtener todos los servicios de la pre-cotización
-       const response = await getAllServicioPrecotizacion(); // Obtiene todos los registros
-       
-       // Filtrar solo aquellos que correspondan a la pre-cotización actual
-       const serviciosFiltrados = response.data.filter(servicio => servicio.preCotizacion === Number(id));
-   
-       // Obtener los nombres de los servicios desde la tabla de servicios
-       const serviciosEnriquecidos = await Promise.all(
-         serviciosFiltrados.map(async (servicio) => {
-           try {
-             const servicioInfo = await getServicioById(servicio.servicio);
-             return {
-               ...servicio,
-               nombreServicio: servicioInfo.data.nombreServicio, // Agregar el nombre del servicio
-             };
-           } catch (error) {
-             console.error(`Error al obtener el nombre del servicio ID ${servicio.servicio}`, error);
-             return { ...servicio, nombreServicio: "Desconocido" }; // Si falla, asigna un valor por defecto
-           }
-         })
-       );
-   
-       setServicios(serviciosEnriquecidos);
-     } catch (error) {
-       message.error("Error al obtener los servicios de la pre-cotización.");
-       console.error("Error al obtener los servicios:", error);
-     }
-   };
-
-   const fetchIva = async () => {
-     if (cotizacionInfo?.iva) { // Verifica que exista el ID de IVA
-       try {
-         const response = await getIvaById(cotizacionInfo.iva);
-         setIvaPorcentaje(response.data.porcentaje); // Guarda el porcentaje de IVA
-       } catch (error) {
-         console.error("Error al obtener el porcentaje de IVA:", error);
-         setIvaPorcentaje("Desconocido"); // Valor por defecto en caso de error
-       }
-     }
-   };
-   const fetchTipoCambio = async () => {
-     try {
-       const response = await getInfoSistema();
-       const tipoCambio = parseFloat(response.data[0].tipoCambioDolar);
-       setTipoCambioDolar(tipoCambio);
-     } catch (error) {
-       console.error("Error al obtener el tipo de cambio del dólar", error);
-     }
-   };
-   fetchTipoCambio();
-   fetchIva();
-   
-
-    Promise.all([fetchCotizacion(), fetchServicios()]).finally(() => setLoading(false));
-  }, [id,cotizacionInfo?.iva]);
+  
+    fetchData();
+  }, [id]);
+  
 
   
 
@@ -126,12 +71,15 @@ const PreCotizacionDetalles = () => {
   const totalConvertido = total / factorConversion;
 
   const columnsServicios = [
-    { title: "ID", dataIndex: "id", key: "id" },
     { title: "Descripción", dataIndex: "descripcion", key: "descripcion" },
     { title: "Cantidad", dataIndex: "cantidad", key: "cantidad" },
     { title: "Precio", dataIndex: "precio", key: "precio" },
-    { title: "Subtotal", key: "subtotal", render: (record) => (record.cantidad * record.precio).toFixed(2) },
+    {
+      title: "Subtotal",
+      render: (_, record) => `${(record.precio * record.cantidad).toFixed(2)}`
+    },
   ];
+  
   
   // Obtener el ID de la organización una sola vez
      const organizationId = useMemo(() => parseInt(localStorage.getItem("organizacion_id"), 10), []);
@@ -278,13 +226,19 @@ const PreCotizacionDetalles = () => {
         </Menu.Item>
     
         {/* ✅ Solo se muestra si el estado es 8 */}
-        {cotizacionInfo?.estado === 8 ? (
+        {cotizacionInfo?.estado?.id === 8 ? (
+          <>
           <Menu.Item key="4" icon={<CheckCircleTwoTone twoToneColor="#52c41a" />} onClick={actualizarEstado}>
             Actualizar estado
           </Menu.Item>
-        ):(<Link to="/cotizar"><Menu.Item key="4" icon={<FormOutlined  twoToneColor="#52c41a" />} >
-          Ir a Cotizacion
-        </Menu.Item></Link>)}
+          <Menu.Item key="8" icon={<EditTwoTone /> }>
+          <Link to={`/editarPreCotizacion/${id}`}>
+          Editar Pre-cotización</Link>
+          </Menu.Item>
+          </>
+        ):(<Menu.Item key="4" icon={<FormOutlined  twoToneColor="#52c41a" />} >
+          <Link to="/cotizar">Ir a Cotizacion</Link>
+        </Menu.Item>)}
     
         <Menu.Item key="5" icon={<FilePdfTwoTone />} onClick={handleDownloadPDF} loading={loading} >
           Ver PDF
@@ -311,14 +265,13 @@ const PreCotizacionDetalles = () => {
           <Row gutter={16}>
             <Col span={12}>
               <Card title="Información de la Pre-Cotización">
-                <p><Text strong>Empresa:</Text> {cotizacionInfo.nombreEmpresa}</p>
-                <p><Text strong>Cliente:</Text> {cotizacionInfo.nombreCliente} {cotizacionInfo.apellidoCliente}</p>
-                <p><Text strong>Denominación:</Text> {cotizacionInfo.denominacion}</p>
+                <p><Text strong>Empresa:</Text> {cotizacionInfo.empresa?.nombre}</p>
+                <p><Text strong>Cliente:</Text> {cotizacionInfo.cliente?.nombreCompleto}</p>
+                <p><Text strong>Correo:</Text> {cotizacionInfo.cliente?.correo}</p>
+                <p><Text strong>Denominación:</Text> {cotizacionInfo.tipoMoneda?.descripcion}-{cotizacionInfo.empresa?.denominacion}</p>
                 <p><Text strong>Fecha de Solicitud:</Text> {cotizacionInfo.fechaSolicitud}</p>
-                <p><Text strong>Fecha de Caducidad:</Text> {cotizacionInfo.fechaCaducidad}</p>
-                <p><Text strong>Descuento:</Text> {cotizacionInfo.descuento}%</p>
-                <p><Text strong>IVA:</Text>{ivaPorcentaje ? `${ivaPorcentaje}%` : "Cargando..."}</p>
-                <p><Text strong>Estado:</Text> {estadoNombre}</p>
+                <p><Text strong>IVA:</Text> {cotizacionInfo.iva?.porcentaje || "0"}%</p>
+                <p><Text strong>Estado:</Text> {cotizacionInfo.estado.nombre}</p>
               </Card>
             </Col>
             {/* ✅ Nueva Card: Resumen Financiero */}
@@ -335,18 +288,24 @@ const PreCotizacionDetalles = () => {
                   }
                 >               
                
-               <p><Text strong>Subtotal:</Text> {subtotalConvertido.toFixed(2)} {esUSD ? "USD" : "MXN"}</p>
-               <p><Text strong>Descuento ({cotizacionInfo?.descuento || 0}%):</Text> {descuentoConvertido.toFixed(2)} {esUSD ? "USD" : "MXN"}</p>
-               <p><Text strong>Subtotal con Descuento:</Text> {subtotalConDescuentoConvertido.toFixed(2)} {esUSD ? "USD" : "MXN"}</p>
-               <p><Text strong>IVA ({ivaPorcentaje * 100 || 0}%):</Text> {ivaConvertido.toFixed(2)} {esUSD ? "USD" : "MXN"}</p>
-               <p><Text strong>Total:</Text> {totalConvertido.toFixed(2)} {esUSD ? "USD" : "MXN"}</p>
+               <p><Text strong>Subtotal:</Text> {cotizacionInfo.valores.subtotal} {esUSD ? "USD" : "MXN"}</p>
+               <p><Text strong>Descuento ({cotizacionInfo.valores.descuento || 0}%):</Text> {descuentoConvertido.toFixed(2)} {esUSD ? "USD" : "MXN"}</p>
+               <p><Text strong>Subtotal con Descuento:</Text> {cotizacionInfo.valores.subtotalDescuento} {esUSD ? "USD" : "MXN"}</p>
+               <p><Text strong>IVA ({cotizacionInfo.valores.iva}%):</Text> {cotizacionInfo.valores.ivaValor} {esUSD ? "USD" : "MXN"}</p>
+               <p><Text strong>Total:</Text> {cotizacionInfo.valores.importe} {esUSD ? "USD" : "MXN"}</p>
                </Card>
                </Col>
           </Row>
         )}
 
         <Title level={3} style={{ marginTop: 20 }}>Servicios Relacionados</Title>
-        <Table dataSource={servicios} columns={columnsServicios} rowKey="id" bordered pagination={false} />
+        <Table
+          dataSource={servicios}
+          columns={columnsServicios}
+          rowKey="precotizacionservicioId"
+          bordered
+          pagination={false}
+        />
       </div>
       <Modal
           title="Enviar Cotización"

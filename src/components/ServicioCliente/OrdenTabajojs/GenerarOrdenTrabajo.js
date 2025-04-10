@@ -7,7 +7,7 @@ import { getAllCliente } from "../../../apis/ApisServicioCliente/ClienteApi";
 import { getAllEmpresas } from "../../../apis/ApisServicioCliente/EmpresaApi";
 import { getAllReceptor, createReceptor } from "../../../apis/ApisServicioCliente/ResectorApi";
 import { getServicioById } from "../../../apis/ApisServicioCliente/ServiciosApi";
-import { getCotizacionById } from "../../../apis/ApisServicioCliente/CotizacionApi";
+import { getCotizacionById, getDetallecotizaciondataById} from "../../../apis/ApisServicioCliente/CotizacionApi";
 import { getCotizacionServiciosByCotizacion } from "../../../apis/ApisServicioCliente/CotizacionServicioApi";
 import { createOrdenTrabajo } from "../../../apis/ApisServicioCliente/OrdenTrabajoApi";
 import { createOrdenTrabajoServico } from "../../../apis/ApisServicioCliente/OrdenTabajoServiciosApi";
@@ -27,6 +27,8 @@ const GenerarOrdenTrabajo = () => {
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [newOrderId, setNewOrderId] = useState(null);
   const navigate=useNavigate();
+  const [isOrdenConfirmModalVisible, setIsOrdenConfirmModalVisible] = useState(false);
+  const [ordenFormValues, setOrdenFormValues] = useState(null);
   
     // Obtener el ID de la organización una sola vez
     const organizationId = useMemo(() => parseInt(localStorage.getItem("organizacion_id"), 10), []);
@@ -44,49 +46,35 @@ const GenerarOrdenTrabajo = () => {
 
     const fetchCotizacionServicios = async () => {
       try {
-        // Obtener los datos de la cotización
-        const cotizacionResponse = await getCotizacionById(cotizacionId);  
-        //console.log("Cotización ID:", cotizacionResponse.data.id); // Ver el ID de la cotización
-        const cotizacionServicios = cotizacionResponse.data.servicios; // Servicios de la cotización
-        //console.log("Servicios de la cotización:", cotizacionServicios); // Ver los servicios de la cotización
+        const response = await getDetallecotizaciondataById(cotizacionId);
+        const serviciosData = response.data.cotizacionServicio.map((item, index) => ({
+          ...item,
+          // Generamos un identificador único para cada concepto.
+        }));
     
-        // Obtener todos los registros de cotizacionServicio
-        const cotizacionServicioResponse = await getCotizacionServiciosByCotizacion(cotizacionId);
-        const cotizacionServicioRecords = cotizacionServicioResponse.data;
-        //console.log("Registros de Cotización Servicio:", cotizacionServicioRecords); 
-    
-        cotizacionServicioRecords.forEach((record, index) => {
+        // Almacenamos la data en el estado (puede ser la misma variable que usas para renderizar los conceptos)
+        setServicios(serviciosData);
+              
+        // Convierte el arreglo en un objeto cuyas keys son el id
+        const serviciosObj = {};
+        serviciosData.forEach(item => {
+          serviciosObj[item.id] = {
+            servicio: item.servicio,
+            cantidad: item.cantidad,
+            descripcion: item.descripcion
+          };
         });
-    
-        // Filtrar solo los registros donde cotizacion sea igual al cotizacionId (asegurando que sean números)
-        const filteredCotizacionServicios = cotizacionServicioRecords.filter(
-          (record) => Number(record.cotizacion) === Number(cotizacionId)
-        );
-    
-        //console.log("Registros filtrados de Cotización Servicio:", filteredCotizacionServicios);
-    
-        // Obtener los servicios basados en los registros filtrados
-        const servicios = await Promise.all(
-          filteredCotizacionServicios.map(async (record) => {
-            const servicioResponse = await getServicioById(record.servicio);
-            return {
-              ...servicioResponse.data,
-              cantidad: record.cantidad,
-              descripcion: record.descripcion,
-            };
-          })
-        );
-        
-    
-        // Log de los servicios con la cantidad
-        //console.log("Servicios con cantidad:", servicios);
-    
-        // Finalmente, guardar los servicios en el estado o hacer lo necesario
-        setServicios(servicios);
+
+        form.setFieldsValue({
+          servicios: serviciosObj
+        });
+        console.log("Servicios de la cotización:", serviciosData);
+        console.log("Valores del formulario:", form.getFieldsValue());
       } catch (error) {
         console.error("Error al obtener los servicios de la cotización", error);
       }
     };
+    
     const fetchCliente = async () => {
       try {
         const cotizacionResponse = await getCotizacionById(cotizacionId); 
@@ -153,41 +141,47 @@ const GenerarOrdenTrabajo = () => {
 
   const onFinish = async (values) => {
     try {
-    
-      // 1. Crear la orden de trabajo  
-      // Se asume que el receptor seleccionado está en values.receptor
+      await form.validateFields();
+      setOrdenFormValues(values); // guardamos los valores validados
+      setIsOrdenConfirmModalVisible(true); // mostramos el modal
+    } catch (error) {
+      message.error("Por favor completa todos los campos requeridos.");
+    }
+  };
+
+  const handleConfirmCrearOrden = async () => {
+    try {
       const ordenData = {
-        receptor: values.receptor,
+        receptor: ordenFormValues.receptor,
         cotizacion: cotizacionId,
-        estado: 2  // valor por defecto 2
+        estado: 2,
       };
       const ordenResponse = await createOrdenTrabajo(ordenData);
-      // Suponemos que el backend retorna el registro creado con su ID (por ejemplo, ordenResponse.data.id)
       const ordenTrabajoId = ordenResponse.data.id;
-
-      // 2. Insertar los conceptos en la tabla cotizacionServicio  
-      // Por cada concepto, insertar: cantidad, descripción, ordenTrabajoId, y el id del servicio
+  
+      // Crear los servicios relacionados
       for (const concepto of servicios) {
         const dataServicio = {
           cantidad: concepto.cantidad,
-          descripcion: concepto.descripcion, // Puedes obtener este valor desde el formulario o dejarlo vacío si lo deseas
-          ordenTrabajo: ordenTrabajoId, // ID de la orden creada
-          servicio: concepto.id   // Suponemos que el id del servicio es el mismo que concepto.id
+          descripcion: concepto.descripcion,
+          ordenTrabajo: ordenTrabajoId,
+          servicio: concepto.servicio,
         };
+        console.log("Servicio a crear:", dataServicio);
         await createOrdenTrabajoServico(dataServicio);
       }
-
+  
       setNewOrderId(ordenTrabajoId);
-
       message.success("Orden de trabajo y servicios creados correctamente");
-      // Opcional: redirigir o limpiar el formulario
+      setIsOrdenConfirmModalVisible(false);
       setIsSuccessModalOpen(true);
-
     } catch (error) {
       console.error("Error al crear la orden de trabajo o los servicios", error);
       message.error("Error al crear la orden de trabajo o los servicios");
     }
   };
+  
+  
 
 
 
@@ -199,7 +193,6 @@ const GenerarOrdenTrabajo = () => {
       return newServicios;
     });
   };
-  
 
 
   const handleCreateReceptor = async (values) => {
@@ -242,14 +235,17 @@ const GenerarOrdenTrabajo = () => {
     formModal.resetFields(); // Limpia el formulario del modal
   };
 
-  const handleRemoveConcepto = (id) => {
-      if (servicios.length > 1) {
-        setServicios(servicios.filter((concepto) => concepto.id !== id));
-      } else {
-        message.warning("Debe haber al menos un concepto.");
-      }
-    };
+  const handleRemoveConcepto = (indexToRemove) => {
+    if (servicios.length > 1) {
+      setServicios((prev) => prev.filter((_, index) => index !== indexToRemove));
+    } else {
+      message.warning("Debe haber al menos un concepto.");
+    }
+  };
+  
 
+// Obtener datos del receptor seleccionado (usado en el modal de confirmación)
+const receptorSeleccionado = receptor.find(r => r.id === ordenFormValues?.receptor);
 
 
   return (
@@ -333,13 +329,13 @@ const GenerarOrdenTrabajo = () => {
         </Row>
 
         <Divider>Agregar Conceptos</Divider>
-        {servicios.map((concepto, index) => (
-          <div key={index}>
+        {servicios.map((servicio, index) => (
+          <div key={servicio.id}>
             <Card>
-              <h3>Concepto {index + 1}</h3>
+              <h3>Concepto {index +1}</h3>
               <div>            
               <Row justify="end">
-                <Checkbox onChange={() => handleRemoveConcepto(concepto.id)}>
+                <Checkbox onChange={() => handleRemoveConcepto(index)}>
                   Eliminar
                 </Checkbox>
               </Row>
@@ -347,18 +343,18 @@ const GenerarOrdenTrabajo = () => {
               <Row gutter={16}>
                 <Col span={12}>
                   <Form.Item
-                    name={['servicios', index, 'servicio']}
+                    name={['servicios', servicio.id, 'servicio']}
                     label="Servicio"
                     rules={[{ required: true, message: "Por favor, seleccione un servicio." }]}
-                    initialValue={concepto.id}
+                    initialValue={servicio.servicio}
                   >
                     <Select
                       placeholder="Selecciona un servicio"
                       disabled={true}
                     >
                       {servicios.map((servicio) => (
-                        <Select.Option key={servicio.id} value={servicio.id}>
-                          {servicio.nombreServicio}
+                        <Select.Option key={servicio.servicio} value={servicio.servicio}>
+                          {servicio.servicioNombre}
                         </Select.Option>
                       ))}
                     </Select>
@@ -366,10 +362,10 @@ const GenerarOrdenTrabajo = () => {
                 </Col>
                 <Col span={12}>
                   <Form.Item
-                    name={['servicios', index, 'cantidad']}
+                    name={['servicios', servicio.id, 'cantidad']}
                     label="Cantidad"
                     rules={[{ required: true, message: "Por favor ingresa la cantidad." }]}
-                    initialValue={concepto.cantidad}
+                    initialValue={servicio.cantidad}
                   >
                     <Input
                       type="number"
@@ -382,16 +378,16 @@ const GenerarOrdenTrabajo = () => {
               <Row gutter={16}>
                 <Col span={24}>
                 <Form.Item
-                  name={['servicios', index, 'descripcion']}
+                  name={['servicios', servicio.id, 'descripcion']}
                   label="Descripción"
                   rules={[{ required: true, message: "Por favor ingresa la descripción." }]}
-                  initialValue={concepto.descripcion} 
+                  initialValue={servicio.descripcion} 
                 >
                   <TextArea
                     placeholder="Escribe aquí la descripción del servicio"
                     autoSize={{ minRows: 2, maxRows: 6 }}
                     rows={2}
-                    value={concepto.descripcion} // Muestra la descripción actual
+                    value={servicio.descripcion} // Muestra la descripción actual
                     onChange={(e) =>
                       handleInputChange(index, "descripcion", e.target.value)
                     }
@@ -490,6 +486,20 @@ const GenerarOrdenTrabajo = () => {
         status="success"
         title="¡La orden de trabajo se creó exitosamente!"></Result>
       </Modal>
+      <Modal
+        title="¿Crear orden de trabajo?"
+        open={isOrdenConfirmModalVisible}
+        onOk={handleConfirmCrearOrden}
+        onCancel={() => setIsOrdenConfirmModalVisible(false)}
+        okText="Crear"
+        cancelText="Cancelar"
+      >
+        <p>¿Estás seguro de crear esta orden de trabajo?</p>
+        <p><strong>Receptor:</strong> {receptorSeleccionado ? `${receptorSeleccionado.nombrePila} ${receptorSeleccionado.apPaterno} ${receptorSeleccionado.apMaterno}` : "N/A"}</p>
+        <p><strong>Cotización asociada:</strong> #{cotizacionId}</p>
+        <p>Se crearán también los servicios asociados automáticamente.</p>
+      </Modal>
+
     </div>
     </div>
   );

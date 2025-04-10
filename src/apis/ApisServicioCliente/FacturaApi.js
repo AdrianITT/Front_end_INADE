@@ -24,5 +24,9 @@ export const createPDFfactura = async (id) => {
      }
 };
 
+export const getAllFacturaByOrganozacion = async (id) => Api_Host.get(`/allfacturasdata/${id}/`);
+
+export const getAllDataFactura = async (id) => Api_Host.get(`/detallefacturadata/${id}`);
+
 // Para descarga del PDF - FacturaPDFdescarga_Api
 export const getFacturPDFaById = async (id) => Api_Host.get(`/factura-pdf/${id}/`);

@@ -36,6 +36,9 @@ import PreCotizacionDetalles from "./components/ServicioCliente/preCotizacion/pr
 import EditarCotizacion from "./components/ServicioCliente/Cotizacionesjs/EditarCotizacion";
 import Pagos from "./components/ServicioCliente/Pagosjs/Pagos";
 import CrearPagos from "./components/ServicioCliente/Pagosjs/CrearPagos";
+import EditarOrdenTrabajo from "./components/ServicioCliente/OrdenTabajojs/EditarOrdenTrabajo";
+import FacturaOTMultiples from "./components/ServicioCliente/Facturacionjs/FacturaOTMultiples";
+import EditarPreCotizacion from "./components/ServicioCliente/preCotizacion/EditarPreCotizacion";
 
 // Hook para cambiar el título de la pestaña
 const usePageTitle = () => {
@@ -99,6 +102,8 @@ const AppRouter = () => {
         >
           <Route path="/Homeadmin" element={<ProtectedRoute allowedRoles={['Administrador']}><HomeAdmin /></ProtectedRoute>} />
           <Route path="/home" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><Home /></ProtectedRoute>} />
+          <Route path="/editarOrdenTrabajo/:id" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><EditarOrdenTrabajo/></ProtectedRoute>} />
+          <Route path="/FacturaOTMultiples" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><FacturaOTMultiples/></ProtectedRoute>} />
           <Route path="/empresa" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><Empresa /></ProtectedRoute>} />
           <Route path="/cliente" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><Cliente /></ProtectedRoute>} />
           <Route path="/servicio" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><Servicio /></ProtectedRoute>} />
@@ -127,6 +132,7 @@ const AppRouter = () => {
           <Route path="/Pagos" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><Pagos/></ProtectedRoute>} />
           <Route path="/CrearPagos" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><CrearPagos/></ProtectedRoute>} />
           <Route path="/CrearPagos/:id" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><CrearPagos/></ProtectedRoute>} />
+          <Route path="/EditarPreCotizacion/:id" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><EditarPreCotizacion/></ProtectedRoute>} /> 
         </Route>
       </Routes>
     </Router>
