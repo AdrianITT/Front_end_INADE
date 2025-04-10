@@ -2,21 +2,16 @@ import React, { useState, useEffect } from "react";
 import { Card, Row, Col, Button, Table, Tabs, Dropdown, Menu, Modal, Select, Input, Form, DatePicker, Flex, Alert, Checkbox,message,Descriptions, Result, Spin  } from "antd";
 import { useParams, Link ,useNavigate } from "react-router-dom";
 import{FileTextTwoTone,MailTwoTone,FilePdfTwoTone,CloseCircleTwoTone, FileAddTwoTone} from "@ant-design/icons";
-import { getFacturaById, createPDFfactura } from "../../../apis/ApisServicioCliente/FacturaApi";
+import { getFacturaById, createPDFfactura, deleteFactura, getAllDataFactura } from "../../../apis/ApisServicioCliente/FacturaApi";
 import { getAllFormaPago } from "../../../apis/ApisServicioCliente/FormaPagoApi";
 import { getAllMetodopago } from "../../../apis/ApisServicioCliente/MetodoPagoApi";
 import { getOrdenTrabajoById } from "../../../apis/ApisServicioCliente/OrdenTrabajoApi"; // Asegúrate de tener esta función
 import { getCotizacionById } from "../../../apis/ApisServicioCliente/CotizacionApi"; // Asegúrate de tener esta función
-import { getTipoMonedaById } from "../../../apis/ApisServicioCliente/Moneda";
-import { getClienteById } from "../../../apis/ApisServicioCliente/ClienteApi";
 import { getEmpresaById } from "../../../apis/ApisServicioCliente/EmpresaApi";
 import { Api_Host } from "../../../apis/api";
 import PaymentCards from "../Facturacionjs/FacturaPagos"
 import { getAllFacturaPagos } from "../../../apis/ApisServicioCliente/FacturaPagosApi";
 //import axios from "axios";
-import { getAllOrdenesTrabajoServicio } from "../../../apis/ApisServicioCliente/OrdenTabajoServiciosApi";
-import { getAllCotizacionServicio } from "../../../apis/ApisServicioCliente/CotizacionServicioApi";
-import {getServicioById} from "../../../apis/ApisServicioCliente/ServiciosApi";
 import {  getAllfacturafacturama } from "../../../apis/ApisServicioCliente/FacturaFacturamaApi";
 import { getIvaById } from "../../../apis/ApisServicioCliente/ivaApi";
 import { getInfoSistema } from "../../../apis/ApisServicioCliente/InfoSistemaApi";
@@ -35,6 +30,7 @@ const DetallesFactura = () => {
   const [visibleCancelModal, setVisibleCancelModal] = useState(false);
   const [visiblePaymentModal, setVisiblePaymentModal] = useState(false);
   const [isModalVisibleCorreo, setIsModalVisibleCorreo] = useState(false);
+  const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
   const [moneda, setMoneda] = useState({ codigo: "", descripcion: "" });
   const [form] = Form.useForm();
   const [cliente, setCliente] = useState({});
@@ -139,9 +135,9 @@ const DetallesFactura = () => {
           setFactura(response.data);
           
           // Llamamos a fetchServicios pasando el ID de la orden de trabajo
-          fetchServicios(response.data.ordenTrabajo);
+          //fetchServicios(response.data.ordenTrabajo);
           
-          fetchMonedaInfo(response.data.ordenTrabajo);
+          //fetchMonedaInfo(response.data.ordenTrabajo);
         } else {
           console.error("La respuesta de la API no es un objeto:", response.data);
           setFactura(null);
@@ -182,41 +178,6 @@ const DetallesFactura = () => {
       }
     };
 
-    const fetchMonedaInfo = async (ordenTrabajoId) => {
-      try {
-        const ordenTrabajo = await getOrdenTrabajoById(ordenTrabajoId);
-        const cotizacion = await getCotizacionById(ordenTrabajo.data.cotizacion);
-        const tipoMoneda = await getTipoMonedaById(cotizacion.data.tipoMoneda);
-        setMoneda({ codigo: tipoMoneda.data.codigo, descripcion: tipoMoneda.data.descripcion });
-    
-        // Obtener el ID del cliente desde la cotización
-        setOrdenCodigo(ordenTrabajo.data.codigo);
-        const clienteId = cotizacion.data.cliente;
-        if (clienteId) {
-          fetchClienteInfo(clienteId); // Llamar a una función para obtener los datos del cliente
-        }
-      } catch (error) {
-        console.error("Error al obtener la información de la moneda:", error);
-      }
-    };
-
-    const fetchClienteInfo = async (clienteId) => {
-      try {
-        const response = await getClienteById(clienteId); // Asegúrate de tener esta función en tu API
-        if (response.data) {
-          setCliente(response.data); // Guardar los datos del cliente en el estado
-          //console.log(response.data);
-
-          // Obtener el ID de la empresa desde el cliente
-          const empresaId = response.data.empresa;
-          if (empresaId) {
-            fetchEmpresaInfo(empresaId); // Llamar a una función para obtener los datos de la empresa
-          }
-        }
-      } catch (error) {
-        console.error("Error al obtener la información del cliente:", error);
-      }
-    };
 
     const fetchEmpresaInfo = async (empresaId) => {
       try {
@@ -249,95 +210,59 @@ const DetallesFactura = () => {
     };
 
     // Obtener los servicios relacionados con la orden de trabajo
-    const fetchServicios = async (ordenTrabajoId) => {
-      setLoading(true);
-      try {
-        if (!ordenTrabajoId) {
-          console.error("❌ Error: ordenTrabajoId es undefined o null.");
-          return;
-        }
-    
-        // Obtener los registros de OrdenTrabajoServicios asociados a la orden
-        const ordenTrabajoServiciosResponse = await getAllOrdenesTrabajoServicio();
-        const ordenTrabajoServicios = ordenTrabajoServiciosResponse.data.filter(
-          (orden) => orden.ordenTrabajo === ordenTrabajoId
-        );
-    
-        if (ordenTrabajoServicios.length === 0) {
-          console.warn("⚠ No hay servicios asociados a esta orden de trabajo.");
-          setServicios([]);
-          return;
-        }
-    
-        // Obtener la orden de trabajo para extraer el ID de la cotización
-        const ordenResponse = await getOrdenTrabajoById(ordenTrabajoId);
-        const cotizacionId = ordenResponse.data?.cotizacion;
-    
-        // Obtener los registros de cotización de servicios (core_cotizacionservicio)
-        let cotizacionServiciosFiltrados = [];
-        if (cotizacionId) {
-          const cotizacionServicioResponse = await getAllCotizacionServicio();
-          cotizacionServiciosFiltrados = cotizacionServicioResponse.data.filter(
-            (cotiServ) => cotiServ.cotizacion === cotizacionId
-          );
-        }
-    
-        // Combinar la información: obtener detalles del servicio y sobrescribir el precio
-        const serviciosConDetalles = await Promise.all(
-          ordenTrabajoServicios.map(async (ordenServicio) => {
-            if (!ordenServicio.servicio) {
-              console.warn("⚠ ID de servicio no encontrado en:", ordenServicio);
-              return null;
-            }
-            try {
-              // Obtener detalles del servicio desde core_servicio (para el nombre, etc.)
-              const servicioResponse = await getServicioById(ordenServicio.servicio);
-              const servicioData = servicioResponse.data || {};
-    
-              // Buscar el precio definido en la cotización para este servicio
-              const cotizacionServicio = cotizacionServiciosFiltrados.find(
-                (cotiServ) => cotiServ.servicio === ordenServicio.servicio
-              );
-              const precioCotizacion = cotizacionServicio
-                ? cotizacionServicio.precio
-                : servicioData.precio || 0;
-    
-              return {
-                key: servicioData.id,
-                servicio: servicioData.nombreServicio || "Desconocido",
-                cantidad: ordenServicio.cantidad || 1,
-                precioUnitario: precioCotizacion,
-                total: precioCotizacion * (ordenServicio.cantidad || 1),
-              };
-            } catch (error) {
-              console.error(
-                `❌ Error obteniendo servicio con ID ${ordenServicio.servicio}:`,
-                error
-              );
-              return null;
-            }
-          })
-        );
-    
-        //console.log("✅ Servicios con detalles:", serviciosConDetalles.filter(Boolean));
-        setServicios(serviciosConDetalles.filter(Boolean));
-      } catch (error) {
-        console.error("❌ Error al obtener los servicios:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
+
     
     
     
     verificarFacturaFacturama()
-    fetchServicios();
     fetchFactura();
     fetchFormasPago();
     fetchMetodosPago();
     fetchTipoCambio();
   }, [id]);
+
+  useEffect(() => {
+    const fetchFacturaCompleta = async () => {
+      try {
+        setLoading(true);
+        const response = await getAllDataFactura(id);
+        const data = response.data;
+  
+        // Seteamos directamente los datos
+        setFactura(data); // puedes eliminar este estado si solo usas los campos individuales
+        setOrdenCodigo(data.codigoOrdenTrabajo);
+        setMoneda({ codigo: data.moneda.includes("USD") ? "USD" : "MXN", descripcion: data.moneda });
+        setCliente({
+          nombrePila: data.contacto.split(" ")[0],
+          apPaterno: data.contacto.split(" ")[1] || "",
+          correo: data.correo
+        });
+        setEmpresa({ nombre: data.empresa, rfc: data.rfc });
+        setServicios(
+          data.servicios.map(serv => ({
+            key: serv.servicioId,
+            servicio: serv.nombre,
+            cantidad: serv.cantidad,
+            precioUnitario: parseFloat(serv.precio),
+            total: parseFloat(serv.precio) * serv.cantidad,
+          }))
+        );
+  
+        setSubtotal(parseFloat(data.valores.subtotal));
+        setDescuento(parseFloat(data.valores.descuento));
+        setPorcentajeIVA(parseFloat(data.valores.iva));
+        setImporteTotal(parseFloat(data.valores.importe));
+      } catch (error) {
+        console.error("Error al obtener la factura completa:", error);
+        message.error("No se pudo cargar la información de la factura.");
+      } finally {
+        setLoading(false);
+      }
+    };
+  
+    fetchFacturaCompleta();
+  }, [id]);
+  
 
   useEffect(() => {
     if (factura.ordenTrabajo) {
@@ -596,6 +521,24 @@ const handDuoModal=()=>{
   setIsResultModalVisible(false)
 }
 
+const handleDeleteFactura = () => {
+  setIsDeleteModalVisible(true);
+};
+const confirmDeleteFactura = async () => {
+  try {
+    await deleteFactura(id);
+    message.success("Factura eliminada correctamente.");
+    setIsDeleteModalVisible(false);
+    navigate("/factura");
+  } catch (error) {
+    console.error("Error al eliminar la factura:", error);
+    message.error("No se pudo eliminar la factura.");
+  }
+};
+
+
+
+
   const menu = (
     <Menu>
       <Menu.Item key="1" onClick={() => showModalCorreo(true)} icon={<MailTwoTone />}>Enviar por correo</Menu.Item>
@@ -646,13 +589,23 @@ const montoRestante =hasPagos
                     <>
                     <Descriptions column={1}>
                       <Descriptions label="Folio">{id}</Descriptions>
-                    <Descriptions.Item label="Fecha">{factura.fechaExpedicion}</Descriptions.Item>
+                      <Descriptions.Item label="Fecha">
+                        {factura.fecha ? new Date(factura.fecha).toLocaleString("es-MX", {
+                          day: "2-digit",
+                          month: "2-digit",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit"
+                        }) : "N/A"}
+                      </Descriptions.Item>
                     <Descriptions.Item label="Forma de Pago">Tarjeta</Descriptions.Item>
                     <Descriptions.Item label="Método de Pago">Transferencia</Descriptions.Item>
                     <Descriptions.Item label="Moneda">
                       {moneda.codigo} - {moneda.descripcion}
                     </Descriptions.Item>
-                    <Descriptions.Item label="Orden de Compra">{factura.ordenCompra}</Descriptions.Item>
+                    <Descriptions.Item label="Orden de Compra">
+                      {factura.ordenCompra ? factura.ordenCompra : "No registrada"}
+                    </Descriptions.Item>
                   </Descriptions>
                     </>
                   </Col>
@@ -680,6 +633,11 @@ const montoRestante =hasPagos
                     style={{ marginTop: "20px" }}
                   >
                     Crear Factura
+                  </Button>
+                  <Button type="dashed" danger onClick={handleDeleteFactura} variant="solid"
+                    style={{ marginTop: "20px" }}
+                  >
+                    Eliminar Factura
                   </Button></Flex>
               ) : (
                 <div >
@@ -867,6 +825,22 @@ const montoRestante =hasPagos
       >
         <p>La factura ha sido cancelada. Serás redirigido al listado de facturas en 2 segundos...</p>
       </Modal>
+      <Modal
+        title="¿Estás seguro de eliminar esta factura?"
+        open={isDeleteModalVisible}
+        onCancel={() => setIsDeleteModalVisible(false)}
+        footer={[
+          <Button key="cancelar" onClick={() => setIsDeleteModalVisible(false)}>
+            Cancelar
+          </Button>,
+          <Button key="eliminar" type="primary" danger onClick={confirmDeleteFactura}>
+            Sí, eliminar
+          </Button>,
+        ]}
+      >
+        <p>Esta acción no se puede deshacer.</p>
+      </Modal>
+
             {/* 
         <Modal
           title={resultStatus === "success" ? "Éxito" : "Error"}

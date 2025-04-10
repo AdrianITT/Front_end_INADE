@@ -8,14 +8,14 @@ export const useCotizacionesColumns = () => {
   const columnsCotizaciones = useMemo(() => [
     {
       title: "Cotización",
-      dataIndex: "id",
-      key: "id",
+      dataIndex: "Cotización",
+      key: "Cotización",
       render: (text) => <span className="cotizacion-text">{text}</span>,
     },
     {
       title: "Empresa",
-      dataIndex: "empresa",
-      key: "empresa",
+      dataIndex: "Empresa",
+      key: "Empresa",
       render: (text, record) =>
         record.incompleto ? (
           <Link to="/empresa">
@@ -29,8 +29,8 @@ export const useCotizacionesColumns = () => {
     },
     {
       title: "Contacto",
-      dataIndex: "contacto",
-      key: "contacto",
+      dataIndex: "Contacto",
+      key: "Contacto",
       render: (text, record) =>
         record.incompleto ? (
           <Link to="/cliente">
@@ -44,23 +44,24 @@ export const useCotizacionesColumns = () => {
     },
     {
       title: "Solicitud",
-      dataIndex: "fechaSolicitud",
-      key: "fechaSolicitud",
+      dataIndex: "Solicitud",
+      key: "Solicitud",
       sorter: (a, b) => new Date(a.fechaCaducidad) - new Date(b.fechaCaducidad),
       sortDirections: ["ascend", "descend"],
     },
     {
       title: "Expiración",
-      dataIndex: "fechaCaducidad",
-      key: "fechaCaducidad",
+      dataIndex: "Expiración",
+      key: "Expiración",
       sorter: (a, b) => new Date(a.fechaCaducidad) - new Date(b.fechaCaducidad),
       sortDirections: ["ascend", "descend"],
     },
-    { title: "Moneda", dataIndex: "moneda", key: "moneda" },
+    { title: "Moneda", dataIndex: "Moneda", key: "Moneda", render: (moneda) => moneda?.codigo || "—", },
     {
       title: "Estado",
-      dataIndex: "estado",
-      key: "estado",
+      dataIndex: "Estado",
+      key: "Estado",
+      render : (estado)=> estado?.nombre||"",
       filterDropdown: ({ setSelectedKeys, selectedKeys, confirm }) => (
         <div style={{ padding: 8 }}>
           <Menu
@@ -77,13 +78,13 @@ export const useCotizacionesColumns = () => {
           </Menu>
         </div>
       ),
-      onFilter: (value, record) => value === "all" || record.estado === value,
+      onFilter: (value, record) => value === "all" || record.Estado?.nombre === value,
     },
     {
       title: "Acción",
       key: "action",
       render: (_, record) => (
-        <Link to={`/detalles_cotizaciones/${record.id}`}>
+        <Link to={`/detalles_cotizaciones/${record["Cotización"]}`}>
           <Button type="primary" className="detalles-button">
             Detalles
           </Button>

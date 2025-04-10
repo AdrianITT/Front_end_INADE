@@ -3,7 +3,7 @@ import { Table, Button, Space, message, Input } from "antd";
 import { Link } from "react-router-dom";
 import { FileTwoTone, PlusOutlined, SearchOutlined} from "@ant-design/icons";
 import "./PrecotizacionData.css";
-import { getAllPrecotizacion } from "../../../apis/ApisServicioCliente/precotizacionApi";
+import { getAllPrecotizacion, getAllPrecotizacionByOrganizacion} from "../../../apis/ApisServicioCliente/precotizacionApi";
 import {getAllEstado} from "../../../apis/ApisServicioCliente/EstadoApi";
 
 const PreCotizacionData = () => { 
@@ -29,18 +29,17 @@ const PreCotizacionData = () => {
         setEstados(estadosMap);
 
         // 🔹 Obtener pre-cotizaciones
-        const response = await getAllPrecotizacion();
-        const filteredPreCotizaciones = response.data.filter(
-          (item) => item.organizacion === organizationId &&
-            (item.estado !== 7 || item.estado !== 8) // 🔹 Filtrar pre-cotizaciones canceladas o rechazadas
-        );
-
+        const response = await getAllPrecotizacionByOrganizacion(organizationId);
+        console.log("Pre-Cotizaciones:", response.data);
+        // 🔸 Filtrar si necesitas excluir los estados 7 y 8:
+        const filteredPreCotizaciones = response.data;       
+        console.log("Filtered Pre-Cotizaciones:", filteredPreCotizaciones);
         const data = filteredPreCotizaciones.map((item) => ({
-          key: item.id,
-          id: item.id,
-          cliente: `${item.nombreCliente} ${item.apellidoCliente}`,
+          key: item.precotizacionId,
+          id: item.precotizacionId,
+          cliente: item.nombreCliente,
           empresa: item.nombreEmpresa,
-          estado: estadosMap[item.estado] || "Desconocido", // 🔹 Mostrar nombre del estado
+          estado: item.estado.nombre || "Desconocido",
         }));
 
         setPreCotizaciones(data);

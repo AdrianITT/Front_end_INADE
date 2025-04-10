@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./Crearcotizacion.css";
-import { Form, Input, Button, Row, Col, Select, Checkbox, Divider, message, DatePicker, Card, Modal,Result, InputNumber} from "antd";
+import { Form, Input, Button, Row, Col, Select, Checkbox, Divider, message, DatePicker, Card, Modal,Result, InputNumber } from "antd";
 import dayjs from "dayjs";
 import { useParams, useNavigate } from "react-router-dom";
 import { getClienteById } from "../../../apis/ApisServicioCliente/ClienteApi";
@@ -39,6 +39,8 @@ const RegistroCotizacion = () => {
   const [isNuevoServicioModalVisible, setIsNuevoServicioModalVisible] = useState(false);
   const [isSuccessModalVisible, setIsSuccessModalVisible] = useState(false);
   const [isModalOpenMetodos, setIsModalOpenMetodos] = useState(false);
+  const [isConfirmModalVisible, setIsConfirmModalVisible] = useState(false);
+  const [cotizacionDataPreview, setCotizacionDataPreview] = useState(null);
   const [successMessage, setSuccessMessage] = useState(""); // Mensaje dinámico
   const [unidad, setUnidad] = useState([]);
   const [clavecdfi, setClavecdfi] = useState([]);
@@ -65,7 +67,7 @@ const RegistroCotizacion = () => {
   const fetchServicios = async () => {
     try {
       const response = await getAllServicio();
-      //console.log("Servicios recibidos:", response.data);
+      console.log("Servicios recibidos:", response.data);
       // Filtra los que no tengan `id`
       const validServices = Array.isArray(response.data)
         ? response.data.filter(s => s && s.id)
@@ -186,6 +188,7 @@ const RegistroCotizacion = () => {
         concepto.id === conceptoId ? {
           ...concepto,
           servicio: servicioSeleccionado.id,
+          metodoCodigo: servicioSeleccionado.metodos,
           precio: servicioSeleccionado.precio || 0,
           precioFinal: concepto.precioFinal || servicioSeleccionado.precio || 0, // ✅ Si no hay un precio final, usa el sugerido
         } : concepto
@@ -236,6 +239,7 @@ const RegistroCotizacion = () => {
   const handleSubmit = async () => {
     try {
       await form.validateFields();
+  
       const cotizacionData = {
         fechaSolicitud: dayjs(fechaSolicitada).format("YYYY-MM-DD"),
         fechaCaducidad: dayjs(fechaCaducidad).format("YYYY-MM-DD"),
@@ -246,11 +250,18 @@ const RegistroCotizacion = () => {
         descuento: descuento,
         tipoMoneda: tipoMonedaSeleccionada,
       };
-
-      const cotizacionResponse = await createCotizacion(cotizacionData);
-      setIsModalVisible(true);
-
+  
+      setCotizacionDataPreview(cotizacionData);
+      setIsConfirmModalVisible(true);
+    } catch (error) {
+      message.error("Por favor completa todos los campos requeridos.");
+    }
+  };
+  const handleConfirmCreate = async () => {
+    try {
+      const cotizacionResponse = await createCotizacion(cotizacionDataPreview);
       const cotizacionId = cotizacionResponse.data.id;
+  
       const conceptosPromises = conceptos.map((concepto) => {
         const conceptoData = {
           descripcion: concepto.descripcion,
@@ -261,17 +272,25 @@ const RegistroCotizacion = () => {
         };
         return createCotizacionServicio(conceptoData);
       });
+  
       await Promise.all(conceptosPromises);
+      message.success("Cotización creada correctamente");
+      setIsConfirmModalVisible(false);
+      setIsModalVisible(true);
+
+      // Redirige o limpia si deseas
     } catch (error) {
       console.error("Error al crear la cotización", error);
       message.error("Error al crear la cotización");
     }
   };
+  
+  
 
   const handleCancelMetodos = () => {
     setIsModalOpenMetodos(false);
   };
-    const handleOkMetodos = async () => {
+  const handleOkMetodos = async () => {
       try {
         // Recoger los datos del formulario (lo que el usuario ha ingresado)
         const values = await formMetodo.validateFields(); // Usando Antd form.validateFields para obtener los valores
@@ -403,92 +422,101 @@ const RegistroCotizacion = () => {
         <div key={concepto.id}>
           <Card>
             <h3>Concepto {concepto.id}</h3>
+
             <Row justify="end">
-              <div>
-                <Checkbox onChange={() => handleRemoveConcepto(concepto.id)}>
-                  Eliminar
-                </Checkbox>
-              </div>
+              <Col>
+                <Checkbox onChange={() => handleRemoveConcepto(concepto.id)}>Eliminar</Checkbox>
+              </Col>
             </Row>
+
             <Row gutter={16}>
               <Col span={12}>
-              <Form.Item
-                label="Servicio"
-                name={['conceptos', index, 'servicio']}
-                rules={[{ required: true, message: 'Por favor selecciona el servicio.' }]}
-              >
-                <Select
-                  showSearch
-                  placeholder="Selecciona un servicio"
-                  style={{ width: '100%' }}
-                  value={concepto.servicio || undefined}
-                  onChange={(value) => handleServicioChange(concepto.id, value)}
+                <Form.Item
+                  label="Servicio"
+                  name={['conceptos', index, 'servicio']}
+                  rules={[{ required: true, message: 'Por favor selecciona el servicio.' }]}
                 >
-                  {servicios.map(serv => (
-                    <Select.Option key={serv.id} value={serv.id}>
-                      {serv.nombreServicio}
-                    </Select.Option>
-                  ))}
-                </Select>
-              </Form.Item>
-
-
+                  <Select
+                    showSearch
+                    placeholder="Selecciona un servicio"
+                    value={concepto.servicio || undefined}
+                    onChange={(value) => handleServicioChange(concepto.id, value)}
+                  >
+                    {servicios.map(serv => (
+                      <Select.Option key={serv.id} value={serv.id}>
+                        {serv.nombreServicio}
+                      </Select.Option>
+                    ))}
+                  </Select>
+                </Form.Item>
               </Col>
+
               <Col span={12}>
+                <Form.Item label="Método Relacionado">
+                  <Input
+                    value={
+                      metodos.find((m) => m.id === concepto.metodoCodigo)?.codigo || "No asignado"
+                    }
+                    disabled
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
+
+            <Row gutter={16}>
+              <Col span={8}>
                 <Form.Item
                   label="Cantidad de servicios"
                   rules={[{ required: true, message: 'Por favor ingresa la cantidad.' }]}
                 >
                   <InputNumber
-                    //type="number"
-                    min="1"
+                    min={1}
                     value={concepto.cantidad}
                     onChange={(value) => handleInputChange(concepto.id, "cantidad", value)}
+                    style={{ width: "100%" }}
                   />
                 </Form.Item>
               </Col>
-            </Row>
-            <Row gutter={16}>
-              <Col span={12}>
+
+              <Col span={8}>
                 <Form.Item
                   label="Precio sugerido"
                   rules={[{ required: true, message: 'Por favor ingresa el precio.' }]}
                 >
                   <Input
-                    disabled={true}
-                    //type="number"
-                    min="0"
+                    disabled
                     value={concepto.precio}
                   />
                 </Form.Item>
               </Col>
-              <Col span={12}>
+
+              <Col span={8}>
+                <Form.Item
+                  label="Precio final"
+                  rules={[{ required: true, message: 'Por favor ingresa el precio final.' }]}
+                >
+                  <InputNumber
+                    min={0}
+                    value={concepto.precioFinal}
+                    onChange={(value) => handleInputChange(concepto.id, "precioFinal", value)}
+                    style={{ width: "100%" }}
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
+
+            <Row>
+              <Col span={24}>
                 <Form.Item
                   label="Notas"
                   name={['conceptos', index, 'descripcion']}
-                  rules={[{ required: true, message: 'Por favor ingresa la descripcion.' }]}
+                  rules={[{ required: true, message: 'Por favor ingresa la descripción.' }]}
                 >
                   <TextArea
                     rows={2}
                     value={concepto.descripcion}
                     onChange={(e) => handleInputChange(concepto.id, "descripcion", e.target.value)}
-                    placeholder="Notas que aparecerán al final de la cotización (Opcional)"
-                  />
-                </Form.Item>
-              </Col>
-            </Row>
-            <Row gutter={16}>
-              <Col span={12}>
-                <Form.Item
-                  label="Precio final"
-
-                  rules={[{ required: true, message: 'Por favor ingresa el precio.' }]}
-                >
-                  <InputNumber
-                    //type="number"
-                    min="0"
-                    value={concepto.precioFinal}
-                    onChange={(value) => handleInputChange(concepto.id, "precioFinal", value)}
+                    placeholder="Notas que aparecerán al final de la cotización (opcional)"
                   />
                 </Form.Item>
               </Col>
@@ -502,6 +530,7 @@ const RegistroCotizacion = () => {
             </Button>
           </div>
         
+          <center>
 
         <div className="cotizacion-totals-buttons">
           <div className="cotizacion-totals">
@@ -518,6 +547,7 @@ const RegistroCotizacion = () => {
             </div>
           </div>
         </div>
+          </center>
       </Form>
 
       <Modal
@@ -740,6 +770,26 @@ const RegistroCotizacion = () => {
       >
           <p style={{ textAlign: "center", fontSize: "16px" }}>{successMessage}</p>
       </Modal>
+      <Modal
+  title="Confirmar creación de cotización"
+  open={isConfirmModalVisible}
+  onOk={handleConfirmCreate}
+  onCancel={() => setIsConfirmModalVisible(false)}
+  okText="Crear"
+  cancelText="Cancelar"
+>
+  <p>¿Estás seguro de crear esta cotización?</p>
+  {cotizacionDataPreview && (
+    <>
+      <p><strong>Cliente:</strong> {clienteData.nombre}</p>
+      <p><strong>Fecha Solicitud:</strong> {cotizacionDataPreview.fechaSolicitud}</p>
+      <p><strong>Fecha Caducidad:</strong> {cotizacionDataPreview.fechaCaducidad}</p>
+      <p><strong>Moneda:</strong> {tipoMonedaSeleccionada === 2 ? "USD" : "MXN"}</p>
+      <p><strong>Descuento:</strong> {cotizacionDataPreview.descuento}%</p>
+      <p><strong>IVA:</strong> {ivasData.find(iva => iva.id === ivaSeleccionado)?.porcentaje || 16}%</p>
+    </>
+  )}
+</Modal>
 
 
     </div>

@@ -13,5 +13,15 @@ export const updateCotizacionServicio = async (id, data) => {
     throw error;
   }
 };
+//.patch
+export const updateCotizacionServicioT = async (id, data) => {
+  try {
+    const response = await Api_Host.patch(`/cotizacionservicio/${id}/`, data);
+    return response.data;
+  } catch (error) {
+    console.error("Error en updateCotizacionServicio:", error.response?.data || error.message);
+    throw error;
+  }
+};
 
 export const deleteCotizacionServicio = (id) => Api_Host.delete(`/cotizacionservicio/${id}/`);

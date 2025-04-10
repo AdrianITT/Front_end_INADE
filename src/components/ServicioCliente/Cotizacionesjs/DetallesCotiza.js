@@ -46,20 +46,18 @@ const CotizacionDetalles = () => {
     }
   };
 
-  const updateEstadoCotizacion=async (nuevoEstado)=>{
-    try{
-      const cotizacionData = {
-        ...cotizacionInfo,  // Mantén el resto de los datos intactos
-        estado: nuevoEstado,  // Actualiza solo el estado
-      };
-      const response = await updateCotizacion(cotizacionInfo.id, cotizacionData); // Enviar la actualización al backend
-      setCotizacionInfo(response.data);  // Actualiza el estado en el frontend
+  const updateEstadoCotizacion = async (nuevoEstado) => {
+    try {
+      const response = await updateCotizacion(id, { estado: nuevoEstado });
+      setCotizacionInfo(response.data);
       refetch();
-    }catch(error){
+      message.success("Estado actualizado correctamente");
+    } catch (error) {
       console.error("Error al actualizar el estado de la cotización", error);
       message.error("Error al actualizar el estado de la cotización");
     }
-  }
+  };
+  
 
   //ENVIAR CORREO
   const handleSendEmail = async () => {
@@ -119,7 +117,7 @@ const CotizacionDetalles = () => {
       <Menu.Item key="1" icon={<MailTwoTone />} onClick={() => setIsModalVisible(true)}>
         Enviar por correo
       </Menu.Item>
-      <Menu.Item key="3" icon={<EditTwoTone />} onClick={() => navigate(`/EditarCotizacion/${cotizacionInfo?.id}`)}>
+      <Menu.Item key="3" icon={<EditTwoTone />} onClick={() => navigate(`/EditarCotizacion/${id}`)}>
         Editar
       </Menu.Item>
       <Menu.Item key="4" icon={<CheckCircleTwoTone />} onClick={() => {  updateEstadoCotizacion(2) }}>

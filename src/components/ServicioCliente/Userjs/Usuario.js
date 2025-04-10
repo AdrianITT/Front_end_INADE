@@ -230,6 +230,7 @@ const Usuario = () => {
               >
                 <Input placeholder="Correo electrónico" />
               </Form.Item>
+              
             </Col>
             <Col span={12}>
               <Form.Item

@@ -344,6 +344,12 @@ const Cliente = () => {
               <Form.Item label="Fax:" name="fax">
                 <Input placeholder="Fax" />
               </Form.Item>
+              <Form.Item
+                label="Sub - Division"
+                name="SubDivision"
+              >
+                <Input placeholder="subDivision" />
+              </Form.Item>
             </Col>
           </Row>
           <Row gutter={30}>
