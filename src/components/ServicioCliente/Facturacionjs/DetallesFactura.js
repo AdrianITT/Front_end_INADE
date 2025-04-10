@@ -128,25 +128,7 @@ const DetallesFactura = () => {
         console.error("Error al obtener el tipo de cambio del dólar", error);
       }
     };
-    const fetchFactura = async () => {
-      try {
-        const response = await getFacturaById(id);
-        if (response.data && typeof response.data === "object") {
-          setFactura(response.data);
-          
-          // Llamamos a fetchServicios pasando el ID de la orden de trabajo
-          //fetchServicios(response.data.ordenTrabajo);
-          
-          //fetchMonedaInfo(response.data.ordenTrabajo);
-        } else {
-          console.error("La respuesta de la API no es un objeto:", response.data);
-          setFactura(null);
-        }
-      } catch (error) {
-        console.error("Error al obtener la factura:", error);
-        setFactura(null);
-      }
-    };
+
 
     
 
@@ -191,33 +173,11 @@ const DetallesFactura = () => {
       }
     }
 
-    const fetchFormasPago = async () => {
-      try {
-        const response = await getAllFormaPago();
-        setFormasPago(response.data);
-      } catch (error) {
-        console.error("Error al obtener formas de pago:", error);
-      }
-    };
-
-    const fetchMetodosPago = async () => {
-      try {
-        const response = await getAllMetodopago();
-        setMetodosPago(response.data);
-      } catch (error) {
-        console.error("Error al obtener métodos de pago:", error);
-      }
-    };
-
     // Obtener los servicios relacionados con la orden de trabajo
-
-    
     
     
     verificarFacturaFacturama()
-    fetchFactura();
-    fetchFormasPago();
-    fetchMetodosPago();
+
     fetchTipoCambio();
   }, [id]);
 
@@ -227,7 +187,7 @@ const DetallesFactura = () => {
         setLoading(true);
         const response = await getAllDataFactura(id);
         const data = response.data;
-  
+        console.log("Datos de la factura completa:", data);
         // Seteamos directamente los datos
         setFactura(data); // puedes eliminar este estado si solo usas los campos individuales
         setOrdenCodigo(data.codigoOrdenTrabajo);
@@ -264,62 +224,9 @@ const DetallesFactura = () => {
   }, [id]);
   
 
-  useEffect(() => {
-    if (factura.ordenTrabajo) {
-      fetchCotizacionDetalles(factura.ordenTrabajo);
-    }
-  }, [factura]);
-  
-  useEffect(() => {
-    calcularTotales();
-  }, [subtotal, descuento, porcentajeIVA, servicios]);
 
+  
 
-  const fetchCotizacionDetalles = async (ordenTrabajoId) => {
-    try {
-      if (!ordenTrabajoId) return;
-  
-      // Obtener la orden de trabajo
-      const ordenTrabajoResponse = await getOrdenTrabajoById(ordenTrabajoId);
-      const cotizacionId = ordenTrabajoResponse.data?.cotizacion;
-  
-      if (!cotizacionId) {
-        console.warn("⚠ No se encontró ID de cotización.");
-        return;
-      }
-  
-      // Obtener los detalles de la cotización
-      const cotizacionResponse = await getCotizacionById(cotizacionId);
-      const descuentoCotizacion = cotizacionResponse.data?.descuento || 0;
-      const ivaId = cotizacionResponse.data?.iva;
-  
-      setDescuento(descuentoCotizacion); // Guardamos el porcentaje de descuento
-  
-      if (!ivaId) {
-        console.warn("⚠ No se encontró ID de IVA en la cotización.");
-        return;
-      }
-  
-      // Obtener el porcentaje del IVA
-      const ivaResponse = await getIvaById(ivaId);
-      //console.log("iva: ",ivaResponse);
-      const porcentajeIvaCotizacion = ivaResponse.data?.porcentaje || 0;
-  
-      setPorcentajeIVA(porcentajeIvaCotizacion); // Guardamos el porcentaje de IVA
-    } catch (error) {
-      console.error("❌ Error al obtener los detalles de la cotización:", error);
-    }
-  };
-  
-  const calcularTotales = () => {
-    
-    const subtotalServicios = servicios.reduce((total, servicio) => total + servicio.total, 0);
-    setSubtotal(subtotalServicios);
-  
-    const subtotalConDescuento = subtotalServicios - (subtotalServicios * descuento / 100);
-    const ivaTotal = subtotalConDescuento * (porcentajeIVA );
-    setImporteTotal(subtotalConDescuento + ivaTotal);
-  };
 
 
   const showModalCorreo = () => {
@@ -598,10 +505,10 @@ const montoRestante =hasPagos
                           minute: "2-digit"
                         }) : "N/A"}
                       </Descriptions.Item>
-                    <Descriptions.Item label="Forma de Pago">Tarjeta</Descriptions.Item>
-                    <Descriptions.Item label="Método de Pago">Transferencia</Descriptions.Item>
+                    <Descriptions.Item label="Forma de Pago">{factura.formaPago}</Descriptions.Item>
+                    <Descriptions.Item label="Método de Pago">{factura.metodoPago}</Descriptions.Item>
                     <Descriptions.Item label="Moneda">
-                      {moneda.codigo} - {moneda.descripcion}
+                      {moneda.descripcion}
                     </Descriptions.Item>
                     <Descriptions.Item label="Orden de Compra">
                       {factura.ordenCompra ? factura.ordenCompra : "No registrada"}

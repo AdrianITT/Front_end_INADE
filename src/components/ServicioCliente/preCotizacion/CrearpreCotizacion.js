@@ -7,7 +7,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { getAllTipoMoneda } from "../../../apis/ApisServicioCliente/Moneda";
 import { getAllIva } from "../../../apis/ApisServicioCliente/ivaApi";
 import { getAllServicio } from "../../../apis/ApisServicioCliente/ServiciosApi";
-import { createPreCotizacion } from "../../../apis/ApisServicioCliente/precotizacionApi";
+import { createPreCotizacion, getAllDataPrecotizacion  } from "../../../apis/ApisServicioCliente/precotizacionApi";
 import { createServicioPreCotizacion } from "../../../apis/ApisServicioCliente/ServiciosPrecotizacionApi";
 import { getInfoSistema } from "../../../apis/ApisServicioCliente/InfoSistemaApi";
 import { getAllEmpresas } from "../../../apis/ApisServicioCliente/EmpresaApi";
