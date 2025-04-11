@@ -110,6 +110,11 @@ const Generarorden = () => {
       ),
     },
   ], [searchText]);
+
+  const sortedData = useMemo(() => {
+    return [...filteredData].sort((a, b) => a.orden - b.orden);
+  }, [filteredData]);
+  
   
 
   return (
@@ -139,7 +144,7 @@ const Generarorden = () => {
           <Table
             rowKey="id"
             className="generarorden-table"
-            dataSource={filteredData}
+            dataSource={sortedData}
             columns={columns}
             bordered
             pagination={{

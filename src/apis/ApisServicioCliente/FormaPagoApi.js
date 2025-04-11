@@ -10,3 +10,5 @@ export const deleteFormaPago = (id) => Api_Host.delete(`/formapago/${id}/`);
 export const updateFormaPago = async (id, data) => Api_Host.put(`/formapago/${id}/`, data);
 
 export const getFormaPagoById = async (id) => Api_Host.get(`/formapago/${id}/`);
+
+export const getFormaPagoByOrganizacionId = async (id) => Api_Host.get(`/clienteConFactura/${id}`);

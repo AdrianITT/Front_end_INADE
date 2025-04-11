@@ -10,6 +10,8 @@ export const useCotizacionesColumns = () => {
       title: "Cotización",
       dataIndex: "Cotización",
       key: "Cotización",
+      sorter: (a, b) => parseInt(a["Cotización"]) - parseInt(b["Cotización"]),
+      defaultSortOrder: "ascend",
       render: (text) => <span className="cotizacion-text">{text}</span>,
     },
     {

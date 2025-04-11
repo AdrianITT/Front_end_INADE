@@ -46,6 +46,11 @@ const Cotizar = () => {
     [filteredData, cotizaciones]
   );
 
+  const sortedDataSource = [...dataSource].sort((a, b) => {
+    return parseInt(a["Cotización"]) - parseInt(b["Cotización"]);
+  });
+  
+
   return (
     <div className="cotizar-container">
       <center>
@@ -79,7 +84,7 @@ const Cotizar = () => {
         <>
           <Table
             className="cotizar-table"
-            dataSource={dataSource}
+            dataSource={sortedDataSource}
             columns={columnsCotizaciones}
             rowClassName={(record) => (record.incompleto ? "row-incompleto" : "")}
             bordered

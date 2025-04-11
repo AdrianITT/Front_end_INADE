@@ -40,11 +40,6 @@ const Pagos = () => {
   // Definición de columnas de la tabla usando el diccionario
   const columns = [
     {
-      title: diccionario.columnas.idFactura,
-      dataIndex: "factura",
-      key: "factura",
-    },
-    {
       title: diccionario.columnas.idComprobantePago,
       dataIndex: "comprobantepago",
       key: "comprobantepago",
@@ -57,6 +52,11 @@ const Pagos = () => {
       onFilter: (value, record) => record.comprobantepago === value,
       // 3) Activa la barra de búsqueda dentro del menú
       filterSearch: true,
+    },
+    {
+      title: diccionario.columnas.idFactura,
+      dataIndex: "factura",
+      key: "factura",
     },
     {
       title: diccionario.columnas.fechaPago,
