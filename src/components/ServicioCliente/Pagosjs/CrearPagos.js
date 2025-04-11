@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Card, Select, Input, Button, Row, Col, Form, DatePicker, message, Modal, Checkbox } from 'antd';
 import { getAllFactura } from '../../../apis/ApisServicioCliente/FacturaApi';
-import { getAllFormaPago } from '../../../apis/ApisServicioCliente/FormaPagoApi';
+import { getAllFormaPago, getFormaPagoByOrganizacionId} from '../../../apis/ApisServicioCliente/FormaPagoApi';
 import { getAllEmpresas } from '../../../apis/ApisServicioCliente/EmpresaApi';
 import { getAllCliente } from '../../../apis/ApisServicioCliente/ClienteApi';
 import { getAllCotizacion, getCotizacionById} from '../../../apis/ApisServicioCliente/CotizacionApi';
@@ -86,7 +86,7 @@ const [comprobantesData, setComprobantesData] = useState([]);
     const fetchClientes = async () => {
       setLoadingClientes(true);
       try {
-        const response = await getAllCliente();
+        const response = await getFormaPagoByOrganizacionId(organizationId);
         setClientesData(response.data);
       } catch (error) {
         console.error("Error al obtener clientes:", error);
@@ -504,8 +504,8 @@ const handleRemoveConcepto = (facturaId, e) => {
           dropdownStyle={{ borderRadius: 8 }} // Estilo para el menú desplegable
         >
           {clientesData.map((cliente) => (
-            <Option key={cliente.id} value={cliente.id}>
-              {cliente.nombrePila} {cliente.apPaterno} {cliente.apMaterno}
+            <Option key={cliente.cliente_id} value={cliente.cliente_id}>
+              {cliente.nombreCompleto} 
             </Option>
           ))}
         </Select>

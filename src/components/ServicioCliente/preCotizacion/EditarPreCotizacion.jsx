@@ -22,6 +22,7 @@ import { getAllDataPrecotizacion } from "../../../apis/ApisServicioCliente/preco
 import {updateServicioPreCotizacionById, deleteServicioPreCotizacionById, createServicioPreCotizacion} from "../../../apis/ApisServicioCliente/ServiciosPrecotizacionApi";
 import { getAllTipoMoneda } from "../../../apis/ApisServicioCliente/Moneda";
 import { getAllIva } from "../../../apis/ApisServicioCliente/ivaApi";
+import { updatePrecotizacion  } from "../../../apis/ApisServicioCliente/precotizacionApi";
 
 
 const EditarPreCotizacion = () => {
@@ -44,7 +45,9 @@ const EditarPreCotizacion = () => {
   const [descuento, setDescuento] = useState(0);
   const [tiposMonedaData, setTiposMonedaData] = useState([]);
   const [ivasData, setIvasData] = useState([]);
-
+  const [serviciosEliminados, setServiciosEliminados] = useState([]);
+  // Obtener el ID de la organización del usuario desde el local storage
+  const organizationId = parseInt(localStorage.getItem("organizacion_id"), 10);
 
   useEffect(() => {
     const fetchPrecotizacionData = async () => {
@@ -133,39 +136,6 @@ const EditarPreCotizacion = () => {
     updatedServices[fieldIndex] = { ...updatedServices[fieldIndex], [fieldName]: value };
     form.setFieldsValue({ servicios: updatedServices });
   };
-/*
-  const onFinish = async (values) => {
-    setLoading(true);
-    try {
-      const servicios = values.servicios || [];
-      console.log("Servicios a actualizar:", servicios);
-      // Validación opcional
-      if (servicios.length === 0) {
-        message.warning("No hay servicios para actualizar.");
-        return;
-      }
-  
-      // Promesas para actualizar cada servicio
-      const updatePromises = servicios.map((serv) =>
-        updateServicioPreCotizacionById(serv.id, {
-          precio: serv.precio,
-          cantidad: serv.cantidad,
-          descripcion: serv.descripcion,
-        })
-      );
-      console.log("Update promises:", updatePromises);
-      await Promise.allSettled(updatePromises);
-  
-      message.success("Servicios actualizados correctamente");
-      navigate(`/preCotizacionDetalles/${id}`); // Redirige si es necesario
-    } catch (error) {
-      console.error("Error al actualizar los servicios:", error);
-      message.error("Ocurrió un error al actualizar los servicios");
-    } finally {
-      setLoading(false);
-    }
-  };
-   */
 
   const onFinish = async (values) => {
     setLoading(true);
@@ -174,16 +144,36 @@ const EditarPreCotizacion = () => {
   
       const serviciosOriginales = form.getFieldValue("servicios") || [];
       const serviciosGuardados = serviciosOriginales.map((s) => s.id);
+      console.log("Servicios guardados:", serviciosGuardados);
+      const eliminados = serviciosEliminados;
+
+
   
       const nuevos = serviciosForm.filter((s) => !s.id);
       const existentes = serviciosForm.filter((s) => s.id && serviciosGuardados.includes(s.id));
-      const eliminados = serviciosGuardados.filter(
-        (idOriginal) => !serviciosForm.some((s) => s.id === idOriginal)
-      );
+
+      const monedaSeleccionada = tiposMonedaData.find((m) => m.id === tipoMonedaSeleccionada)
+      //const serviciosSeleccionados = serviciosForm.map((s) => s.servicio);
   
       console.log("Nuevos:", nuevos);
       console.log("Existentes:", existentes);
       console.log("Eliminados:", eliminados);
+      // Actualizar datos generales de la precotización
+      await updatePrecotizacion(id, {
+        nombreCliente: values.nombre,
+        apellidoCliente: values.apellido,
+        correo: values.correo,
+        nombreEmpresa: values.empresa,
+        tipoMoneda: tipoMonedaSeleccionada,
+        iva: ivaSeleccionado,
+        descuento: descuento,
+        fechaSolicitud: dayjs(fechaSolicitada).format("YYYY-MM-DD"),
+        fechaCaducidad: dayjs(fechaCaducidad).format("YYYY-MM-DD"),
+        organizacion: organizationId, // si la organización no cambia, puedes dejarla fija
+        estado: 8, // igual si ya lo tienes por default
+        denominacion:monedaSeleccionada.codigo,
+      });
+
   
       // Actualizar datos generales de la precotización (si tienes un endpoint tipo updatePrecotizacionById)
       // await updatePrecotizacionById(id, {
@@ -203,13 +193,15 @@ const EditarPreCotizacion = () => {
       // Crear nuevos servicios (si tienes un endpoint tipo createServicioPrecotizacion)
       const createPromises = nuevos.map((serv) =>
         createServicioPreCotizacion({
-          precotizacionId: id,
-          servicioId: serv.servicio,
+          //precotizacionId: id,
+          servicio: serv.servicio,
           cantidad: serv.cantidad,
           precio: serv.precio,
           descripcion: serv.descripcion,
+          preCotizacion: id,
         })
       );
+      console.log("Create promises:", createPromises);
   
       // Eliminar servicios (si tienes un endpoint tipo deleteServicioPreCotizacionById)
       const deletePromises = eliminados.map((idServicio) =>
@@ -386,7 +378,20 @@ const EditarPreCotizacion = () => {
                       boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
                     }}
                   >
-                    <Button danger onClick={() => remove(field.name)}>
+                    <Button
+                      danger
+                      onClick={() => {
+                        const current = form.getFieldValue("servicios") || [];
+                        const servicio = current[field.name];
+
+                        if (servicio?.id) {
+                          // Agregar a lista de eliminados antes de remover
+                          setServiciosEliminados((prev) => [...prev, servicio.id]);
+                        }
+
+                        remove(field.name);
+                      }}
+                    >
                       Eliminar
                     </Button>
                     <Row gutter={16}>
