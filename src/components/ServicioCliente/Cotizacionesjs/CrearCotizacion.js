@@ -469,7 +469,7 @@ const RegistroCotizacion = () => {
                   label="Cantidad de servicios"
                   rules={[{ required: true, message: 'Por favor ingresa la cantidad.' }]}
                 >
-                  <InputNumber
+                  <Input
                     min={1}
                     value={concepto.cantidad}
                     onChange={(value) => handleInputChange(concepto.id, "cantidad", value)}
@@ -495,7 +495,7 @@ const RegistroCotizacion = () => {
                   label="Precio final"
                   rules={[{ required: true, message: 'Por favor ingresa el precio final.' }]}
                 >
-                  <InputNumber
+                  <Input
                     min={0}
                     value={concepto.precioFinal}
                     onChange={(value) => handleInputChange(concepto.id, "precioFinal", value)}

@@ -368,7 +368,7 @@ const receptorSeleccionado = receptor.find(r => r.id === ordenFormValues?.recept
                     initialValue={servicio.cantidad}
                   >
                     <Input
-                      type="number"
+                      
                       min="1"
                       onChange={(e) => handleInputChange(index, "cantidad", parseFloat(e.target.value))}
                     />
@@ -452,14 +452,12 @@ const receptorSeleccionado = receptor.find(r => r.id === ordenFormValues?.recept
             <Form.Item
               name="correo"
               label="Correo Electrónico"
-              rules={[{ required: true, type: 'email', message: 'Por favor ingrese un correo válido' }]}
             >
               <Input placeholder="Correo electrónico" />
             </Form.Item>
           <Form.Item
             label="Celular:"
             name="celular"
-            rules={[{ required: true, message: "Por favor ingrese el número de celular" }]}
           >
             <Input placeholder="Celular" />
           </Form.Item>
