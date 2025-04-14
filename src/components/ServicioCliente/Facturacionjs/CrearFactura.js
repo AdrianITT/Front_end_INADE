@@ -2,23 +2,14 @@ import React, {useState, useEffect} from "react";
 import { Form, Input, Button, Select, Row, Col,DatePicker, message, Table } from "antd";
 import { useParams, useNavigate } from "react-router-dom";
 import "./crearfactura.css";
+import { NumericInput } from "../../NumericInput/NumericInput";
 import { getAllTipoCDFI } from "../../../apis/ApisServicioCliente/TipoCFDIApi";
 import { getAllFormaPago } from "../../../apis/ApisServicioCliente/FormaPagoApi";
 import { getAllMetodopago } from "../../../apis/ApisServicioCliente/MetodoPagoApi";
 import { getAllServicio } from "../../../apis/ApisServicioCliente/ServiciosApi";
-import { getAllOrdenesTrabajoServicio } from "../../../apis/ApisServicioCliente/OrdenTabajoServiciosApi";
-import { getAllCotizacionServicio } from "../../../apis/ApisServicioCliente/CotizacionServicioApi";
-import { getAllEmpresas } from "../../../apis/ApisServicioCliente/EmpresaApi";
-import { getAllOrganizacion } from "../../../apis/ApisServicioCliente/organizacionapi";
 import { getAllCSD } from "../../../apis/ApisServicioCliente/csdApi";
-import { getAllOrdenesTrabajo } from "../../../apis/ApisServicioCliente/OrdenTrabajoApi";
-import { getAllCotizacion } from "../../../apis/ApisServicioCliente/CotizacionApi";
-import { getAllIva } from "../../../apis/ApisServicioCliente/ivaApi";
-import { createFactura } from "../../../apis/ApisServicioCliente/FacturaApi";
+import { createFactura,getAllDataFacturaById } from "../../../apis/ApisServicioCliente/FacturaApi";
 import { getInfoSistema } from "../../../apis/ApisServicioCliente/InfoSistemaApi";
-import { getOrdenTrabajoById } from "../../../apis/ApisServicioCliente/OrdenTrabajoApi";
-import { getCotizacionById } from "../../../apis/ApisServicioCliente/CotizacionApi";
-import { getTipoMonedaById } from "../../../apis/ApisServicioCliente/Moneda";
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -40,7 +31,8 @@ const CrearFactura = () => {
     const [empresa, setEmpresa] = useState(null);
     const [rfcEmisor, setRfcEmisor] = useState(null);
     const [codigoOrden, setCodigoOrden] = useState(null);
-    const [ivaId, setIvaId] = useState(1);
+    const [tipomoneda, setTipoMoneda] = useState(1);
+    const [valor, setvalores]= useState([]);
     const navigate = useNavigate();
     const [moneda, setMoneda] = useState({ codigo: "", descripcion: "" });
     const [cotizacionId, setCotizacionId] = useState(null);
@@ -64,37 +56,55 @@ const CrearFactura = () => {
         obtenerUsoCfdi();
         obtenerFormaPago();
         obtenerMetodoPago();
-        obtenerServicios();
-        obtenerOrdenTrabajoServicios();
-        obtenerEmpresaPorOrganizacion();
-        obtenerOrganizacion();
         obtenerRFCEmisor();
-        obtenerCodigoOrdenTrabajo();
         fetchTipoCambio();
-        fetchMonedaInfo(id);
     }, [id]);
 
-    useEffect(() => {
-      if (ordenTrabajoServicios.length > 0) {
-          calcularTotales();
-      }
-  }, [ordenTrabajoServicios, tasaIva]);
 
-  const fetchMonedaInfo = async (ordenTrabajoId) => {
-        try {
-          const ordenTrabajo = await getOrdenTrabajoById(ordenTrabajoId);
-          //console.log("Orden de trabajo:", ordenTrabajo.data);
-          const cotizacion = await getCotizacionById(ordenTrabajo.data.cotizacion);
-          //console.log("Cotización:", cotizacion.data);
-          setDescuento(cotizacion.data.descuento);
-          const tipoMoneda = await getTipoMonedaById(cotizacion.data.tipoMoneda);
-          //console.log("Tipo de moneda:", tipoMoneda.data);
-          setMoneda({ codigo: tipoMoneda.data.codigo, descripcion: tipoMoneda.data.descripcion });
-      
-        } catch (error) {
-          console.error("Error al obtener la información de la moneda:", error);
-        }
-      };
+  useEffect(() => {
+    const fetchFacturaData = async () => {
+      try {
+        const response = await getAllDataFacturaById(id);
+        const data = response.data;
+        console.log("Datos de la factura:", data);
+        console.log("Empresa:", data.empresa);
+        console.log("data.organizacion:", data.organizacion);
+        console.log("data.valores:", data.valores);
+        // Datos directos
+        setCodigoOrden(data.ordenTrabajo.codigo);
+        setEmpresa(data.empresa);
+        setOrganizacion(data.organizacion);
+        setTasaIva(parseFloat(data.cotizacion.iva.porcentaje));
+        setDescuento(data.cotizacion.descuento);
+        setOrdenTrabajoServicios(data.servicios); // Ya vienen con nombre, precio, cantidad
+        setSubtotal(data.valores.subtotal);
+        setIva(data.valores.iva);
+        setTotal(data.valores.total);
+        setvalores(data.valores);
+        setTipoMoneda(data.cotizacion.tipoMoneda);
+
+        form.setFieldsValue({
+          subtotal: `$${(data.valores.subtotal / factorConversion).toFixed(2)} ${esUSD ? "USD" : "MXN"}`,
+          iva: `$${(data.valores.iva / factorConversion).toFixed(2)} ${esUSD ? "USD" : "MXN"}`,
+          total: `$${(data.valores.total / factorConversion).toFixed(2)} ${esUSD ? "USD" : "MXN"}`
+        });
+        form.setFieldsValue({ poresentajeFactura: 0 });
+  
+        // Moneda
+        setMoneda({ codigo: data.cotizacion.tipoMoneda, descripcion: "" }); // puedes expandir si quieres mostrar descripción
+      } catch (error) {
+        console.error("Error al obtener datos completos de la factura:", error);
+        message.error("No se pudo cargar la información de la factura.");
+      } finally {
+        setLoading(false);
+      }
+    };
+  
+    fetchFacturaData();
+  }, [id]);
+
+  
+  
   
   const fetchTipoCambio = async () => {
         try {
@@ -105,76 +115,7 @@ const CrearFactura = () => {
           console.error("Error al obtener el tipo de cambio del dólar", error);
         }
       };
-
-
-      const obtenerCodigoOrdenTrabajo = async () => {
-        try {
-          const response = await getAllOrdenesTrabajo();
-          // Buscar la orden con el ID recibido en la URL
-          const ordenEncontrada = response.data.find((orden) => orden.id === parseInt(id));
       
-          if (ordenEncontrada) {
-            setCodigoOrden(ordenEncontrada.codigo);
-            fetchMonedaInfo(ordenEncontrada.id);
-            if (ordenEncontrada.cotizacion) {
-              setCotizacionId(ordenEncontrada.cotizacion);
-              obtenerCotizacion(ordenEncontrada.cotizacion); // Para obtener IVA, etc.
-              // Llamar a la función que obtiene los servicios usando cotizacionId
-              obtenerOrdenTrabajoServicios(ordenEncontrada.cotizacion);
-            }
-          } else {
-            console.error("Orden de trabajo no encontrada");
-          }
-        } catch (error) {
-          console.error("Error al obtener la orden de trabajo:", error);
-        } finally {
-          setLoading(false);
-        }
-      };
-      
-
-  // Función para calcular Subtotal, IVA y Total
-  const calcularTotales = () => {
-    const nuevoSubtotal = ordenTrabajoServicios.reduce(
-      (acc, servicio) => acc + servicio.cantidad * servicio.precio,
-      0
-    );
-
-    const descuentoSubtotal = nuevoSubtotal * (descuento / 100);
-    const nuevoSubtotalConDescuento = nuevoSubtotal - descuentoSubtotal;
-    const nuevoIva = nuevoSubtotalConDescuento * tasaIva;
-    const nuevoTotal = nuevoSubtotalConDescuento + nuevoIva;
-
-  
-    setSubtotal(nuevoSubtotal.toFixed(2));
-    setIva(nuevoIva.toFixed(2));
-    setTotal(nuevoTotal.toFixed(2));
-
-  
-    // Actualizar valores en el formulario
-    form.setFieldsValue({
-      subtotal: `$${(nuevoSubtotal / factorConversion).toFixed(2)} ${esUSD ? "USD" : "MXN"}`,
-      iva: `$${(nuevoIva / factorConversion).toFixed(2)} ${esUSD ? "USD" : "MXN"}`,
-      total: `$${(nuevoTotal / factorConversion).toFixed(2)} ${esUSD ? "USD" : "MXN"}`,
-
-    });
-  };
-  
-
-    // Función para obtener la organización (Emisor)
-    const obtenerOrganizacion = async () => {
-      try {
-          const response = await getAllOrganizacion();
-          const organizacionFiltrada = response.data.find(org => org.id === parseInt(userOrganizationId));
-
-          if (organizacionFiltrada) {
-              setOrganizacion(organizacionFiltrada);
-          }
-      } catch (error) {
-          console.error("Error al obtener los datos de la organización", error);
-          message.error("Error al obtener los datos de la organización.");
-      }
-  };
 
     // Función para obtener Uso CFDI
     const obtenerUsoCfdi = async () => {
@@ -202,19 +143,6 @@ const CrearFactura = () => {
     };
 
    // Función para obtener la empresa de la organización
-   const obtenerEmpresaPorOrganizacion = async () => {
-    try {
-        const response = await getAllEmpresas();
-        const empresaFiltrada = response.data.find(emp => emp.organizacion === parseInt(userOrganizationId));
-
-        if (empresaFiltrada) {
-            setEmpresa(empresaFiltrada);
-        }
-        } catch (error) {
-            console.error("Error al obtener los datos de la empresa", error);
-            message.error("Error al obtener los datos de la empresa.");
-        }
-    };
 
   // Función para obtener Forma de Pago
   const obtenerFormaPago = async () => {
@@ -238,114 +166,52 @@ const CrearFactura = () => {
       }
   };
 
-  // Función para obtener los Servicios de la Orden de Trabajo
-  const obtenerServicios = async () => {
-      try {
-          const response = await getAllServicio();
-          setServiciosList(response.data);
-          //console.log("Servicios:", response.data);
-      } catch (error) {
-          console.error("Error al obtener los Servicios", error);
-          message.error("Error al obtener los Servicios.");
-      }
-  };
-
-  // Función para obtener los Servicios de la Orden de Trabajo
-  const obtenerOrdenTrabajoServicios = async (cotizacionId) => {
-    try {
-      // Obtener los servicios asociados a la orden de trabajo (tabla core_ordenestrabajosservicios)
-      const responseOrdenTrabajo = await getAllOrdenesTrabajoServicio();
-      const ordenServicios = responseOrdenTrabajo.data.filter(
-        (serv) => serv.ordenTrabajo === parseInt(id)
-      );
-      
-      // Obtener los servicios de la cotización (tabla core_cotizacionservicio)
-      const responseCotizacionServicio = await getAllCotizacionServicio();
-      const cotizacionServiciosFiltrados = responseCotizacionServicio.data.filter(
-        (cotiServ) => cotiServ.cotizacion === cotizacionId
-      );
-      //console.log('cotizacionServiciosFiltrados: ',cotizacionServiciosFiltrados);
-      // 🟢 Asegurar que `serviciosList` tenga datos antes de usarlo
-      let listaServicios = serviciosList;
-      if (listaServicios.length === 0) {
-          const responseServicios = await getAllServicio();
-          listaServicios = responseServicios.data;
-          setServiciosList(responseServicios.data); // Guardar en el estado
-      }
-
-      // 🟢 Combinar información: Agregar `nombreServicio` correctamente
-      const serviciosRelacionados = ordenServicios.map((servicio) => {
-          const cotizacionServicio = cotizacionServiciosFiltrados.find(
-              (cotiServ) => cotiServ.servicio === servicio.servicio
-          );
-
-          const servicioInfo = listaServicios.find((s) => s.id === servicio.servicio);
-
-          return {
-              ...servicio,
-              precio: cotizacionServicio ? cotizacionServicio.precio : servicio.precio,
-              nombreServicio: servicioInfo ? servicioInfo.nombreServicio : "Sin nombre",
-          };
-      });
-      
-      setOrdenTrabajoServicios(serviciosRelacionados);
-    } catch (error) {
-      console.error("Error al obtener los servicios de la orden de trabajo", error);
-      message.error("Error al obtener los servicios.");
-    }
-  };
+  const columns = [
+    {
+      title: "Código",
+      dataIndex: "servicio",
+      key: "codigo",
+      render: (serv) => serv?.metodo.codigo || "N/A",
+    },
+    {
+      title: "Nombre del Servicio",
+      dataIndex: "servicio",
+      key: "nombreServicio",
+      render: (serv) => serv?.nombre || "N/A",
+    },
+    {
+      title: "Cantidad",
+      key: "cantidad",
+      render: (_, record) => record?.ordenTrabajoServicio?.cantidad || 0,
+    },    
+    {
+      title: "Precio",
+      key: "precio",
+      render: (_, record) => {
+        const precio = record?.cotizacionServicio?.precio || 0;
+        return `$${(precio / factorConversion).toFixed(2)} ${esUSD ? "USD" : "MXN"}`;
+      },
+    },
+    {
+      title: "Importe",
+      key: "importe",
+      render: (_, record) => {
+        const precio = record?.cotizacionServicio?.precio || 0;
+        const cantidad = record?.ordenTrabajoServicio?.cantidad || 0;
+        const importe = precio * cantidad;
+        return `$${(importe / factorConversion).toFixed(2)} ${esUSD ? "USD" : "MXN"}`;
+      },
+    },
+    
+  ];
+  
   
 
-// **Obtener el ID del IVA desde la cotización**
-const obtenerCotizacion = async (cotizacionId) => {
-  try {
-    
-      const response = await getAllCotizacion();
-      const cotizacion = response.data.find(coti => coti.id === cotizacionId);
-      if (cotizacion) {
-          setIvaId(cotizacion.iva);  // Guardar el ID de IVA
-          obtenerIva(cotizacion.iva); // Obtener el porcentaje de IVA
-
-      }
-  } catch (error) {
-      console.error("Error al obtener la cotización:", error);
-  }
-};
-
-// **Obtener el porcentaje de IVA desde la API**
-const obtenerIva = async (ivaIdParam = 1) => {
-  try {
-      const response = await getAllIva();
-      const ivaData = response.data.find(iva => iva.id === ivaIdParam);
-      if (ivaData) {
-          setTasaIva(parseFloat(ivaData.porcentaje));  // Convertir a decimal (Ej. 0.08 o 0.16)
-      }
-  } catch (error) {
-      console.error("Error al obtener IVA:", error);
-  }
-};
-
-    // Columnas de la tabla
-    const columns = [
-      { title: "Código", dataIndex: "id", key: "id" },
-      { title: "Nombre del Servicio", dataIndex: "nombreServicio", key: "nombreServicio" },
-      { title: "Cantidad", dataIndex: "cantidad", key: "cantidad" },
-      { title: "Precio", dataIndex: "precio", key: "precio", render: (precioMXN) => {
-        // Si es USD, dividir entre factorConversion
-        const precioConvertido = (precioMXN / factorConversion).toFixed(2);
-        return `$${precioConvertido} ${esUSD ? "USD" : "MXN"}`;
-      },},
-      { title: "Importe", key: "importe", render: (_, record) => {
-        // Calcula el importe en MXN primero
-        const importeMXN = record.cantidad * record.precio;
-        // Lo convierte si la moneda es USD
-        const importeConvertido = (importeMXN / factorConversion).toFixed(2);
-        return `$${importeConvertido} ${esUSD ? "USD" : "MXN"}`;
-      },},
-  ];
 
   const handlecrearFactura=async(values)=>{
     const importeEnMoneda = parseFloat(total) / factorConversion;
+    const porcentaje = values.poresentajeFactura ?? 0;
+    const preioDescuento = parseFloat(importeEnMoneda) * ((100-porcentaje ) / 100);
     const datosFactura={
       notas:values.notas|| "",
       ordenCompra: values.ordenCompra||"",
@@ -354,8 +220,9 @@ const obtenerIva = async (ivaIdParam = 1) => {
         tipoCfdi: values.tipoCfdi,  // ID del CFDI seleccionado
         formaPago: values.formaPago,  // ID de la forma de pago seleccionada
         metodoPago: values.metodoPago, // ID del método de pago seleccionado
-        importe: importeEnMoneda,
-        tipoMoneda: moneda.codigo
+        importe: preioDescuento,
+        tipoMoneda: tipomoneda.codigo,
+        porcentaje:values?.poresentajeFactura||0,
     }
     try {
       message.success("Factura creada con éxito");
@@ -369,6 +236,7 @@ const obtenerIva = async (ivaIdParam = 1) => {
       message.error("Error al crear la factura");
   }
   }
+  
 
   return (
     <div className="factura-container">
@@ -376,32 +244,54 @@ const obtenerIva = async (ivaIdParam = 1) => {
         <h1>Facturar {codigoOrden }</h1>
       </div>
 
-      <div className="factura-emisor-receptor">
-        <div className="emisor">
-          <h3>Emisor</h3>
-          {organizacion ? (
+      <Row gutter={24} className="factura-emisor-receptor">
+        <Col span={12}>
+          <div className="emisor">
+            <h3>Emisor</h3>
+            {organizacion ? (
               <>
-                  <p><strong>{organizacion.nombre}</strong></p>
-                  <p>RFC: {rfcEmisor || "Cargando..."}</p>
-                  <p>Dirección: {organizacion.estado}, {organizacion.ciudad}, {organizacion.colonia}, {organizacion.calle}, {organizacion.numero}, {organizacion.codigoPostal}</p>
+                <p><strong>{organizacion.nombre}</strong></p>
+                <p><strong>RFC:</strong> {rfcEmisor || "Cargando..."}</p>
+                <p><strong>Dirección:</strong></p>
+                <ul style={{ marginLeft: 16 }}>
+                  <li><strong>Estado:</strong> {organizacion.direccion.estado}</li>
+                  <li><strong>Ciudad:</strong> {organizacion.direccion.ciudad}</li>
+                  <li><strong>Colonia:</strong> {organizacion.direccion.colonia}</li>
+                  <li><strong>Calle:</strong> {organizacion.direccion.calle}</li>
+                  <li><strong>Número:</strong> {organizacion.direccion.numero}</li>
+                  <li><strong>Código Postal:</strong> {organizacion.direccion.codigoPostal}</li>
+                </ul>
               </>
-          ) : (
+            ) : (
               <p>Cargando datos de la organización...</p>
-          )}
-        </div>
-        <div className="receptor">
-          <h3>Receptor</h3>
-          {empresa ? (
+            )}
+          </div>
+        </Col>
+
+        <Col span={12}>
+          <div className="receptor">
+            <h3>Receptor</h3>
+            {empresa ? (
               <>
-                  <p><strong>{empresa.nombre}</strong></p>
-                  <p>RFC: {empresa.rfc}</p>
-                  <p>Régimen Fiscal: {empresa.regimenFiscal}</p>
+                <p><strong>{empresa.nombre}</strong></p>
+                <p><strong>RFC:</strong> {empresa.rfc}</p>
+                <p><strong>Dirección:</strong></p>
+                <ul style={{ marginLeft: 16 }}>
+                  <li><strong>Estado:</strong> {empresa.direccion.estado}</li>
+                  <li><strong>Ciudad:</strong> {empresa.direccion.ciudad}</li>
+                  <li><strong>Colonia:</strong> {empresa.direccion.colonia}</li>
+                  <li><strong>Calle:</strong> {empresa.direccion.calle}</li>
+                  <li><strong>Número:</strong> {empresa.direccion.numero}</li>
+                  <li><strong>Código Postal:</strong> {empresa.direccion.codigoPostal}</li>
+                </ul>
               </>
-          ) : (
+            ) : (
               <p>Cargando datos de la empresa...</p>
-          )}
-        </div>
-      </div>
+            )}
+          </div>
+        </Col>
+      </Row>
+
 
       <Form layout="vertical" className="my-factura-form"
       form={form} // Conecta el formulario con la instancia
@@ -488,26 +378,34 @@ const obtenerIva = async (ivaIdParam = 1) => {
           <Form.Item label="ordenCompra:" name="ordenCompra">
             <Input />
             </Form.Item>
+            <Form.Item label="Poresentaje a pagar:" name="poresentajeFactura">
+              <NumericInput
+                value={form.getFieldValue("poresentajeFactura")}
+                onChange={(val) => form.setFieldsValue({ poresentajeFactura: val })}
+                style={{ width: '100%' }}
+              />
+            </Form.Item>
+
         </div>
           </Col>
           <Col span={10}>
             <div className="factura-summary">
             <Form.Item label="Subtotal:" name="subtotal">
-            <Input value={`$${(subtotal / factorConversion).toFixed(2)} ${esUSD ? "USD" : "MXN"}`}
+            <Input value={`${valor.subtotal} `}
               disabled  />
             </Form.Item>
             <Form.Item label="Descuento:">
-              <Input value={`${descuento}%`} disabled />
+              <Input value={`${descuento}`} disabled />
             </Form.Item>
             <Form.Item label="tasa IVA:">
-              <Input value={`${tasaIva}%`} disabled />
+              <Input value={`${(tasaIva * 100).toFixed(2)}%`} disabled />
             </Form.Item>
             <Form.Item label="IVA:" name="iva">
-              <Input value={`$${(iva / factorConversion).toFixed(2)} ${esUSD ? "USD" : "MXN"}`}
+              <Input value={`$${valor.iva}`}
               disabled />
             </Form.Item>
             <Form.Item label="Total:" name="total">
-              <Input value={`$${(total / factorConversion).toFixed(2)} ${esUSD ? "USD" : "MXN"}`}
+              <Input value={`$${(valor.total / factorConversion).toFixed(2)} ${esUSD ? "USD" : "MXN"}`}
               disabled />
             </Form.Item>
           </div>

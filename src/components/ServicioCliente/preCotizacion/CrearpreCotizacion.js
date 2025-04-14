@@ -16,6 +16,7 @@ import { getAllMetodo,createMetodo} from "../../../apis/ApisServicioCliente/Meto
 import {createServicio} from "../../../apis/ApisServicioCliente/ServiciosApi";
 import { getAllUnidadCDFI } from "../../../apis/ApisServicioCliente/unidadcdfiApi";
 import { getAllClaveCDFI } from "../../../apis/ApisServicioCliente/ClavecdfiApi";
+import ErrorModal from "./PreCotizacionesModal/PreCotizacionModal";
 
 const { TextArea } = Input;
 
@@ -50,11 +51,14 @@ const CrearPreCotizaciones = () => {
   const [metodoSeleccionado, setMetodoSeleccionado] = useState(null);
   const [formMetodo] = Form.useForm();
   const [successMessage, setSuccessMessage] = useState(""); // Mensaje dinámico
-    const [isSuccessModalVisible, setIsSuccessModalVisible] = useState(false);
+  const [isSuccessModalVisible, setIsSuccessModalVisible] = useState(false);
+  const [errorModalVisible, setErrorModalVisible] = useState(false);
+  const [errorModalText, setErrorModalText] = useState("");
+
 
   // Obtener el ID de la organización una sola vez
   const organizationId = useMemo(() => parseInt(localStorage.getItem("organizacion_id"), 10), []);
-
+  
 
     useEffect(() => {
       const fetchDatosModal = async () => {
@@ -269,7 +273,7 @@ const CrearPreCotizaciones = () => {
       }
   
       // Obtener todos los clientes y empresas existentes
-      const clientesExistentes = await getAllCliente();
+      //const clientesExistentes = await getAllCliente();
       const empresasExistentes = await getAllEmpresas();
   /*
       // Verificar si el cliente ya existe
@@ -277,12 +281,12 @@ const CrearPreCotizaciones = () => {
         (cliente) =>
           cliente.nombrePila === nombre && cliente.apPaterno === apellido
       );
-  
+
       // Verificar si la empresa ya existe
       const empresaExistente = empresasExistentes.data.find(
         (emp) => emp.nombre === empresa
       ); 
-  
+
       // Si el cliente o la empresa ya existen, mostrar un error y detener el proceso
       if (clienteExistente) {
         message.error("El cliente ya existe.");

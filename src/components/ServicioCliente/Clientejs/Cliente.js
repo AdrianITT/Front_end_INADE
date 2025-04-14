@@ -142,6 +142,7 @@ const Cliente = () => {
         estado: formValues.estado,
         organizacion: organizationId,
         UsoCfdi: formValues.UsoCfdi,
+        division:formValues.SubDivision,
       };
       try {
         const createEmpresaResponse = await createEmpresas(empresaData);

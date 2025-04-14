@@ -2,18 +2,13 @@ import React, { useState, useEffect } from "react";
 import { Card, Row, Col, Button, Table, Tabs, Dropdown, Menu, Modal, Select, Input, Form, DatePicker, Flex, Alert, Checkbox,message,Descriptions, Result, Spin  } from "antd";
 import { useParams, Link ,useNavigate } from "react-router-dom";
 import{FileTextTwoTone,MailTwoTone,FilePdfTwoTone,CloseCircleTwoTone, FileAddTwoTone} from "@ant-design/icons";
-import { getFacturaById, createPDFfactura, deleteFactura, getAllDataFactura } from "../../../apis/ApisServicioCliente/FacturaApi";
-import { getAllFormaPago } from "../../../apis/ApisServicioCliente/FormaPagoApi";
-import { getAllMetodopago } from "../../../apis/ApisServicioCliente/MetodoPagoApi";
-import { getOrdenTrabajoById } from "../../../apis/ApisServicioCliente/OrdenTrabajoApi"; // Asegúrate de tener esta función
-import { getCotizacionById } from "../../../apis/ApisServicioCliente/CotizacionApi"; // Asegúrate de tener esta función
+import { createPDFfactura, deleteFactura, getAllDataFactura } from "../../../apis/ApisServicioCliente/FacturaApi";
 import { getEmpresaById } from "../../../apis/ApisServicioCliente/EmpresaApi";
 import { Api_Host } from "../../../apis/api";
 import PaymentCards from "../Facturacionjs/FacturaPagos"
 import { getAllFacturaPagos } from "../../../apis/ApisServicioCliente/FacturaPagosApi";
 //import axios from "axios";
 import {  getAllfacturafacturama } from "../../../apis/ApisServicioCliente/FacturaFacturamaApi";
-import { getIvaById } from "../../../apis/ApisServicioCliente/ivaApi";
 import { getInfoSistema } from "../../../apis/ApisServicioCliente/InfoSistemaApi";
 import ComprobantePago from "./ModalComprobantePago";
 //import MenuItem from "antd/es/menu/MenuItem";
@@ -201,10 +196,10 @@ const DetallesFactura = () => {
         setServicios(
           data.servicios.map(serv => ({
             key: serv.servicioId,
-            servicio: serv.nombre,
-            cantidad: serv.cantidad,
-            precioUnitario: parseFloat(serv.precio),
-            total: parseFloat(serv.precio) * serv.cantidad,
+            servicio: serv.servicio.nombre,
+            cantidad: serv.ordenTrabajoServicio.cantidad,
+            precioUnitario: parseFloat(serv.cotizacionServicio.precio),
+            total: parseFloat(serv.cotizacionServicio.precio) * serv.ordenTrabajoServicio.cantidad,
           }))
         );
   

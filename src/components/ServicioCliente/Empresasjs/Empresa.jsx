@@ -37,6 +37,9 @@ const Empresa = () => {
 
   // NUEVO: Estado para almacenar los usos CFDI
   const [usosCfdi, setUsosCfdi] = useState([]);
+  const [errorModalVisible, setErrorModalVisible] = useState(false);
+  const [errorModalMessage, setErrorModalMessage] = useState("");
+
 
   // Cargar lista de empresas
   const loadEmpresas = useCallback(async () => {
@@ -106,19 +109,38 @@ const Empresa = () => {
     try {
       const userOrgId = parseInt(localStorage.getItem("organizacion_id"));
       const payload = { ...values, organizacion: userOrgId };
+  
+      const nombreDuplicado = empresas.some((e) =>
+        e.Empresa.toLowerCase().trim() === payload.nombre.toLowerCase().trim()
+      );
+      const rfcDuplicado = empresas.some((e) =>
+        e.RFC.toLowerCase().trim() === payload.rfc.toLowerCase().trim()
+      );
+  
+      if (nombreDuplicado || rfcDuplicado) {
+        setErrorModalMessage(
+          nombreDuplicado
+            ? "Ya existe una empresa con ese nombre."
+            : "Ya existe una empresa con ese RFC."
+        );
+        setErrorModalVisible(true);
+        return;
+      }
+  
       const response = await createEmpresas(payload);
       if (response && response.data) {
         message.success("Empresa creada correctamente");
         setIsModalOpen(false);
         setIsSuccessModalOpen(true);
-        form.resetFields(); // Limpia el formulario
-        loadEmpresas();     // Refresca la tabla
+        form.resetFields();
+        loadEmpresas();
       }
     } catch (error) {
       console.error("Error al crear la empresa:", error);
       message.error("Error al crear la empresa");
     }
   };
+  
 
   // 3. ABRIR modal de editar
   const handleOpenEdit = async (id) => {
@@ -232,6 +254,20 @@ const Empresa = () => {
       >
         <p>¡La operación se ha realizado correctamente!</p>
       </Modal>
+      <Modal
+        title="Error de Creacion"
+        open={errorModalVisible}
+        onOk={() => setErrorModalVisible(false)}
+        onCancel={() => setErrorModalVisible(false)}
+        footer={[
+          <Button key="ok" type="primary" onClick={() => setErrorModalVisible(false)}>
+            Cerrar
+          </Button>
+        ]}
+      >
+        <p>{errorModalMessage}</p>
+      </Modal>
+
     </Spin></div>
   );
 };

@@ -12,13 +12,15 @@ import {
   message,
   Checkbox,
   Modal,
-  Typography
+  Typography, 
+
 } from "antd";
 import { PlusOutlined, MinusCircleOutlined } from "@ant-design/icons";
 import { useParams, useNavigate } from "react-router-dom";
 // Usamos el endpoint actualizado (EditOrdenTrabajoData) que ahora retorna "ordenTrabajoServicios" con el precio
-import { EditOrdenTrabajoData } from "../../../apis/ApisServicioCliente/OrdenTrabajoApi";
+import { EditOrdenTrabajoData, updateOrdenTrabajo } from "../../../apis/ApisServicioCliente/OrdenTrabajoApi";
 import { updateCotizacionServicioT } from "../../../apis/ApisServicioCliente/CotizacionServicioApi";
+import { getAllReceptor} from "../../../apis/ApisServicioCliente/ResectorApi";
 // Funciones para crear, actualizar y eliminar servicios
 import {
   createOrdenTrabajoServico,
@@ -39,29 +41,33 @@ const EditarOrdenTrabajo = () => {
   const [ordenData, setOrdenData] = useState(null);
   const [serviciosDisponibles, setServiciosDisponibles] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [receptor, setReceptor] = useState([]);
   const { Title } = Typography;
+  const { Option } = Select;
 
 
   useEffect(() => {
+    const fetchReceptor= async () =>{
+      try{
+        const response=await getAllReceptor();
+        setReceptor(response.data);
+      }catch(error){console.error('Error al cargar los receptores', error);}
+    };
     const fetchOrdenData = async () => {
       try {
-        // Obtenemos la data de la orden de trabajo (con ordenTrabajoServicios) y receptor, cotización, etc.
         const response = await EditOrdenTrabajoData(id);
         const data = response.data;
         setOrdenData(data.ordenTrabajo);
-        // Ahora obtenemos la información de la cotización para extraer el precio de cada servicio
+    
         const resCot = await getDetallecotizaciondataById(data.ordenTrabajo.id);
-        const cotServicios = resCot.data.cotizacionServicio; // Array con precio, cantidad, etc.
-        //console.log("Datos de la cotización:", resCot.data);  
-        //console.log("Servicios de cotización:", cotServicios);
-        // Mapeamos los servicios de la orden, combinándolos con el precio obtenido de cotServicios.
+        const cotServicios = resCot.data.cotizacionServicio;
+    
         const serviciosMapped = data.ordenTrabajoServicios.map((ots) => {
-          // Buscamos el registro en cotServicios que coincida en 'servicio'
           const match = cotServicios.find(
             (cs) => cs.id === ots.servicio.id &&
             cs.cotizacion === data.ordenTrabajo.cotizacion
           );
-        
+    
           return {
             id: ots.id,
             servicio: ots.servicio.id,
@@ -71,15 +77,17 @@ const EditarOrdenTrabajo = () => {
             eliminar: false,
           };
         });
-        //console.log("Servicios mapeados:", serviciosMapped);
+    
         form.setFieldsValue({
           servicios: serviciosMapped,
+          receptor: data.receptor.id || null, // ✅ Aquí lo asignas
         });
       } catch (error) {
         console.error("Error al obtener la orden de trabajo:", error);
         message.error("Error al cargar la orden de trabajo");
       }
     };
+    
 
     const fetchServiciosDisponibles = async () => {
       try {
@@ -90,9 +98,9 @@ const EditarOrdenTrabajo = () => {
         message.error("Error al cargar los servicios disponibles");
       }
     };
-
     fetchOrdenData();
     fetchServiciosDisponibles();
+    fetchReceptor();
   }, [id, form]);
 
   const handleInputChange = (fieldIndex, fieldName, value) => {
@@ -109,67 +117,70 @@ const EditarOrdenTrabajo = () => {
 
 
    const onFinish = async (values) => {
-     setLoading(true);
-     try {
-       const serviciosArray = values.servicios || [];
-          console.log("Servicios a guardar:", serviciosArray);
-       // Separar servicios marcados para eliminar
-       const serviciosAEliminar = serviciosArray.filter((item) => item.eliminar && item.id);
-       console.log("Servicios a eliminar:", serviciosAEliminar);
-       // Para los servicios existentes que no se eliminarán, actualizamos tanto en CotizacionServicio como en OrdenTrabajoServicio
-       const serviciosExistentes = serviciosArray.filter((item) => item.id && !item.eliminar);
-       console.log("Servicios existentes:", serviciosExistentes);
-
-       const serviciosNuevos = serviciosArray.filter((item) => !item.id && !item.eliminar);
-       const insertarPromises = serviciosNuevos.map((item) => {
+    setLoading(true);
+    try {
+      const serviciosArray = values.servicios || [];
+      console.log("Servicios a guardar:", serviciosArray);
+  
+      // 👉 ACTUALIZAR RECEPTOR DE LA ORDEN
+      await updateOrdenTrabajo(id, {
+        receptor: values.receptor,
+      });
+  
+      // Separar servicios marcados para eliminar
+      const serviciosAEliminar = serviciosArray.filter((item) => item.eliminar && item.id);
+      console.log("Servicios a eliminar:", serviciosAEliminar);
+  
+      const serviciosExistentes = serviciosArray.filter((item) => item.id && !item.eliminar);
+      console.log("Servicios existentes:", serviciosExistentes);
+  
+      const serviciosNuevos = serviciosArray.filter((item) => !item.id && !item.eliminar);
+      const insertarPromises = serviciosNuevos.map((item) => {
         const payload = {
           cantidad: item.cantidad,
           descripcion: item.descripcion,
-          ordenTrabajo: parseInt(id), // el id de la orden actual
+          ordenTrabajo: parseInt(id),
           servicio: item.servicio,
         };
         return createOrdenTrabajoServico(payload);
       });
       await Promise.allSettled(insertarPromises);
-
-       // 2. Actualizar los servicios existentes en OrdenTrabajoServicio (cantidad y descripción)
-       const actualizarOrdenPromises = serviciosExistentes.map((item) => {
-         const payload = {
-           cantidad: item.cantidad,
-           descripcion: item.descripcion,
-         };
-         return updateOrdenTrabajoServicio(item.id, payload);
-       });
-       await Promise.allSettled(actualizarOrdenPromises);
-       console.log("Servicios actualizados en OrdenTrabajoServicio");
-       // 3. Eliminar los servicios marcados en OrdenTrabajoServicio
-       // 2. Actualizar CotizacionServicio (precio)
-     const actualizarCotizacionPromises = serviciosExistentes.map((item) => {
-          const payloadCotizacion = {
-          precio: item.precio, // o item.precioFinal según cómo se llame en tu backend
-          };
-          return updateCotizacionServicioT(item.servicio, payloadCotizacion);
-     });
-
-     // Ejecutar ambas en paralelo
-     await Promise.allSettled([
-          ...actualizarOrdenPromises,
-          ...actualizarCotizacionPromises,
-     ]);
-       // 3. Eliminar los servicios marcados
-     const eliminarPromises = serviciosAEliminar.map((item) =>
-     deleteOrdenTrabajoServicio(item.id)
-     );
-     await Promise.allSettled(eliminarPromises);
-
-       message.success("Servicios actualizados correctamente");
-       navigate(`/DetalleOrdenTrabajo/${id}`);
-     } catch (error) {
-       console.error("Error al actualizar los servicios:", error);
-       message.error("Error al actualizar los servicios");
-     }
-     setLoading(false);
-   };
+  
+      const actualizarOrdenPromises = serviciosExistentes.map((item) => {
+        const payload = {
+          cantidad: item.cantidad,
+          descripcion: item.descripcion,
+        };
+        return updateOrdenTrabajoServicio(item.id, payload);
+      });
+      await Promise.allSettled(actualizarOrdenPromises);
+  
+      const actualizarCotizacionPromises = serviciosExistentes.map((item) => {
+        const payloadCotizacion = {
+          precio: item.precio,
+        };
+        return updateCotizacionServicioT(item.servicio, payloadCotizacion);
+      });
+  
+      await Promise.allSettled([
+        ...actualizarOrdenPromises,
+        ...actualizarCotizacionPromises,
+      ]);
+  
+      const eliminarPromises = serviciosAEliminar.map((item) =>
+        deleteOrdenTrabajoServicio(item.id)
+      );
+      await Promise.allSettled(eliminarPromises);
+  
+      message.success("Orden de trabajo actualizada correctamente");
+      navigate(`/DetalleOrdenTrabajo/${id}`);
+    } catch (error) {
+      console.error("Error al actualizar los servicios:", error);
+      message.error("Error al actualizar la orden de trabajo");
+    }
+    setLoading(false);
+  };
+  
 
   return (
     <div className="editar-orden-container">
@@ -178,6 +189,21 @@ const EditarOrdenTrabajo = () => {
       </Title>
       <Card>
         <Form form={form} layout="vertical" onFinish={onFinish}>
+          <Col span={20}>
+                      <Form.Item
+                        name="receptor"
+                        label="Seleccione el receptor de la orden"
+                        rules={[{ required: true, message: "Seleccione un receptor" }]}
+                      >
+                        <Select placeholder="Seleccione un receptor" className="form-select">
+                          {receptor.map((recep) => (
+                            <Option key={recep.id} value={recep.id}>
+                              {recep.nombrePila} {recep.apPaterno} {recep.apMaterno}
+                            </Option>
+                          ))}
+                        </Select>
+                      </Form.Item>
+                    </Col>
           <Divider>Servicios</Divider>
           <Form.List name="servicios">
             {(fields, { add, remove }) => (

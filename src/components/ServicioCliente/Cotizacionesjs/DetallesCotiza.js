@@ -1,14 +1,19 @@
 // src/pages/CotizacionDetalles.js
 import React, { useState} from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Tabs, Typography, Spin, Menu, message } from "antd";
-import { MailTwoTone, EditTwoTone, CheckCircleTwoTone, FilePdfTwoTone } from "@ant-design/icons";
+import { Tabs, Typography, Spin, Menu, message, Modal } from "antd";
+import { MailTwoTone,
+  EditTwoTone, 
+  CheckCircleTwoTone, 
+  FilePdfTwoTone,
+  CopyTwoTone }
+   from "@ant-design/icons";
 import { Api_Host } from "../../../apis/api";
 import { useCotizacionDetails } from "../Cotizacionesjs/CotizacionDetalles/useCotizacionDetails";
 import ServiciosTable from "../Cotizacionesjs/CotizacionDetalles/ServiciosTable";
 import CotizacionInfoCard from "../Cotizacionesjs/CotizacionDetalles/CotizacionInfoCard";
-import { SendEmailModal, EditCotizacionModal, ResultModal } from "../Cotizacionesjs/CotizacionDetalles/CotizacionModals";
-import { updateCotizacion } from "../../../apis/ApisServicioCliente/CotizacionApi";
+import { SendEmailModal, EditCotizacionModal, ResultModal,SuccessDuplicarModal,ConfirmDuplicarModal } from "../Cotizacionesjs/CotizacionDetalles/CotizacionModals";
+import { updateCotizacion, getDuplicarCotizacion} from "../../../apis/ApisServicioCliente/CotizacionApi";
 import "./cotizar.css";
 
 const { Title, Text } = Typography;
@@ -27,11 +32,15 @@ const CotizacionDetalles = () => {
   const [, setCotizacionInfo] = useState([]);
   const [loadingtwo, setLoading] = useState(false);
   const [emailLoading, setEmailLoading] = useState(false);
+  const [isDuplicarModalVisible, setIsDuplicarModalVisible] = useState(false);
+  const [isDuplicarSuccessModalVisible, setIsDuplicarSuccessModalVisible] = useState(false);
+
+
 
   
   
   // Obtenemos datos de la cotización mediante nuestro custom hook
-  const { cotizacionInfo, servicios, tipoMoneda, tipoCambioDolar, loading,refetch } = useCotizacionDetails(id);
+  const { cotizacionesCliente, cotizacionInfo, servicios, tipoMoneda, tipoCambioDolar, loading,refetch } = useCotizacionDetails(id);
   
   // Calcular si es USD y el factor de conversión
   const esUSD = tipoMoneda?.id === 2;
@@ -109,6 +118,27 @@ const CotizacionDetalles = () => {
     }
   };
   
+  const handleDuplicarCotizacion = async (clienteIdSeleccionado) => {
+    setLoading(true);
+    try {
+      console.log("Duplicando con opción:", clienteIdSeleccionado);
+      const idCliente=clienteIdSeleccionado; // úsala aquí si lo necesitas
+      const response = await getDuplicarCotizacion(id,idCliente);
+      const duplicatedId = response.data.nueva_cotizacion_id;
+  
+      setIsDuplicarSuccessModalVisible(true);
+      setTimeout(() => {
+        setIsDuplicarSuccessModalVisible(false);
+        navigate(`/detalles_cotizaciones/${duplicatedId}`);
+      }, 3000);
+    } catch (error) {
+      console.error("Error al duplicar la cotización", error);
+      message.error("Error al duplicar la cotización");
+    } finally {
+      setLoading(false);
+    }
+  };  
+  
 
   
   // Definición del menú de acciones (enviar correo, editar, actualizar estado, ver PDF)
@@ -125,6 +155,9 @@ const CotizacionDetalles = () => {
       </Menu.Item>
       <Menu.Item key="5" icon={<FilePdfTwoTone />} onClick={handleDownloadPDF}>
         Ver PDF
+      </Menu.Item>
+      <Menu.Item key="6" icon={<CopyTwoTone />} onClick={() => setIsDuplicarModalVisible(true)}>
+        Duplicar
       </Menu.Item>
     </Menu>
   );
@@ -184,6 +217,19 @@ const CotizacionDetalles = () => {
             setExtraEmails("");
           }}
         />
+        <ConfirmDuplicarModal
+          visible={isDuplicarModalVisible}
+          cotizacionesCliente={cotizacionesCliente}
+          onCancel={() => setIsDuplicarModalVisible(false)}
+          onConfirm={async (selectedOption) => {
+            setIsDuplicarModalVisible(false);
+            await handleDuplicarCotizacion(selectedOption);
+          }}
+        />
+
+        <SuccessDuplicarModal visible={isDuplicarSuccessModalVisible} />
+
+
       </div>
     </Spin>
   );
