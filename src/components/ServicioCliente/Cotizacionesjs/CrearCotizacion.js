@@ -116,6 +116,7 @@ const RegistroCotizacion = () => {
     const fetchCliente = async () => {
       try {
         const response = await getClienteById(clienteId);
+        console.log("Cliente recibido:", response.data);
         setClienteData(response.data);
         if (response.data && response.data.empresa) {
           const empresaId = response.data.empresa;
@@ -472,7 +473,7 @@ const RegistroCotizacion = () => {
                   <Input
                     min={1}
                     value={concepto.cantidad}
-                    onChange={(value) => handleInputChange(concepto.id, "cantidad", value)}
+                    onChange={(e) => handleInputChange(concepto.id, "cantidad", e.target.value)}
                     style={{ width: "100%" }}
                   />
                 </Form.Item>
@@ -498,7 +499,7 @@ const RegistroCotizacion = () => {
                   <Input
                     min={0}
                     value={concepto.precioFinal}
-                    onChange={(value) => handleInputChange(concepto.id, "precioFinal", value)}
+                    onChange={(e) => handleInputChange(concepto.id, "precioFinal", e.target.value)}
                     style={{ width: "100%" }}
                   />
                 </Form.Item>
@@ -781,7 +782,7 @@ const RegistroCotizacion = () => {
   <p>¿Estás seguro de crear esta cotización?</p>
   {cotizacionDataPreview && (
     <>
-      <p><strong>Cliente:</strong> {clienteData.nombre}</p>
+      <p><strong>Cliente:</strong> {clienteData.nombrePila} {clienteData.apPaterno}</p>
       <p><strong>Fecha Solicitud:</strong> {cotizacionDataPreview.fechaSolicitud}</p>
       <p><strong>Fecha Caducidad:</strong> {cotizacionDataPreview.fechaCaducidad}</p>
       <p><strong>Moneda:</strong> {tipoMonedaSeleccionada === 2 ? "USD" : "MXN"}</p>
