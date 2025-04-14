@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Form, Input, Button, Row, Col, Select, message, Modal, Result, Divider } from "antd";
 import { useNavigate, useParams } from "react-router-dom"; // Importa useNavigate
 import "./Cliente.css";
-import { updateCliente, getClienteById } from "../../../apis/ApisServicioCliente/ClienteApi";
+import { updateCliente, getClienteById, getClienteDataById } from "../../../apis/ApisServicioCliente/ClienteApi";
 import { getAllTitulo } from '../../../apis/ApisServicioCliente/TituloApi';
 import { getAllUsoCDFI } from '../../../apis/ApisServicioCliente/UsocfdiApi'; // Asegúrate de que este API esté implementada correctamente
 
@@ -20,15 +20,41 @@ const EditarCliente = () => {
   useEffect(() => {
     const fetchCliente = async () => {
       try {
-        const response = await getClienteById(clienteId);  // Realiza la llamada a la API para obtener los datos
-        setClienteData(response.data);  // Establece los datos del cliente
-        setLoading(false);  // Cambia el estado de carga
+        const response = await getClienteById(clienteId);
+        const cliente = response.data;
+        setClienteData(cliente);
+        form.setFieldsValue(cliente); // ← Establece datos básicos
+  
+        // Ahora intenta obtener dirección
+        const direccionRes = await getClienteDataById(clienteId);
+        console.log("Dirección del cliente:", direccionRes.data);
+        const direccion = direccionRes.data;
+        console.log("Dirección del cliente1:", direccion.cliente.empresa.calle);
+        // Solo si el cliente NO tiene dirección, usamos la de la empresa
+        const direccionActual = form.getFieldsValue(["calleCliente", "numeroCliente"]);
+        console.log("Dirección actual:", direccionActual);
+        const sinDireccion = !direccionActual.calleCliente || !direccionActual.numeroCliente;
+        console.log("Sin dirección:", sinDireccion);
+  
+        if (sinDireccion && direccion?.cliente?.empresa) {
+          form.setFieldsValue({
+            calleCliente: direccion.cliente.empresa.calle || "",
+            numeroCliente: direccion.cliente.empresa.numero || "",
+            coloniaCliente: direccion.cliente.empresa.colonia || "",
+            ciudadCliente: direccion.cliente.empresa.ciudad || "",
+            estadoCliente: direccion.cliente.empresa.estado || "",
+            codigoPostalCliente: direccion.cliente.empresa.codigoPostal || "",
+          });
+        }
+  
       } catch (error) {
-        console.error("Error al obtener los datos del cliente", error);
-        setLoading(false);
+        console.error("Error al obtener los datos del cliente o la dirección:", error);
         message.error("Error al cargar los datos del cliente");
+      } finally {
+        setLoading(false);
       }
     };
+    
 
     const fetchTitulos = async () => {
       try {
@@ -50,6 +76,7 @@ const EditarCliente = () => {
     };
 
     fetchCliente();
+
     fetchTitulos();
     fetchUsoCfdi();
   }, [clienteId]);
@@ -180,9 +207,9 @@ const EditarCliente = () => {
           <Col span={12}>
           <Form.Item
             label="Sub - Division"
-            name="SubDivision"
+            name="division"
           >
-            <Input placeholder="subDivision" />
+            <Input placeholder="division" />
           </Form.Item>
           </Col>
         </Row>

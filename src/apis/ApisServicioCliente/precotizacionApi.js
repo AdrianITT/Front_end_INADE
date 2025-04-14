@@ -4,7 +4,7 @@ import { Api_Host } from "../api";
 export const getAllPrecotizacion = () => Api_Host.get('/precotizacion/');
 
 // Actualizar una precotización
-export const updatePrecotizacion = async (id, data) => Api_Host.put(`/precotizacion/${id}/`, data);
+export const updatePrecotizacion = async (id, data) => Api_Host.patch(`/precotizacion/${id}/`, data);
 
 // Obtener una precotización por ID
 export const getPreCotizacionById = async (id) => Api_Host.get(`/precotizacion/${id}/`);

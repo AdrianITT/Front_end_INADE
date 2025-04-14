@@ -1,11 +1,13 @@
-import { useState, useEffect } from "react";
-import { getDetallecotizaciondataById, getCotizacionById } from "../../../../apis/ApisServicioCliente/CotizacionApi";
+import { useState, useEffect, useMemo } from "react";
+import { getDetallecotizaciondataById, getCotizacionById, getAllCotizacionByCliente } from "../../../../apis/ApisServicioCliente/CotizacionApi";
 
 export const useCotizacionDetails = (id) => {
   const [cotizacionInfo, setCotizacionInfo] = useState([]);
   const [loading, setLoading] = useState(false);
   const [servicios, setServicios] = useState([]);
   const [AllCotizacion, setalldata] = useState([]);
+  const [cotizacionesCliente, setCotizacionesCliente] = useState([]);
+  const organizationId = useMemo(() => parseInt(localStorage.getItem("organizacion_id"), 10), []);
 
   const fetchData = async () => {
     setLoading(true);
@@ -30,6 +32,8 @@ export const useCotizacionDetails = (id) => {
       });
       // 🔥 AQUÍ extraes los servicios
       setServicios(data.cotizacionServicio || []);
+      const cotizacionesResponse = await getAllCotizacionByCliente(organizationId);
+      setCotizacionesCliente(cotizacionesResponse.data || []);
       const respons2= await getCotizacionById(id);
       const datas = respons2.data;
       setalldata({...datas});
@@ -49,6 +53,7 @@ export const useCotizacionDetails = (id) => {
     loading,
     servicios,
     AllCotizacion,
+    cotizacionesCliente,
     refetch: fetchData,
   };
 };

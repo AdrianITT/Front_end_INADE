@@ -1,7 +1,57 @@
 // src/components/CotizacionModals.js
-import React from "react";
-import { Modal, Form, Input, Checkbox, Button, Result, Select } from "antd";
+import React, { useState } from "react";
+import { Modal, Form, Input, Checkbox, Button, Result, Select,Typography } from "antd";
 import { ExclamationCircleOutlined } from "@ant-design/icons";
+const { Text } = Typography;
+
+export const ConfirmDuplicarModal = ({ visible, onCancel, onConfirm, cotizacionesCliente = [] }) => {
+  const [selectedOption, setSelectedOption] = useState(null);
+
+
+  const handleOk = () => {
+    onConfirm(selectedOption); // enviamos el valor al componente padre
+  };
+
+  return (
+    <Modal
+      title="¿Confirmar duplicación?"
+      open={visible}
+      onCancel={onCancel}
+      onOk={handleOk}
+      okText="Sí, duplicar"
+      cancelText="Cancelar"
+    >
+      <p>¿Estás seguro de que deseas duplicar esta cotización? Se creará una nueva con los mismos datos.</p>
+
+      <Select
+        showSearch
+        placeholder="Selecciona una cotización del cliente"
+        style={{ width: "100%", marginTop: "1rem" }}
+        onChange={setSelectedOption}
+        optionFilterProp="label"
+        filterOption={(input, option) =>
+          option.label.toLowerCase().includes(input.toLowerCase())
+        }
+        options={cotizacionesCliente.map(cot => ({
+          value: cot.id,
+          label: `#${cot.nombreCompleto} - ${cot.empresa.nombre|| "Sin código"}`
+        }))}
+      />
+    </Modal>
+  );
+};
+
+export const SuccessDuplicarModal = ({ visible }) => (
+  <Modal
+    title="¡Cotización Duplicada!"
+    open={visible}
+    closable={false}
+    footer={null}
+  >
+    <Text>La cotización fue duplicada exitosamente. Redirigiendo...</Text>
+  </Modal>
+);
+
 
 export const SendEmailModal = ({
   visible,

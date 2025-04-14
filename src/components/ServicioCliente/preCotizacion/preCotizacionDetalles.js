@@ -118,14 +118,18 @@ const PreCotizacionDetalles = () => {
     
     const handleConfirmChange = async () => {
       try {
-        const nuevaCotizacion = {
-          ...cotizacionInfo,
-          estado: 7, // Nuevo estado
-        };
+        console.log("Actualizando solo el estado...");
     
-        const response = await updatePrecotizacion(cotizacionInfo.id, nuevaCotizacion);
-        setCotizacionInfo(response.data);
-        setIsConfirmModalVisible(false); // 👉 Cerrar modal
+        const response = await updatePrecotizacion(id, {
+          estado: 7, // Solo se envía el campo necesario
+        });
+    
+        setCotizacionInfo((prev) => ({
+          ...prev,
+          estado: 7,
+        }));
+    
+        setIsConfirmModalVisible(false);
         setIsSuccessModalVisible(true);
         setTimeout(() => {
           setIsSuccessModalVisible(false);
@@ -137,6 +141,7 @@ const PreCotizacionDetalles = () => {
         message.error("No se pudo actualizar el estado.");
       }
     };
+    
 
    const showEmailModal = () => {
      setIsModalVisible(true);

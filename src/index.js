@@ -39,6 +39,7 @@ import CrearPagos from "./components/ServicioCliente/Pagosjs/CrearPagos";
 import EditarOrdenTrabajo from "./components/ServicioCliente/OrdenTabajojs/EditarOrdenTrabajo";
 import FacturaOTMultiples from "./components/ServicioCliente/Facturacionjs/FacturaOTMultiples";
 import EditarPreCotizacion from "./components/ServicioCliente/preCotizacion/EditarPreCotizacion";
+import VerificarExpiracionLocalStorage from "./components/DataLocalStorage/LocalStorage";
 
 // Hook para cambiar el título de la pestaña
 const usePageTitle = () => {
@@ -88,6 +89,7 @@ const PageWrapper = ({ children }) => {
 const AppRouter = () => {
   return (
     <Router>
+      <VerificarExpiracionLocalStorage/>
       <Routes>
         {/* Ruta para el login sin el Layout */}
         <Route path="/" element={<Login />} />
@@ -135,6 +137,7 @@ const AppRouter = () => {
           <Route path="/EditarPreCotizacion/:id" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><EditarPreCotizacion/></ProtectedRoute>} /> 
         </Route>
       </Routes>
+
     </Router>
   );
 };

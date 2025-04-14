@@ -110,6 +110,7 @@ const items = [
               localStorage.removeItem('rol');
               localStorage.removeItem('organizacion');
               localStorage.removeItem('organizacion_id');
+              //localStorage.clear();
               // Redirige al usuario a la página principal
               window.location.href = '/';
             } catch (error) {
