@@ -11,6 +11,7 @@ import { getAllFacturaPagos } from "../../../apis/ApisServicioCliente/FacturaPag
 import {  getAllfacturafacturama } from "../../../apis/ApisServicioCliente/FacturaFacturamaApi";
 import { getInfoSistema } from "../../../apis/ApisServicioCliente/InfoSistemaApi";
 import ComprobantePago from "./ModalComprobantePago";
+import "./estiloDetalleFactura.css";
 //import MenuItem from "antd/es/menu/MenuItem";
 
 
@@ -532,37 +533,20 @@ const montoRestante =hasPagos
                     type="info"
                     showIcon
                   />
-                  <div style={{ display: 'flex', gap: '16px', marginTop: '20px', alignItems: 'center' }}>
-                    <Button
-                      type="primary"
-                      onClick={handleCrearFactura}
-                      style={{
-                        backgroundColor: '#52c41a', // Verde
-                        borderColor: '#52c41a',
-                        borderRadius: '8px',
-                        color: '#fff',
-                        padding: '10px 20px',
-                        fontSize: '16px'
-                      }}
-                    >
-                      Crear Factura
-                    </Button>
-                    <Button
-                      type="primary"
-                      danger
-                      onClick={handleDeleteFactura}
-                      style={{
-                        backgroundColor: '#f5222d', // Rojo
-                        borderColor: '#f5222d',
-                        borderRadius: '8px',
-                        color: '#fff',
-                        padding: '10px 20px',
-                        fontSize: '16px'
-                      }}
-                    >
-                      Eliminar Factura
-                    </Button>
-                  </div>
+                <div className="container-botones">
+                      <Button
+                        onClick={handleCrearFactura}
+                        className="btn-crear-factura"
+                      >
+                        Crear Factura
+                      </Button>
+                      <Button
+                        onClick={handleDeleteFactura}
+                        className="btn-eliminar-factura"
+                      >
+                        Eliminar Factura
+                      </Button>
+                </div>
                   </Flex>
               ) : (
                 <div >
