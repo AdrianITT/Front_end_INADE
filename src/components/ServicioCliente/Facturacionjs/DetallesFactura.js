@@ -517,6 +517,7 @@ const montoRestante =hasPagos
                     <Descriptions.Item label="RFC">{empresa.rfc}</Descriptions.Item>
                     <Descriptions.Item label="Contacto">{cliente.nombrePila} {cliente.apPaterno} {cliente.apMaterno}</Descriptions.Item>
                     <Descriptions.Item label="Contacto">{cliente.correo} </Descriptions.Item>
+                    <Descriptions.Item label="Porcentaje">{factura.porcentaje}% </Descriptions.Item>
                   </Descriptions>
                   </Col>
                 </Row>
