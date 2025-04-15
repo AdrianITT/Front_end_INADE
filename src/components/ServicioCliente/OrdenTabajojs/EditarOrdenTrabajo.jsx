@@ -28,7 +28,7 @@ import {
   deleteOrdenTrabajoServicio,
 } from "../../../apis/ApisServicioCliente/OrdenTabajoServiciosApi";
 // Función para obtener la data de cotización (incluye precio en cotizacionServicio)
-import { getDetallecotizaciondataById } from "../../../apis/ApisServicioCliente/CotizacionApi";
+//import { getDetallecotizaciondataById } from "../../../apis/ApisServicioCliente/CotizacionApi";
 // Función para obtener la lista de servicios disponibles
 import { getAllServicio } from "../../../apis/ApisServicioCliente/ServiciosApi";
 
@@ -56,11 +56,12 @@ const EditarOrdenTrabajo = () => {
     const fetchOrdenData = async () => {
       try {
         const response = await EditOrdenTrabajoData(id);
+        console.log("Orden de trabajo data:", response.data);
         const data = response.data;
         setOrdenData(data.ordenTrabajo);
     
-        const resCot = await getDetallecotizaciondataById(data.ordenTrabajo.id);
-        const cotServicios = resCot.data.cotizacionServicio;
+        //const resCot = await getDetallecotizaciondataById(data.ordenTrabajo.id);
+        const cotServicios = data.ordenTrabajoServicios;
     
         const serviciosMapped = data.ordenTrabajoServicios.map((ots) => {
           const match = cotServicios.find(

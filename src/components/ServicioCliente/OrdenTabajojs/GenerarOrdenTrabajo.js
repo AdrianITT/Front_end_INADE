@@ -29,6 +29,7 @@ const GenerarOrdenTrabajo = () => {
   const navigate=useNavigate();
   const [isOrdenConfirmModalVisible, setIsOrdenConfirmModalVisible] = useState(false);
   const [ordenFormValues, setOrdenFormValues] = useState(null);
+  const [serviciosParaEliminar, setServiciosParaEliminar] = useState([]);
   
     // Obtener el ID de la organización una sola vez
     const organizationId = useMemo(() => parseInt(localStorage.getItem("organizacion_id"), 10), []);
@@ -158,9 +159,13 @@ const GenerarOrdenTrabajo = () => {
       };
       const ordenResponse = await createOrdenTrabajo(ordenData);
       const ordenTrabajoId = ordenResponse.data.id;
-  
+      // Filtrar los servicios que NO se deben eliminar
+      const serviciosAFiltrar = servicios.filter(
+        servicio => !serviciosParaEliminar.includes(servicio.id)
+      );
+      
       // Crear los servicios relacionados
-      for (const concepto of servicios) {
+      for (const concepto of serviciosAFiltrar) {
         const dataServicio = {
           cantidad: concepto.cantidad,
           descripcion: concepto.descripcion,
@@ -335,9 +340,23 @@ const receptorSeleccionado = receptor.find(r => r.id === ordenFormValues?.recept
               <h3>Concepto {index +1}</h3>
               <div>            
               <Row justify="end">
-                <Checkbox onChange={() => handleRemoveConcepto(index)}>
-                  Eliminar
-                </Checkbox>
+              <Checkbox 
+                checked={serviciosParaEliminar.includes(servicio.id)}
+                onChange={(e) => {
+                  const checked = e.target.checked;
+                  if (checked) {
+                    // Agregar el id al estado
+                    setServiciosParaEliminar(prev => [...prev, servicio.id]);
+                  } else {
+                    // Remover el id del estado
+                    setServiciosParaEliminar(prev =>
+                      prev.filter(id => id !== servicio.id)
+                    );
+                  }
+                }}
+              >
+                Eliminar
+              </Checkbox>
               </Row>
                           </div>
               <Row gutter={16}>
