@@ -44,6 +44,7 @@ const CrearPreCotizaciones = () => {
   const [conceptos, setConceptos] = useState([
     { id: 1, servicio: "", cantidad: 1, precio: 0, precioFinal: 0, descripcion: "" },
   ]);
+  const [conceptosParaEliminar, setConceptosParaEliminar] = useState([]);
   const [messageApi, contextHolder] = message.useMessage();
   const [isNuevoServicioModalVisible, setIsNuevoServicioModalVisible] = useState(false);
   const [isModalOpenMetodos, setIsModalOpenMetodos] = useState(false);

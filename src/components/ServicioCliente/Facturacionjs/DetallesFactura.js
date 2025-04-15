@@ -11,6 +11,7 @@ import { getAllFacturaPagos } from "../../../apis/ApisServicioCliente/FacturaPag
 import {  getAllfacturafacturama } from "../../../apis/ApisServicioCliente/FacturaFacturamaApi";
 import { getInfoSistema } from "../../../apis/ApisServicioCliente/InfoSistemaApi";
 import ComprobantePago from "./ModalComprobantePago";
+import "./estiloDetalleFactura.css";
 //import MenuItem from "antd/es/menu/MenuItem";
 
 
@@ -532,16 +533,21 @@ const montoRestante =hasPagos
                     type="info"
                     showIcon
                   />
-                  <Button color="danger"onClick={handleCrearFactura} variant="solid"
-                    style={{ marginTop: "20px" }}
-                  >
-                    Crear Factura
-                  </Button>
-                  <Button type="dashed" danger onClick={handleDeleteFactura} variant="solid"
-                    style={{ marginTop: "20px" }}
-                  >
-                    Eliminar Factura
-                  </Button></Flex>
+                <div className="container-botones">
+                      <Button
+                        onClick={handleCrearFactura}
+                        className="btn-crear-factura"
+                      >
+                        Crear Factura
+                      </Button>
+                      <Button
+                        onClick={handleDeleteFactura}
+                        className="btn-eliminar-factura"
+                      >
+                        Eliminar Factura
+                      </Button>
+                </div>
+                  </Flex>
               ) : (
                 <div >
                   <Dropdown overlay={menu} trigger={["click"]}>

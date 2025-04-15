@@ -401,6 +401,7 @@ const receptorSeleccionado = receptor.find(r => r.id === ordenFormValues?.recept
                   label="Descripción"
                   rules={[{ required: true, message: "Por favor ingresa la descripción." }]}
                   initialValue={servicio.descripcion} 
+
                 >
                   <TextArea
                     placeholder="Escribe aquí la descripción del servicio"
@@ -410,6 +411,7 @@ const receptorSeleccionado = receptor.find(r => r.id === ordenFormValues?.recept
                     onChange={(e) =>
                       handleInputChange(index, "descripcion", e.target.value)
                     }
+                    disabled={true}
                   />
                 </Form.Item>
                 </Col>
