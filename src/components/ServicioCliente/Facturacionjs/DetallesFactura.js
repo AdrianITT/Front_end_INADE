@@ -73,7 +73,7 @@ const DetallesFactura = () => {
       key: "precioUnitario",
       render: (valorEnMXN) => {
         // Convertimos al vuelo si es USD
-        const convertido = (valorEnMXN / factorConversion).toFixed(2);
+        const convertido = (valorEnMXN).toFixed(2);
         return `$${convertido} ${esUSD ? "USD" : "MXN"}`;
       },
     },
@@ -83,7 +83,7 @@ const DetallesFactura = () => {
       key: "total",
       render: (valorEnMXN) => {
         // Convertimos al vuelo si es USD
-        const convertido = (valorEnMXN / factorConversion).toFixed(2);
+        const convertido = (valorEnMXN).toFixed(2);
         return `$${convertido} ${esUSD ? "USD" : "MXN"}`;
       },
     },
@@ -553,20 +553,20 @@ const montoRestante =hasPagos
               )}
               <Card title="Cuenta" bordered style={{ marginTop: "20px" , padding:"40px"}}>
                 <p><strong>Subtotal: </strong>{" "}
-                { (subtotal / factorConversion).toFixed(2) }
+                { subtotal.toFixed(2) }
                 {" "}
                 { esUSD ? "USD" : "MXN" }</p>
                 <p><strong>Descuento:</strong> {descuento}%</p>
                 <p><strong>Subtotal - Descuento:</strong>{" "}
-                { ((subtotal - (subtotal * descuento / 100)) / factorConversion).toFixed(2) }
+                { ((subtotal - (subtotal * descuento / 100)) ).toFixed(2) }
                 {" "}
                 { esUSD ? "USD" : "MXN" }</p>
                 <p><strong>IVA :</strong>{" "}
-                { (((subtotal - (subtotal * descuento / 100)) * (porcentajeIVA)) / factorConversion).toFixed(2) }
+                { (((subtotal - (subtotal * descuento / 100)) * (porcentajeIVA)) ).toFixed(2) }
                 {" "}
                 { esUSD ? "USD" : "MXN" }</p>
                 <p><strong>Importe:</strong>{" "}
-                { (importeTotal / factorConversion).toFixed(2) }
+                { (importeTotal ).toFixed(2) }
                 {" "}
                 { esUSD ? "USD" : "MXN" }</p>
               </Card>

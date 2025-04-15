@@ -47,19 +47,18 @@ const CrearFactura = () => {
     const [iva, setIva] = useState(0);
     const [total, setTotal] = useState(0);
     const[descuento, setDescuento]=useState(0);
-
-    const esUSD =moneda.codigo === "USD";
+    console.log("Moneda codigo:", moneda.codigo.codigo);
+    const esUSD = String(moneda.codigo.codigo).toUpperCase() === "USD" || moneda.codigo.id === 2;
     const factorConversion = esUSD ? tipoCambioDolar : 1;
 
     // Cargar datos al montar el componente
     useEffect(() => {
-        obtenerUsoCfdi();
-        obtenerFormaPago();
-        obtenerMetodoPago();
-        obtenerRFCEmisor();
-        fetchTipoCambio();
-    }, [id]);
-
+      obtenerUsoCfdi();
+      obtenerFormaPago();
+      obtenerMetodoPago();
+      obtenerRFCEmisor();
+      fetchTipoCambio();
+  }, [id]);
 
   useEffect(() => {
     const fetchFacturaData = async () => {
@@ -84,9 +83,9 @@ const CrearFactura = () => {
         setTipoMoneda(data.cotizacion.tipoMoneda);
 
         form.setFieldsValue({
-          subtotal: `$${(data.valores.subtotal / factorConversion).toFixed(2)} ${esUSD ? "USD" : "MXN"}`,
-          iva: `$${(data.valores.iva / factorConversion).toFixed(2)} ${esUSD ? "USD" : "MXN"}`,
-          total: `$${(data.valores.total / factorConversion).toFixed(2)} ${esUSD ? "USD" : "MXN"}`
+          subtotal: `$${data.valores.subtotal } ${data.cotizacion.tipoMoneda.codigo ? "USD" : "MXN"}`,
+          iva: `$${data.valores.iva } ${data.cotizacion.tipoMoneda.codigo ? "USD" : "MXN"}`,
+          total: `$${data.valores.total} ${data.cotizacion.tipoMoneda.codigo ? "USD" : "MXN"}`
         });
         form.setFieldsValue({ poresentajeFactura: 0 });
   
@@ -189,7 +188,7 @@ const CrearFactura = () => {
       key: "precio",
       render: (_, record) => {
         const precio = record?.cotizacionServicio?.precio || 0;
-        return `$${(precio / factorConversion).toFixed(2)} ${esUSD ? "USD" : "MXN"}`;
+        return `$${(precio).toFixed(2)} ${esUSD ? "USD" : "MXN"}`;
       },
     },
     {
@@ -199,7 +198,7 @@ const CrearFactura = () => {
         const precio = record?.cotizacionServicio?.precio || 0;
         const cantidad = record?.ordenTrabajoServicio?.cantidad || 0;
         const importe = precio * cantidad;
-        return `$${(importe / factorConversion).toFixed(2)} ${esUSD ? "USD" : "MXN"}`;
+        return `$${(importe).toFixed(2)} ${esUSD ? "USD" : "MXN"}`;
       },
     },
     
@@ -209,20 +208,20 @@ const CrearFactura = () => {
 
 
   const handlecrearFactura=async(values)=>{
-    const importeEnMoneda = parseFloat(total) / factorConversion;
+    const importeEnMoneda = parseFloat(total) ;
     const porcentaje = values.poresentajeFactura ?? 0;
     const preioDescuento = parseFloat(importeEnMoneda) * ((100-porcentaje ) / 100);
     const datosFactura={
       notas:values.notas|| "",
       ordenCompra: values.ordenCompra||"",
       fechaExpedicion: values.fechaExpedicion.format("YYYY-MM-DDTHH:mm:ss[Z]"),  // Formato correcto de fecha
-        ordenTrabajo: parseInt(id),  // ID de la orden de trabajo
-        tipoCfdi: values.tipoCfdi,  // ID del CFDI seleccionado
-        formaPago: values.formaPago,  // ID de la forma de pago seleccionada
-        metodoPago: values.metodoPago, // ID del método de pago seleccionado
-        importe: preioDescuento,
-        tipoMoneda: tipomoneda.codigo,
-        porcentaje:values?.poresentajeFactura||0,
+      ordenTrabajo: parseInt(id),  // ID de la orden de trabajo
+      tipoCfdi: values.tipoCfdi,  // ID del CFDI seleccionado
+      formaPago: values.formaPago,  // ID de la forma de pago seleccionada
+      metodoPago: values.metodoPago, // ID del método de pago seleccionado
+      importe: preioDescuento.toFixed(2),
+      tipoMoneda: tipomoneda.codigo,
+      porcentaje:values?.poresentajeFactura||0,
     }
     try {
       message.success("Factura creada con éxito");
@@ -236,6 +235,11 @@ const CrearFactura = () => {
       message.error("Error al crear la factura");
   }
   }
+  const toFixedSeguro = (value, decimals = 2) => {
+    const num = parseFloat(value);
+    return isNaN(num) ? "0.00" : num.toFixed(decimals);
+  };
+  
   
 
   return (
@@ -391,8 +395,7 @@ const CrearFactura = () => {
           <Col span={10}>
             <div className="factura-summary">
             <Form.Item label="Subtotal:" name="subtotal">
-            <Input value={`${valor.subtotal} `}
-              disabled  />
+            <Input value={`$${valor.subtotal} ${esUSD ? "USD" : "MXN"}`} disabled />
             </Form.Item>
             <Form.Item label="Descuento:">
               <Input value={`${descuento}`} disabled />
@@ -401,11 +404,11 @@ const CrearFactura = () => {
               <Input value={`${(tasaIva * 100).toFixed(2)}%`} disabled />
             </Form.Item>
             <Form.Item label="IVA:" name="iva">
-              <Input value={`$${valor.iva}`}
+              <Input value={`$${valor.iva}${esUSD ? "USD" : "MXN"}`}
               disabled />
             </Form.Item>
             <Form.Item label="Total:" name="total">
-              <Input value={`$${(valor.total / factorConversion).toFixed(2)} ${esUSD ? "USD" : "MXN"}`}
+              <Input value={`$${valor.total} ${esUSD ? "USD" : "MXN"}`}
               disabled />
             </Form.Item>
           </div>
