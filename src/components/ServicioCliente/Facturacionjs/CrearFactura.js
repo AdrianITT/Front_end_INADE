@@ -83,9 +83,9 @@ const CrearFactura = () => {
         setTipoMoneda(data.cotizacion.tipoMoneda);
 
         form.setFieldsValue({
-          subtotal: `$${data.valores.subtotal } ${data.cotizacion.tipoMoneda.codigo ? "USD" : "MXN"}`,
-          iva: `$${data.valores.iva } ${data.cotizacion.tipoMoneda.codigo ? "USD" : "MXN"}`,
-          total: `$${data.valores.total} ${data.cotizacion.tipoMoneda.codigo ? "USD" : "MXN"}`
+          subtotal: `$${data.valores.subtotal } ${data.cotizacion.tipoMoneda.codigo}`,
+          iva: `$${data.valores.iva } ${data.cotizacion.tipoMoneda.codigo }`,
+          total: `$${data.valores.total} ${data.cotizacion.tipoMoneda.codigo } `
         });
         form.setFieldsValue({ poresentajeFactura: 0 });
   
