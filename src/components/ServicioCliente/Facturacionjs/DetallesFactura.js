@@ -532,16 +532,38 @@ const montoRestante =hasPagos
                     type="info"
                     showIcon
                   />
-                  <Button color="danger"onClick={handleCrearFactura} variant="solid"
-                    style={{ marginTop: "20px" }}
-                  >
-                    Crear Factura
-                  </Button>
-                  <Button type="dashed" danger onClick={handleDeleteFactura} variant="solid"
-                    style={{ marginTop: "20px" }}
-                  >
-                    Eliminar Factura
-                  </Button></Flex>
+                  <div style={{ display: 'flex', gap: '16px', marginTop: '20px', alignItems: 'center' }}>
+                    <Button
+                      type="primary"
+                      onClick={handleCrearFactura}
+                      style={{
+                        backgroundColor: '#52c41a', // Verde
+                        borderColor: '#52c41a',
+                        borderRadius: '8px',
+                        color: '#fff',
+                        padding: '10px 20px',
+                        fontSize: '16px'
+                      }}
+                    >
+                      Crear Factura
+                    </Button>
+                    <Button
+                      type="primary"
+                      danger
+                      onClick={handleDeleteFactura}
+                      style={{
+                        backgroundColor: '#f5222d', // Rojo
+                        borderColor: '#f5222d',
+                        borderRadius: '8px',
+                        color: '#fff',
+                        padding: '10px 20px',
+                        fontSize: '16px'
+                      }}
+                    >
+                      Eliminar Factura
+                    </Button>
+                  </div>
+                  </Flex>
               ) : (
                 <div >
                   <Dropdown overlay={menu} trigger={["click"]}>
