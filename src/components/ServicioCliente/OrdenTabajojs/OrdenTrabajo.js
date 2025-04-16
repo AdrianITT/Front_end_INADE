@@ -5,7 +5,7 @@ import "./cssOrdenTrabajo/Generarorden.css";
 import { getAllOrdenesTrabajoData } from "../../../apis/ApisServicioCliente/OrdenTrabajoApi";
 
 const LOCAL_STORAGE_KEY = "ordenes_trabajo_state";
-const TIEMPO_EXPIRACION_MS = 1 * 60 * 1000; // 10 minutos
+const TIEMPO_EXPIRACION_MS = 1 * 60 * 1000; // 1 minutos
 
 // Guardar con timestamp
 const guardarEstadoEnLocalStorage = (data) => {
