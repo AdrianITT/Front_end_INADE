@@ -46,22 +46,6 @@ const Cotizar = () => {
     [filteredData, cotizaciones]
   );
 
-  const sortedDataSource = [...dataSource].sort((a, b) => {
-    return parseInt(a["Cotización"]) - parseInt(b["Cotización"]);
-  });
-
-  const sortedDataSources = [...dataSource].sort((a, b) => {
-    const aCot = a["Cotización"];
-    const bCot = b["Cotización"];
-  
-    // 1. Coloca primero los que no tienen cotización
-    if (!aCot && bCot) return -1;
-    if (aCot && !bCot) return 1;
-    if (!aCot && !bCot) return 0;
-  
-    // 2. Si ambos tienen, ordena de menor a mayor
-    return parseInt(aCot) - parseInt(bCot);
-  });
   
   
 
@@ -104,7 +88,6 @@ const Cotizar = () => {
             bordered
             pagination={{
               pageSize: 10,
-              showSizeChanger: true,
             }}
           />
 
