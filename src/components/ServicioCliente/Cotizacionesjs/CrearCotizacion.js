@@ -442,6 +442,9 @@ const RegistroCotizacion = () => {
                     placeholder="Selecciona un servicio"
                     value={concepto.servicio || undefined}
                     onChange={(value) => handleServicioChange(concepto.id, value)}
+                    filterOption={(input, option) =>
+                      option.children.toLowerCase().includes(input.toLowerCase())
+                    }
                   >
                     {servicios.map(serv => (
                       <Select.Option key={serv.id} value={serv.id}>
