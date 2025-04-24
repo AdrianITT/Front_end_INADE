@@ -40,6 +40,7 @@ import EditarOrdenTrabajo from "./components/ServicioCliente/OrdenTabajojs/Edita
 import FacturaOTMultiples from "./components/ServicioCliente/Facturacionjs/FacturaOTMultiples";
 import EditarPreCotizacion from "./components/ServicioCliente/preCotizacion/EditarPreCotizacion";
 import VerificarExpiracionLocalStorage from "./components/DataLocalStorage/LocalStorage";
+import NoAutorizado from "./components/FetchProtected/NoAutorizado";
 
 // Hook para cambiar el título de la pestaña
 const usePageTitle = () => {
@@ -94,7 +95,7 @@ const AppRouter = () => {
         {/* Ruta para el login sin el Layout */}
         <Route path="/" element={<Login />} />
         <Route path="/RegistroUsuarios" element={<RegistroUsuarios />} />
-        
+        <Route path="/no-autorizado" element={<NoAutorizado />} />
         {/* Rutas envueltas con Layout */}
         <Route path="/" element={
             <PageWrapper>

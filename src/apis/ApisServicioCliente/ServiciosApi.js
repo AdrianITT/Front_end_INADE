@@ -25,3 +25,5 @@ export const updateServicio = async (id, data) => {
 };
 
 export const getServicioById = async (id) => Api_Host.get(`/servicio/${id}/`);
+
+export const getServicioData = async (id) => Api_Host.get(`/allServiciosData/${id}/`);

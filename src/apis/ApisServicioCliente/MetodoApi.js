@@ -23,3 +23,5 @@ export const deleteMetodo = async (id) => {
 };
 
 export const getMetodoById = (id) => Api_Host.get(`/metodos/${id}/`);
+
+export const getAllMetodoData=(id) => Api_Host.get(`/allMetodosData/${id}/`);

@@ -33,11 +33,6 @@ const DetalleOrdenTrabajo = () => {
         const data = detailResponse.data;
         const Ot= await getOrdenTrabajoById(orderId);
         
-        console.log("Detalle Orden Trabajo:", data);
-        console.log("data.cliente:", data.cliente);
-        console.log("data.empresa:", data.empresa);
-        console.log("data.receptor:", data.receptor);
-        console.log("data.estado:", data.estado);
         setClientData(data.cliente);
         setEmpresa(data.empresa);
         setRecep(data.receptor);
@@ -45,7 +40,6 @@ const DetalleOrdenTrabajo = () => {
         
         // Si en la respuesta tienes algo como data.orden con info adicional (código, etc.)
         setOrderHeader(Ot.data);
-        console.log("data.orden:", Ot.data);
         setIdCotizacion(data.cotizacion);
         // Si la respuesta ya incluye los servicios con todo lo que necesitas:
         //  (cantidad, notas, nombreServicio, etc.)
@@ -57,6 +51,10 @@ const DetalleOrdenTrabajo = () => {
         // y hacer llamadas a getMetodoById(...) como hacías antes.
       } catch (error) {
         console.error("Error al obtener el detalle de la orden:", error);
+        const status = error.response?.status;
+        if (status === 403 || status === 404|| status === 500) {
+          return navigate("/no-autorizado", { replace: true });
+        }
       }
     };
   

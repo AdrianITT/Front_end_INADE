@@ -85,7 +85,8 @@ const CreateEmpresaModal = ({ visible, onCancel, onCreate, regimenFiscal,usosCfd
             </Form.Item>
             <Form.Item 
             label="Uso CFDI:" 
-            name="UsoCfdi">
+            name="UsoCfdi"
+            rules={[{ required: true, message: 'Uso CFDI' }]}>
             <Select
                 showSearch
                 placeholder="Selecciona un Uso CFDI"
@@ -145,7 +146,10 @@ const CreateEmpresaModal = ({ visible, onCancel, onCreate, regimenFiscal,usosCfd
             <Form.Item
               label="Codigo Postal:"
               name="codigoPostal"
-              rules={[{ required: true, message: 'Código postal requerido' }]}
+              rules={[{ required: true, message: 'Código postal requerido' },
+                { len: 5, message: 'Debe tener 5 caracteres' },
+                { pattern: /^\d+$/, message: 'Sólo dígitos permitidos' },
+              ]}
             >
               <Input />
             </Form.Item>

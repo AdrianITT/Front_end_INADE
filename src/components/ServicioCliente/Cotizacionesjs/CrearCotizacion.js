@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import "./Crearcotizacion.css";
 import { Form, Input, Button, Row, Col, Select, Checkbox, Divider, message, DatePicker, Card, Modal,Result, InputNumber } from "antd";
 import dayjs from "dayjs";
@@ -7,13 +7,13 @@ import { getClienteById } from "../../../apis/ApisServicioCliente/ClienteApi";
 import { getEmpresaById } from '../../../apis/ApisServicioCliente/EmpresaApi';
 import { getAllTipoMoneda } from "../../../apis/ApisServicioCliente/Moneda";
 import { getAllIva } from "../../../apis/ApisServicioCliente/ivaApi";
-import { getAllServicio } from "../../../apis/ApisServicioCliente/ServiciosApi";
+import { getServicioData } from "../../../apis/ApisServicioCliente/ServiciosApi";
 import { createCotizacion } from "../../../apis/ApisServicioCliente/CotizacionApi";
 import { createCotizacionServicio } from "../../../apis/ApisServicioCliente/CotizacionServicioApi";
 import { getInfoSistema } from "../../../apis/ApisServicioCliente/InfoSistemaApi";
 import { getAllClaveCDFI } from "../../../apis/ApisServicioCliente/ClavecdfiApi";
 import { getAllUnidadCDFI } from "../../../apis/ApisServicioCliente/unidadcdfiApi";
-import { getAllMetodo,createMetodo} from "../../../apis/ApisServicioCliente/MetodoApi";
+import {createMetodo, getAllMetodoData} from "../../../apis/ApisServicioCliente/MetodoApi";
 import {createServicio} from "../../../apis/ApisServicioCliente/ServiciosApi";
 
 const { TextArea } = Input;
@@ -48,7 +48,7 @@ const RegistroCotizacion = () => {
 
   const [formNuevoServicio] = Form.useForm();
   const [formMetodo] = Form.useForm();
-
+  const organizationId = useMemo(() => parseInt(localStorage.getItem("organizacion_id"), 10), []);
 
   // Obtener el tipo de cambio del dólar
   useEffect(() => {
@@ -66,7 +66,7 @@ const RegistroCotizacion = () => {
 
   const fetchServicios = async () => {
     try {
-      const response = await getAllServicio();
+      const response = await getServicioData(organizationId);
       console.log("Servicios recibidos:", response.data);
       // Filtra los que no tengan `id`
       const validServices = Array.isArray(response.data)
@@ -93,7 +93,7 @@ const RegistroCotizacion = () => {
         console.error("Error al cargar unidades CFDI", error);
       }
       try {
-        const metodosResponse = await getAllMetodo();
+        const metodosResponse = await getAllMetodoData(organizationId);
         setMetodos(metodosResponse.data);
       } catch (error) {
         console.error("Error al cargar métodos", error);
@@ -301,9 +301,12 @@ const RegistroCotizacion = () => {
           message.error("Por favor, complete todos los campos obligatorios.");
           return;
         }
-    
+        const dataToSend = {
+          ...values,
+          organizacion: organizationId,   // <-- aquí
+        };
         // Enviar los datos a la API
-        const response = await createMetodo(values);  // Llamamos a la función que envía los datos
+        const response = await createMetodo(dataToSend);  // Llamamos a la función que envía los datos
     
         // Actualizamos la lista de métodos después de la creación
         setMetodos(prevMetodos => [...prevMetodos, response]);
@@ -575,8 +578,12 @@ const RegistroCotizacion = () => {
         onOk={async () => {
           try {
             const values = await formNuevoServicio.validateFields();
+            const dataToSend = {
+              ...values,
+              organizacion: organizationId,   // <-- aquí
+            };
             // Llamar a la API para crear el servicio
-            const response = await createServicio(values);
+            const response = await createServicio(dataToSend);
             message.success("Nuevo servicio creado");
             // Actualizar la lista de servicios (agregando el nuevo)
             setServicios([...servicios, response.data]);
@@ -604,7 +611,7 @@ const RegistroCotizacion = () => {
       onOk={async () => {
         try {
           const values = await formNuevoServicio.validateFields();
-          const dataToSend = { ...values, estado: values.estado || 5 };
+          const dataToSend = { ...values, estado: values.estado || 5, organizacion: organizationId };
 
           if (!values.unidadCfdi || !values.claveCfdi) {
             message.error("Por favor, complete todos los campos obligatorios.");

@@ -1,10 +1,10 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Button, Input, Upload, Form, Typography, Alert, message, Modal } from "antd";
 import { UploadOutlined, ArrowLeftOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { Api_Host } from "../../../apis/api";
-import { createCSD } from "../../../apis/ApisServicioCliente/csdApi";
+import { createCSD,getAllCsdData } from "../../../apis/ApisServicioCliente/csdApi";
 
 import "./CargarCSD.css";
 
@@ -16,6 +16,7 @@ const CargarCSD = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [confirmationText, setConfirmationText] = useState("");
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [csdActual, setCsdActual] = useState(null);
   const navigate = useNavigate();
 
   // Obtener el ID de la organización una sola vez desde localStorage
@@ -23,6 +24,26 @@ const CargarCSD = () => {
     () => parseInt(localStorage.getItem("organizacion_id"), 10),
     []
   );
+  const fetchCsdActual = async () => {
+    try {
+      //const response = await FacturamaCSD(organizationId);
+      const response =await getAllCsdData(organizationId);
+      console.log("📌 Datos del CSD actual:", response.data);
+      if (Array.isArray(response.data) && response.data.length > 0 && response.data[0].rfc) {
+        setCsdActual(response.data[0]);
+      } else {
+        setCsdActual(null);
+      }
+    } catch (error) {
+      console.error("❌ No se pudo obtener el CSD actual:", error);
+      setCsdActual(null); // Asume que no hay CSD
+    }
+  };
+  useEffect(() => {
+    fetchCsdActual();
+  }, [organizationId, loading]);
+  
+  
 
   // Función para enviar el formulario de carga del CSD
   const handleSubmit = async (values) => {
@@ -59,6 +80,7 @@ const CargarCSD = () => {
       if (response.status === 201 || response.status === 200) {
         message.success("✅ Certificado de Sello Digital (CSD) guardado correctamente.");
         form.resetFields();
+        await fetchCsdActual();
         // Puedes actualizar el estado o realizar otra acción si es necesario
         const responseCSD = await axios.get(
           `${Api_Host.defaults.baseURL}/carga-csd/${organizationId}/`
@@ -107,6 +129,7 @@ const CargarCSD = () => {
       setDeleteLoading(false);
       setIsModalVisible(false);
       setConfirmationText("");
+      await fetchCsdActual();
     }
   };
 
@@ -140,6 +163,7 @@ const CargarCSD = () => {
         </Form.Item>
 
         <Form.Item
+        disabled={!!csdActual}
           label="Archivo .key:"
           name="archivokey"
           valuePropName="fileList"
@@ -158,6 +182,23 @@ const CargarCSD = () => {
         >
           <Input.Password placeholder="Ingrese la contraseña" />
         </Form.Item>
+
+        {csdActual?.rfc && (
+          <Alert
+            type="success"
+            message="✅ Certificado de Sello Digital ya cargado"
+            description={
+              <>
+                <p><strong>RFC:</strong> {csdActual.rfc}</p>
+                <p>Si deseas reemplazarlo, vuelve a subir los archivos.</p>
+              </>
+            }
+            showIcon
+            style={{ marginBottom: 24 }}
+          />
+        )}
+
+
 
         <Alert
           message="Consideraciones"

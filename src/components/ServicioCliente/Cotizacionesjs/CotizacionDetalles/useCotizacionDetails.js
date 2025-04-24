@@ -1,7 +1,9 @@
 import { useState, useEffect, useMemo } from "react";
 import { getDetallecotizaciondataById, getCotizacionById, getAllCotizacionByCliente } from "../../../../apis/ApisServicioCliente/CotizacionApi";
+import { useNavigate } from "react-router-dom";
 
 export const useCotizacionDetails = (id) => {
+  const navigate = useNavigate();
   const [cotizacionInfo, setCotizacionInfo] = useState([]);
   const [loading, setLoading] = useState(false);
   const [servicios, setServicios] = useState([]);
@@ -39,6 +41,10 @@ export const useCotizacionDetails = (id) => {
       setalldata({...datas});
     } catch (error) {
       console.error("❌ Error al obtener detalles de cotización:", error);
+      const status = error.response?.status;
+       if (status === 403 || status === 404|| status === 500) {
+         return navigate("/no-autorizado", { replace: true });
+       }
     } finally {
       setLoading(false);
     }

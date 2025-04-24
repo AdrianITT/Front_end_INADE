@@ -6,17 +6,17 @@ import dayjs from "dayjs";
 import { useParams, useNavigate } from "react-router-dom";
 import { getAllTipoMoneda } from "../../../apis/ApisServicioCliente/Moneda";
 import { getAllIva } from "../../../apis/ApisServicioCliente/ivaApi";
-import { getAllServicio } from "../../../apis/ApisServicioCliente/ServiciosApi";
-import { createPreCotizacion, getAllDataPrecotizacion  } from "../../../apis/ApisServicioCliente/precotizacionApi";
+import { getServicioData } from "../../../apis/ApisServicioCliente/ServiciosApi";
+import { createPreCotizacion} from "../../../apis/ApisServicioCliente/precotizacionApi";
 import { createServicioPreCotizacion } from "../../../apis/ApisServicioCliente/ServiciosPrecotizacionApi";
 import { getInfoSistema } from "../../../apis/ApisServicioCliente/InfoSistemaApi";
 import { getAllEmpresas } from "../../../apis/ApisServicioCliente/EmpresaApi";
-import { getAllCliente } from "../../../apis/ApisServicioCliente/ClienteApi";
+//import { getAllCliente } from "../../../apis/ApisServicioCliente/ClienteApi";
 import { getAllMetodo,createMetodo} from "../../../apis/ApisServicioCliente/MetodoApi";
 import {createServicio} from "../../../apis/ApisServicioCliente/ServiciosApi";
 import { getAllUnidadCDFI } from "../../../apis/ApisServicioCliente/unidadcdfiApi";
 import { getAllClaveCDFI } from "../../../apis/ApisServicioCliente/ClavecdfiApi";
-import ErrorModal from "./PreCotizacionesModal/PreCotizacionModal";
+//import ErrorModal from "./PreCotizacionesModal/PreCotizacionModal";
 
 const { TextArea } = Input;
 
@@ -86,12 +86,13 @@ const CrearPreCotizaciones = () => {
     }, []);
   const fetchServicios = async () => {
     try {
-      const response = await getAllServicio();
+      const response = await getServicioData(organizationId);
       //console.log("Servicios recibidos:", response.data);
       // Filtra los que no tengan `id`
       const validServices = Array.isArray(response.data)
         ? response.data.filter(s => s && s.id)
         : [];
+      console.log("Servicios válidos:", validServices);
       setServicios(validServices);
     } catch (error) {
       console.error("Error al cargar los servicios", error);
@@ -151,7 +152,7 @@ const CrearPreCotizaciones = () => {
     };
     const fetchServicios = async () => {
       try {
-        const response = await getAllServicio();
+        const response = await getServicioData(organizationId);
         setServicios(response.data);
       } catch (error) {
         console.error("Error al cargar los servicios", error);
@@ -343,6 +344,7 @@ const CrearPreCotizaciones = () => {
             cantidad: Number(concepto.cantidad) || 0,
             preCotizacion: preCotizacionId,
             servicio: concepto.servicio,
+            organizacion: organizationId,
           };
   
           //console.log("📤 Enviando servicio:", servicioData);
@@ -380,7 +382,10 @@ const CrearPreCotizaciones = () => {
       try {
         // Recoger los datos del formulario (lo que el usuario ha ingresado)
         const values = await formMetodo.validateFields(); // Usando Antd form.validateFields para obtener los valores
-    
+        const dataToSend = {
+          ...values,
+          organizacion: organizationId,   // <-- aquí
+        };
         // Verificar si todos los datos necesarios están presentes
         if (!values.codigo ) {
           message.error("Por favor, complete todos los campos obligatorios.");
@@ -388,7 +393,7 @@ const CrearPreCotizaciones = () => {
         }
     
         // Enviar los datos a la API
-        const response = await createMetodo(values);  // Llamamos a la función que envía los datos
+        const response = await createMetodo(dataToSend);  // Llamamos a la función que envía los datos
     
         // Actualizamos la lista de métodos después de la creación
         setMetodos(prevMetodos => [...prevMetodos, response]);
@@ -591,6 +596,9 @@ const CrearPreCotizaciones = () => {
                       showSearch
                       value={concepto.servicio || undefined}
                       onChange={(value) => handleServicioChange(concepto.id, value)}
+                      filterOption={(input, option) =>
+                        option.children.toLowerCase().includes(input.toLowerCase())
+                      }
                     >
                       {servicios.map(serv => (
                         <Select.Option key={serv.id} value={serv.id}>
@@ -716,7 +724,7 @@ const CrearPreCotizaciones = () => {
             onOk={async () => {
               try {
                 const values = await formNuevoServicio.validateFields();
-                const dataToSend = { ...values, estado: values.estado || 5 };
+                const dataToSend = { ...values, estado: values.estado || 5, organizacion: organizationId };
       
                 if (!values.unidadCfdi || !values.claveCfdi) {
                   message.error("Por favor, complete todos los campos obligatorios.");
