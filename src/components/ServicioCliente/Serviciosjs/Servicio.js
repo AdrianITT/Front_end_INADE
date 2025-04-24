@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Tabs, Table, Input, Button, Modal, Form, Row, Col, Select, Checkbox, message } from "antd";
 import "./Servicio.css"
 //import { Link} from "react-router-dom";
 import { ExclamationCircleOutlined, EditOutlined, CloseOutlined } from "@ant-design/icons";
-import { getAllServicio, deleteServicio, createServicio, updateServicio } from "../../../apis/ApisServicioCliente/ServiciosApi";
-import { getAllMetodo, createMetodo , deleteMetodo} from "../../../apis/ApisServicioCliente/MetodoApi";
+import { deleteServicio, createServicio, updateServicio, getServicioData } from "../../../apis/ApisServicioCliente/ServiciosApi";
+import { createMetodo , deleteMetodo, getAllMetodoData} from "../../../apis/ApisServicioCliente/MetodoApi";
 import { getAllClaveCDFI } from "../../../apis/ApisServicioCliente/ClavecdfiApi";
 import { getAllUnidadCDFI } from "../../../apis/ApisServicioCliente/unidadcdfiApi";
 import { getAllObjectImpuesto_Api } from "../../../apis/ApisServicioCliente/ObjetoimpuestoApi";
@@ -34,7 +34,8 @@ const Servicio = () => {
   const [successMessage, setSuccessMessage] = useState(""); // Mensaje dinámico
   //const [searchServicios, setSearchServicios] = useState("");
   // Al inicio del componente, declara el estado y la función
-const [metodoSeleccionado, setMetodoSeleccionado] = useState(null);
+  const [metodoSeleccionado, setMetodoSeleccionado] = useState(null);
+  const organizationId = useMemo(() => parseInt(localStorage.getItem("organizacion_id"), 10), []);
 
 const handleMetodoChange = (value) => {
   setMetodoSeleccionado(value);
@@ -45,7 +46,7 @@ const handleMetodoChange = (value) => {
   useEffect(() => {
     const fetchMetodos = async () => {
       try {
-        const response = await getAllMetodo();
+        const response = await getAllMetodoData(organizationId);
         setMetodos(response.data); // Almacenar los métodos en el estado
       } catch (error) {
         console.error("Error al cargar los métodos", error);
@@ -59,12 +60,12 @@ const handleMetodoChange = (value) => {
   // Function to fetch all necessary data
   const fetchData = async () => {
     try {
-      const [serviciosRes, metodosRes, claveCDFIRes, unidadCDFIRes, objetoImpuestoRes] = await Promise.all([
-        getAllServicio(),
-        getAllMetodo(),
+      const [metodosRes, claveCDFIRes, unidadCDFIRes, objetoImpuestoRes,serviciosRes ] = await Promise.all([
+        getAllMetodoData(organizationId),
         getAllClaveCDFI(),
         getAllUnidadCDFI(),
         getAllObjectImpuesto_Api(),
+        getServicioData(organizationId)
       ]);
 
       setServicios(serviciosRes.data);
@@ -82,7 +83,7 @@ const handleMetodoChange = (value) => {
   // Function to refresh the service list
   const refreshServicios = async () => {
     try {
-      const response = await getAllServicio();
+      const response = await getServicioData(organizationId);
       setServicios(response.data);
       setFilteredServicios(response.data);
     } catch (error) {
@@ -134,6 +135,7 @@ const handleMetodoChange = (value) => {
       const dataToSend = {
         ...values,
         estado: values.estado || 5,  // Si no existe el campo "estado", asignar 5 por defecto
+        organizacion: organizationId,
       };
 
       // Verificar si todos los datos necesarios están presentes
@@ -270,6 +272,10 @@ const handleConfirmDeleteService = async () => {
     try {
       // Recoger los datos del formulario (lo que el usuario ha ingresado)
       const values = await formMetodo.validateFields(); // Usando Antd form.validateFields para obtener los valores
+      const dataToSend = {
+        ...values,
+        organizacion: organizationId,   // <-- aquí
+      };
   
       // Verificar si todos los datos necesarios están presentes
       if (!values.codigo ) {
@@ -278,7 +284,7 @@ const handleConfirmDeleteService = async () => {
       }
   
       // Enviar los datos a la API
-      const response = await createMetodo(values);  // Llamamos a la función que envía los datos
+      const response = await createMetodo(dataToSend);  // Llamamos a la función que envía los datos
   
       // Actualizamos la lista de métodos después de la creación
       setMetodos(prevMetodos => [...prevMetodos, response]);
@@ -300,6 +306,7 @@ const handleConfirmDeleteService = async () => {
   const handleCancelMetodos = () => {
     setIsModalOpenMetodos(false);
   };
+  /*
   const showModalAlert = (id) => {
     setCurrentServiceId(id);
     setIsModalVisible(true);
@@ -313,19 +320,13 @@ const handleConfirmDeleteService = async () => {
   const handleCancelAlert = () => {
 
     setIsModalVisible(false);
-  };
+  }; */
 
   //datos de la tabla 
   const columnsServicios = [
-    { title: "Código", dataIndex: "id", key: "codigo" },
+    { title: "Código", dataIndex: "codigo", key: "codigo" },
     { title: "Nombre", dataIndex: "nombreServicio", key: "nombreServicio" },
-    { title: "Método", dataIndex: "metodos", key: "metodos",
-      render: (metodoId) => {
-        // Busca el método en la lista de métodos y muestra el código
-        const metodo = metodos.find((m) => m.id === metodoId);
-        return metodo ? metodo.codigo : "No disponible";  // Si el método existe, muestra su código
-      },
-    },
+    { title: "Método", dataIndex: "metodos", key: "metodos"},
     { title: "Precio", dataIndex: "precio", key: "precio" },
     {
       title: "Acción",
@@ -349,9 +350,8 @@ const handleConfirmDeleteService = async () => {
   ];
 
   const columnsMetodos = [
-    { title: "#", dataIndex: "id", key: "id" },
-    { title: "codigo", dataIndex: "codigo", key: "codigo"
-    },
+    { title: "#", dataIndex: "numero", key: "numero" },
+    { title: "codigo", dataIndex: "codigo", key: "codigo"},
     {
       title: "Acción",
       key: "action",

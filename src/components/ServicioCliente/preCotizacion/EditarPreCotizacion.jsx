@@ -17,7 +17,7 @@ import {
 } from "antd";
 import dayjs from "dayjs";
 import { useParams, useNavigate } from "react-router-dom";
-import { getAllServicio } from "../../../apis/ApisServicioCliente/ServiciosApi";
+import { getAllServicio, getServicioData } from "../../../apis/ApisServicioCliente/ServiciosApi";
 import { getAllDataPrecotizacion } from "../../../apis/ApisServicioCliente/precotizacionApi";
 import {updateServicioPreCotizacionById, deleteServicioPreCotizacionById, createServicioPreCotizacion} from "../../../apis/ApisServicioCliente/ServiciosPrecotizacionApi";
 import { getAllTipoMoneda } from "../../../apis/ApisServicioCliente/Moneda";
@@ -101,7 +101,7 @@ const EditarPreCotizacion = () => {
 
     const fetchServiciosDisponibles = async () => {
       try {
-        const response = await getAllServicio();
+        const response = await getServicioData(organizationId);
         setServiciosDisponibles(response.data);
       } catch (error) {
         console.error("Error al cargar servicios disponibles:", error);

@@ -128,6 +128,7 @@ const Cliente = () => {
   // Función para crear un cliente (y crear empresa si es necesario)
   const createClientAndReturnId = async (formValues, createCompanyFlag) => {
     let empresaId = formValues.empresa;
+    console.log("formValues: ", formValues);
     if (createCompanyFlag) {
       const empresaData = {
         nombre: formValues.nombre,
@@ -142,7 +143,6 @@ const Cliente = () => {
         estado: formValues.estado,
         organizacion: organizationId,
         UsoCfdi: formValues.UsoCfdi,
-        division:formValues.SubDivision,
       };
       try {
         const createEmpresaResponse = await createEmpresas(empresaData);
@@ -169,6 +169,7 @@ const Cliente = () => {
       ciudadCliente: formValues.ciudadCliente,
       codigoPostalCliente: formValues.codigoPostalCliente,
       estadoCliente: formValues.estadoCliente,
+      division:formValues.SubDivision,
     };
   
     if (!clienteData.nombrePila || !clienteData.apPaterno || !clienteData.correo || !clienteData.empresa) {

@@ -159,7 +159,10 @@ const EditEmpresaModal = ({ visible, onCancel, onEdit, regimenFiscal, empresa,us
             <Form.Item
               label="Codigo Postal:"
               name="codigoPostal"
-              rules={[{ required: true, message: 'Código postal requerido' }]}
+              rules={[{ required: true, message: 'Código postal requerido' },
+                { len: 5, message: 'Debe tener 5 caracteres' },
+                { pattern: /^\d+$/, message: 'Sólo dígitos permitidos' },
+              ]}
             >
               <Input />
             </Form.Item>

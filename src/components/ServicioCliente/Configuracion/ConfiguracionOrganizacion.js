@@ -34,6 +34,7 @@ const ConfiguraciónOrganizacion=()=>{
   const [isSuccessModalVisible, setIsSuccessModalVisible] = useState(false);
   const [isErrorModalVisible, setIsErrorModalVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [activeTab,setActiveTab]=useState("1");
 
   // Obtener el id de la organización del usuario autenticado
   const userOrganizationId = ObtenerOrganizacion("organizacion_id" );// O la forma en la que almacenas el ID de la organización
@@ -143,14 +144,54 @@ const fetchIva = useCallback(async () => {
     }
 }, []);
 
-// useEffect para ejecutar las funciones al montar el componente
 useEffect(() => {
+  fetchTipoMoneda();
+  fetchIva();
+  fetchRegimenFiscal();
+  fetchOrganizacion();
+  setIsModalVisible(true);
+}, [fetchTipoMoneda, fetchIva, fetchRegimenFiscal, fetchOrganizacion]);
+
+
+useEffect(() => {
+  if (activeTab === "1") {
+    fetchOrganizacion();
+    fetchRegimenFiscal();
+  }
+}, [activeTab, fetchOrganizacion, fetchRegimenFiscal]);
+
+useEffect(() => {
+  if (activeTab === "2") {
+    fetchTipoMoneda();
+    fetchIva();
+    if (organizaciones?.infoCotizacion) {
+      fetchInfoCotizacion(organizaciones.infoCotizacion);
+    }
+  }
+}, [activeTab, organizaciones, fetchInfoCotizacion, fetchTipoMoneda, fetchIva]);
+
+useEffect(() => {
+  if (activeTab === "3" && organizaciones?.infoOrdenTrabajo) {
+    fetchInfOrdenTrabajo(organizaciones.infoOrdenTrabajo);
+  }
+}, [activeTab, organizaciones, fetchInfOrdenTrabajo]);
+
+
+useEffect(() => {
+  if (activeTab === "4" && organizaciones?.infoSistema) {
+    fetchInfoConfiguracionSistema(organizaciones.infoSistema);
+  }
+}, [activeTab, organizaciones, fetchInfoConfiguracionSistema]);
+
+
+// useEffect para ejecutar las funciones al montar el componente
+/*useEffect(() => {
     fetchTipoMoneda();
     fetchIva();
     fetchRegimenFiscal();
     fetchOrganizacion();
     setIsModalVisible(true); // Mostrar el modal
-}, [fetchTipoMoneda, fetchIva, fetchRegimenFiscal, fetchOrganizacion]);
+}, [fetchTipoMoneda, fetchIva, fetchRegimenFiscal, fetchOrganizacion]); */
 
   const handleOk = () => {
     setIsModalVisible(false);
@@ -754,18 +795,19 @@ const CotizacionPureva=()=>{
    
      return(
           <div className="main-container">
-          <Tabs defaultActiveKey="1">
+          <Tabs activeKey={activeTab}
+  onChange={(key) => setActiveTab(key)}>
             <Tabs.TabPane tab="Organización" key="1">
-              {renderOrganizacion()}
+              {activeTab==="1"&&renderOrganizacion()}
             </Tabs.TabPane>
             <Tabs.TabPane tab="Cotizaciones" key="2">
-              {renderCotizaciones()}
+              {activeTab==="2"&&renderCotizaciones()}
             </Tabs.TabPane>
             <Tabs.TabPane tab="Órdenes de Trabajo" key="3">
-              {renderOrdenesTrabajo()}
+              {activeTab==="3"&&renderOrdenesTrabajo()}
             </Tabs.TabPane>
             <Tabs.TabPane tab="Configuración del sistema" key="4">
-              {renderConfiguracionSistema()}
+              {activeTab==="4"&&renderConfiguracionSistema()}
             </Tabs.TabPane>
           </Tabs>
     
