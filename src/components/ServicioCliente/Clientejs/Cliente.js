@@ -7,7 +7,7 @@ import {ExclamationCircleOutlined } from "@ant-design/icons";
 import ClienteTable from "./ClienteTable";
 import { createEmpresas } from "../../../apis/ApisServicioCliente/EmpresaApi";
 import { useCatalogos } from "../Clientejs/useCatalogos";
-import { getAllCliente, createCliente, deleteCliente } from "../../../apis/ApisServicioCliente/ClienteApi";
+import { getAllCliente, createCliente, deleteCliente, getAllClienteData } from "../../../apis/ApisServicioCliente/ClienteApi";
 import { getAllTitulo } from "../../../apis/ApisServicioCliente/TituloApi";
 import "./Cliente.css";
 
@@ -34,33 +34,31 @@ const Cliente = () => {
   // Función para cargar clientes desde la API y formatearlos para la tabla
   const loadClientes = useCallback(async () => {
     try {
-      //Obtener todas las empresas de la organizacion
-      const empresaDeLaOrganizacion=empresas.filter(empresa=> empresa.organizacion===organizationId)
-
-      const res = await getAllCliente();
-
-      //Filtrar los clientes que pertenecen a las empresas de la organizacion
-      const clientesFiltrados = res.data.filter(cliente=> empresaDeLaOrganizacion.some(empresa=>empresa.id===cliente.empresa));
-      // Se formatean los clientes: se calcula un flag "incompleto" si faltan datos
-      const clientesFormateados = clientesFiltrados.map((cliente) => {
+      const res = await getAllClienteData(organizationId); // <-- nueva función
+  
+      const clientesFormateados = res.data.map((cliente) => {
         const datosIncompletos =
-          !cliente.nombrePila || !cliente.apPaterno || !cliente.empresa||!cliente.codigoPostalCliente;
+          !cliente.nombrePila || !cliente.apPaterno || !cliente.empresa?.nombre || !cliente.empresa.codigoPostal;
+
         return {
           key: cliente.id,
+          numero: cliente.numero,
+          division: cliente.division,
           Cliente: `${cliente.nombrePila || "Sin nombre"} ${cliente.apPaterno || ""} ${cliente.apMaterno || ""}`,
-          Empresa: empresas.find((e) => e.id === cliente.empresa)?.nombre || "Empresa no encontrada",
+          Empresa: cliente.empresa?.nombre || "Empresa no encontrada",
           Correo: cliente.correo || "Sin correo",
           activo: cliente.activo,
           incompleto: datosIncompletos,
         };
       });
-      // Ordenar los clientes, mostrando primero aquellos con datos incompletos
+  
       const sortedClientes = clientesFormateados.sort((a, b) => b.incompleto - a.incompleto);
       setClientes(sortedClientes);
     } catch (error) {
-      console.error("Error al cargar los clientes", error);
+      console.error("Error al cargar los clientes desde getAllClienteData", error);
     }
-  }, [empresas, organizationId ]);
+  }, [organizationId]);
+  
 
   useEffect(() => {
     if (empresas.length > 0) { // Solo cargar clientes si las empresas ya están cargadas
@@ -136,7 +134,7 @@ const Cliente = () => {
         regimenFiscal: parseInt(formValues.regimenFiscal, 10),
         condicionPago: formValues.condicionPago,
         calle: formValues.calle,
-        numero: formValues.numero,
+        numeroExterior: formValues.numero,
         colonia: formValues.colonia,
         ciudad: formValues.ciudad,
         codigoPostal: formValues.codigoPostal,

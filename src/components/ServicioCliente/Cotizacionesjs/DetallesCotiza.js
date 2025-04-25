@@ -121,7 +121,7 @@ const CotizacionDetalles = () => {
   const handleDuplicarCotizacion = async (clienteIdSeleccionado) => {
     setLoading(true);
     try {
-      console.log("Duplicando con opción:", clienteIdSeleccionado);
+      //console.log("Duplicando con opción:", clienteIdSeleccionado);
       const idCliente=clienteIdSeleccionado; // úsala aquí si lo necesitas
       const response = await getDuplicarCotizacion(id,idCliente);
       const duplicatedId = response.data.nueva_cotizacion_id;
@@ -168,7 +168,7 @@ const CotizacionDetalles = () => {
     <Spin spinning={loading|| emailLoading}>
       <div className="cotizacion-detalles-container">
         <div>
-          <h1>Detalles de la Cotización {id} Proyecto</h1>
+          <h1>Detalles de la Cotización {cotizacionInfo.numero} Proyecto</h1>
         </div>
         
         <Tabs defaultActiveKey="1">

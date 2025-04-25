@@ -5,7 +5,7 @@ import { ExclamationCircleOutlined } from '@ant-design/icons';
 import './Empresa.css';
 
 
-import { getAllEmpresas, createEmpresas, deleteEmpresa, updateEmpresa, getEmpresaById } from '../../../apis/ApisServicioCliente/EmpresaApi';
+import { getAllEmpresas, createEmpresas, deleteEmpresa, updateEmpresa, getEmpresaById, getAllEmpresasData } from '../../../apis/ApisServicioCliente/EmpresaApi';
 import { getAllRegimenFiscal } from '../../../apis/ApisServicioCliente/Regimenfiscla';
 import { getAllUsoCDFI } from '../../../apis/ApisServicioCliente/UsocfdiApi';
 
@@ -45,34 +45,35 @@ const Empresa = () => {
   const loadEmpresas = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await getAllEmpresas();
-      const allData = res.data || [];
-      // Filtra por organización (si lo necesitas)
-      const userOrganizationId = localStorage.getItem("organizacion_id");
-      const filtered = allData.filter(e => e.organizacion === parseInt(userOrganizationId));
-      
-      // Prepara data para la tabla
-      const dataTabla = filtered.map((empresa) => {
-        const incompleta = !empresa.calle || !empresa.numero || !empresa.colonia
-          || !empresa.ciudad || !empresa.estado || !empresa.codigoPostal;
+      const userOrganizationId = parseInt(localStorage.getItem("organizacion_id"), 10);
+      const res = await getAllEmpresasData(userOrganizationId); // NUEVO ENDPOINT
+  
+      const dataTabla = res.data.map((empresa) => {
+        const incompleta =
+          !empresa.calle || !empresa.numeroExterior || !empresa.colonia ||
+          !empresa.ciudad || !empresa.estado || !empresa.codigoPostal;
+  
         return {
           key: empresa.id,
+          numero:empresa.numero,
           Empresa: empresa.nombre,
           RFC: empresa.rfc,
-          Direccion: `${empresa.calle || ''} ${empresa.numero || ''}, ${empresa.colonia || ''}, ${empresa.ciudad || ''}, ${empresa.estado || ''}, ${empresa.codigoPostal || ''}`,
-          incompleta
+          Direccion: empresa.direccioncompleta || "Sin dirección",
+          Organizacion: empresa.organizacion || "No disponible",
+          incompleta,
         };
       });
-
-      // Ordenar para que primero aparezcan las incompletas
+  
+      // Ordenar para mostrar primero las incompletas
       dataTabla.sort((a, b) => b.incompleta - a.incompleta);
       setEmpresas(dataTabla);
     } catch (error) {
-      console.error("Error al cargar las empresas:", error);
+      console.error("Error al cargar empresas desde getAllEmpresasData:", error);
     } finally {
-      setLoading(false); // Desactiva el spinner, haya o no error
+      setLoading(false);
     }
   }, []);
+  
 
   // Cargar régimen fiscal
   const loadRegimenFiscal = useCallback(async () => {

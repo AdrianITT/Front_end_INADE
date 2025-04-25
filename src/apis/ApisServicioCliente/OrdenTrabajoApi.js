@@ -13,3 +13,5 @@ export const getAllOrdenesTrabajoData = (id) => Api_Host.get(`/allordentrabajoda
 export const getDetalleOrdenTrabajoDataById = (id) => Api_Host.get(`/dataordentrabajo/${id}/`);
 //dataeditordentrabajo
 export const EditOrdenTrabajoData = (id) => Api_Host.get(`/dataeditordentrabajo/${id}/`);
+
+export const getAllOrdenTrabajoById = (id) => Api_Host.get(`/crearOrdenTrabajo/${id}/`);

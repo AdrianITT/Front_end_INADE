@@ -16,7 +16,7 @@ const EditEmpresaModal = ({ visible, onCancel, onEdit, regimenFiscal, empresa,us
         regimenFiscal: empresa.regimenFiscal,
         condicionPago: empresa.condicionPago,
         calle: empresa.calle,
-        numero: empresa.numero,
+        numeroExterior: empresa.numeroExterior,
         colonia: empresa.colonia,
         ciudad: empresa.ciudad,
         codigoPostal: empresa.codigoPostal,
@@ -137,7 +137,7 @@ const EditEmpresaModal = ({ visible, onCancel, onEdit, regimenFiscal, empresa,us
             </Form.Item>
             <Form.Item
               label="Numero:"
-              name="numero"
+              name="numeroExterior"
               rules={[{ required: true, message: 'Número requerido' }]}
             >
               <Input />

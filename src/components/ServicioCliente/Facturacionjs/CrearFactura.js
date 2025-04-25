@@ -6,7 +6,7 @@ import { NumericInput } from "../../NumericInput/NumericInput";
 import { getAllTipoCDFI } from "../../../apis/ApisServicioCliente/TipoCFDIApi";
 import { getAllFormaPago } from "../../../apis/ApisServicioCliente/FormaPagoApi";
 import { getAllMetodopago } from "../../../apis/ApisServicioCliente/MetodoPagoApi";
-import { getAllServicio } from "../../../apis/ApisServicioCliente/ServiciosApi";
+//import { getAllServicio } from "../../../apis/ApisServicioCliente/ServiciosApi";
 import { getAllCSD } from "../../../apis/ApisServicioCliente/csdApi";
 import { createFactura,getAllDataFacturaById } from "../../../apis/ApisServicioCliente/FacturaApi";
 import { getInfoSistema } from "../../../apis/ApisServicioCliente/InfoSistemaApi";
@@ -35,7 +35,7 @@ const CrearFactura = () => {
     const [valor, setvalores]= useState([]);
     const navigate = useNavigate();
     const [moneda, setMoneda] = useState({ codigo: "", descripcion: "" });
-    const [cotizacionId, setCotizacionId] = useState(null);
+    //const [cotizacionId, setCotizacionId] = useState(null);
     //const [cotizacion, setcotizacionData]=useState(null);
     const [formaPagoGlobal, setFormaPagoGlobal] = useState(null);
     const [loadingFormasPago, setLoadingFormasPago] = useState(false);
@@ -47,9 +47,8 @@ const CrearFactura = () => {
     const [iva, setIva] = useState(0);
     const [total, setTotal] = useState(0);
     const[descuento, setDescuento]=useState(0);
-    console.log("Moneda codigo:", moneda.codigo.codigo);
     const esUSD = String(moneda.codigo.codigo).toUpperCase() === "USD" || moneda.codigo.id === 2;
-    const factorConversion = esUSD ? tipoCambioDolar : 1;
+    //const factorConversion = esUSD ? tipoCambioDolar : 1;
 
     // Cargar datos al montar el componente
     useEffect(() => {
@@ -65,10 +64,10 @@ const CrearFactura = () => {
       try {
         const response = await getAllDataFacturaById(id);
         const data = response.data;
-        console.log("Datos de la factura:", data);
-        console.log("Empresa:", data.empresa);
-        console.log("data.organizacion:", data.organizacion);
-        console.log("data.valores:", data.valores);
+        //console.log("Datos de la factura:", data);
+        //console.log("Empresa:", data.empresa);
+        //console.log("data.organizacion:", data.organizacion);
+        //console.log("data.valores:", data.valores);
         // Datos directos
         setCodigoOrden(data.ordenTrabajo.codigo);
         setEmpresa(data.empresa);
@@ -228,7 +227,7 @@ const CrearFactura = () => {
       const response = await createFactura( datosFactura);
       const facturaId = response.data.id; // Suponiendo que la API retorna el ID en response.data.id
       message.success("Factura creada con éxito");
-      //console.log("Factura creada:", response.data);
+      ////console.log("Factura creada:", response.data);
       navigate(`/detallesfactura/${facturaId}`);
   } catch (error) {
       console.error("Error al crear la factura:", error);

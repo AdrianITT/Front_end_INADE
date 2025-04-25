@@ -106,8 +106,8 @@ const EmpresaTable = ({ dataSource, onEdit, onDelete }) => {
   const columns = [
     {
       title: '#',
-      dataIndex: 'key',
-      key: 'key',
+      dataIndex: 'numero',
+      key: 'numero',
       width: '5%',
     },
     {

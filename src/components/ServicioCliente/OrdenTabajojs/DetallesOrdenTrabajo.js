@@ -31,6 +31,7 @@ const DetalleOrdenTrabajo = () => {
         // Llamada al nuevo endpoint
         const detailResponse = await getDetalleOrdenTrabajoDataById(orderId);
         const data = detailResponse.data;
+        console.log("data: ", data);
         const Ot= await getOrdenTrabajoById(orderId);
         
         setClientData(data.cliente);
@@ -39,12 +40,12 @@ const DetalleOrdenTrabajo = () => {
         setEstadoOrden(data.estado);
         
         // Si en la respuesta tienes algo como data.orden con info adicional (código, etc.)
-        setOrderHeader(Ot.data);
+        setOrderHeader(data.orden);
         setIdCotizacion(data.cotizacion);
         // Si la respuesta ya incluye los servicios con todo lo que necesitas:
         //  (cantidad, notas, nombreServicio, etc.)
         // simplemente los asignas a tu tabla
-        console.log("data.servicios:", data.servicios);
+        //console.log("data.servicios:", data.servicios);
         setServicesData(data.servicios);
 
         // Si necesitas un "método" adicional, tendrías que mapear
