@@ -63,6 +63,7 @@ const Generarorden = () => {
       try {
         setIsLoading(true);
         const response = await getAllOrdenesTrabajoData(organizationId);
+        console.log("Órdenes de trabajo response:", response);
         setOrdenes(response.data);
 
         const filtered = filterData(response.data, searchText);
@@ -121,8 +122,8 @@ const Generarorden = () => {
     () => [
       {
         title: "ID",
-        dataIndex: "orden",
-        key: "orden",
+        dataIndex: "numero",
+        key: "numero",
         sorter: (a, b) => a.orden - b.orden,
       },
       {
@@ -218,7 +219,6 @@ const Generarorden = () => {
             pagination={{
               current: currentPage,
               pageSize,
-              showSizeChanger: true,
               onChange: handlePageChange,
             }}
           />

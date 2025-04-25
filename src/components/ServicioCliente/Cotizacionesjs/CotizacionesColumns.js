@@ -8,8 +8,8 @@ export const useCotizacionesColumns = () => {
   const columnsCotizaciones = useMemo(() => [
     {
       title: "Cotización",
-      dataIndex: "Cotización",
-      key: "Cotización",
+      dataIndex: "numero",
+      key: "numero",
       
       defaultSortOrder: "ascend",
       render: (text) => <span className="cotizacion-text">{text}</span>,

@@ -15,5 +15,3 @@ export const getDetallecotizaciondataById = async (id) => Api_Host.get(`/detalle
 export const getDuplicarCotizacion =(id, idCliente)=> Api_Host.get(`/duplicarCotizacion/${id}/?cliente=${idCliente}`);
 
 export const getAllCotizacionByCliente = (id) => Api_Host.get(`/listaClientes/${id}/`);
-
-

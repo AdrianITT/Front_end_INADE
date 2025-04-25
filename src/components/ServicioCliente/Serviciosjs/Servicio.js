@@ -47,6 +47,7 @@ const handleMetodoChange = (value) => {
     const fetchMetodos = async () => {
       try {
         const response = await getAllMetodoData(organizationId);
+        console.log("Métodos:", response.data);
         setMetodos(response.data); // Almacenar los métodos en el estado
       } catch (error) {
         console.error("Error al cargar los métodos", error);
@@ -69,8 +70,10 @@ const handleMetodoChange = (value) => {
       ]);
 
       setServicios(serviciosRes.data);
+      console.log("Servicios:", serviciosRes.data);
       setFilteredServicios(serviciosRes.data);
       setMetodos(metodosRes.data);
+      console.log("Métodos:", metodosRes.data);
       setClaveCDFI(claveCDFIRes.data);
       setUnidadCDFI(unidadCDFIRes.data);
       setObjetoImpuesto(objetoImpuestoRes.data);
@@ -324,7 +327,7 @@ const handleConfirmDeleteService = async () => {
 
   //datos de la tabla 
   const columnsServicios = [
-    { title: "Código", dataIndex: "codigo", key: "codigo" },
+    { title: "Código", dataIndex: "numero", key: "numero" },
     { title: "Nombre", dataIndex: "nombreServicio", key: "nombreServicio" },
     { title: "Método", dataIndex: "metodos", key: "metodos"},
     { title: "Precio", dataIndex: "precio", key: "precio" },

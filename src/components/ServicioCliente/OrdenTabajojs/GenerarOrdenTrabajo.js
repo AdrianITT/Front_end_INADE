@@ -3,14 +3,10 @@ import { Form, Input, Select, Button, Row, Col,Checkbox, Modal, message, Divider
 //import { CloseCircleOutlined  } from "@ant-design/icons";
 import { useParams, useNavigate } from "react-router-dom";
 import "./cssOrdenTrabajo/GenerarOrdenTrabajo.css";
-import { getAllCliente } from "../../../apis/ApisServicioCliente/ClienteApi";
-import { getAllEmpresas } from "../../../apis/ApisServicioCliente/EmpresaApi";
 import { getAllReceptor, createReceptor } from "../../../apis/ApisServicioCliente/ResectorApi";
-import { getServicioById } from "../../../apis/ApisServicioCliente/ServiciosApi";
-import { getCotizacionById, getDetallecotizaciondataById} from "../../../apis/ApisServicioCliente/CotizacionApi";
-import { getCotizacionServiciosByCotizacion } from "../../../apis/ApisServicioCliente/CotizacionServicioApi";
 import { createOrdenTrabajo } from "../../../apis/ApisServicioCliente/OrdenTrabajoApi";
 import { createOrdenTrabajoServico } from "../../../apis/ApisServicioCliente/OrdenTabajoServiciosApi";
+import {getAllOrdenTrabajoById} from "../../../apis/ApisServicioCliente/OrdenTrabajoApi";
 const { TextArea } = Input;
 const { Option } = Select;
 
@@ -30,6 +26,7 @@ const GenerarOrdenTrabajo = () => {
   const [isOrdenConfirmModalVisible, setIsOrdenConfirmModalVisible] = useState(false);
   const [ordenFormValues, setOrdenFormValues] = useState(null);
   const [serviciosParaEliminar, setServiciosParaEliminar] = useState([]);
+  const [dataCotizacion, setCotizacionData] = useState([]);
   
     // Obtener el ID de la organización una sola vez
     const organizationId = useMemo(() => parseInt(localStorage.getItem("organizacion_id"), 10), []);
@@ -44,99 +41,23 @@ const GenerarOrdenTrabajo = () => {
         setReceptor(response.data);
       }catch(error){console.error('Error al cargar los receptores', error);}
     };
-
-    const fetchCotizacionServicios = async () => {
+    const fetchOrdenData = async () => {
       try {
-        const response = await getDetallecotizaciondataById(cotizacionId);
-        const serviciosData = response.data.cotizacionServicio.map((item, index) => ({
-          ...item,
-          // Generamos un identificador único para cada concepto.
-        }));
-    
-        // Almacenamos la data en el estado (puede ser la misma variable que usas para renderizar los conceptos)
-        setServicios(serviciosData);
-              
-        // Convierte el arreglo en un objeto cuyas keys son el id
-        const serviciosObj = {};
-        serviciosData.forEach(item => {
-          serviciosObj[item.id] = {
-            servicio: item.servicio,
-            cantidad: item.cantidad,
-            descripcion: item.descripcion
-          };
-        });
-
-        form.setFieldsValue({
-          servicios: serviciosObj
-        });
-        console.log("Servicios de la cotización:", serviciosData);
-        console.log("Valores del formulario:", form.getFieldsValue());
+        const response = await getAllOrdenTrabajoById(id); // <-- usa id directamente desde useParams
+        const data = response.data;
+  
+        setCotizacionData(data);           // info general
+        setCliente(data.cliente);          // info cliente
+        setEmpresa(data.empresa);          // info empresa
+        setServicios(data.servicios);      // lista de servicios
+  
       } catch (error) {
-        console.error("Error al obtener los servicios de la cotización", error);
+        console.error("Error al obtener la información de la orden de trabajo", error);
       }
     };
-    
-    const fetchCliente = async () => {
-      try {
-        const cotizacionResponse = await getCotizacionById(cotizacionId); 
-        const clienteId = cotizacionResponse.data.cliente; 
-        //console.log("ID del cliente de la cotización:", clienteId);
-    
-        // Obtener los datos del cliente
-        const clienteResponse = await getAllCliente(clienteId);
-        //console.log("Datos del cliente obtenido:", clienteResponse.data);
-        
-        const clienteData = Array.isArray(clienteResponse.data) 
-          ? clienteResponse.data.find(c => c.id === clienteId) 
-          : clienteResponse.data;
-    
-        //console.log("Cliente seleccionado:", clienteData);
-    
-        if (clienteData) {
-          setCliente(clienteData); 
-    
-          // Verificar si `empresa` existe en los datos del cliente
-          if (clienteData.empresa) {
-            const empresaId = clienteData.empresa;  
-            //console.log("ID de la empresa asociado al cliente:", empresaId);
-    
-            // Obtener todas las empresas
-            const empresasResponse = await getAllEmpresas();
-            //console.log("Empresas disponibles:", empresasResponse.data);
-    
-            // Buscar la empresa del cliente
-            const empresaRelacionada = empresasResponse.data.find(emp => emp.id === empresaId);
-            //console.log("Empresa relacionada con el cliente:", empresaRelacionada);
-    
-            if (empresaRelacionada) {
-              setEmpresa(empresaRelacionada);
-              form.setFieldsValue({
-                calle: empresaRelacionada.calle,
-                numero: empresaRelacionada.numero,
-                colonia: empresaRelacionada.colonia,
-                codigoPostal: empresaRelacionada.codigoPostal,
-                ciudad: empresaRelacionada.ciudad,
-                estado: empresaRelacionada.estado
-              });
-            } else {
-              console.error("No se encontró la empresa asociada al cliente.");
-            }
-          } else {
-            console.warn("El cliente no tiene una empresa asociada.");
-          }
-        } else {
-          console.error("No se encontró el cliente con el ID especificado.");
-        }
-      } catch (error) {
-        console.error("Error al cargar los datos del cliente", error);
-      }
-    };
-    
-    
-
+  
+    fetchOrdenData();
     fetchReceptor();
-    fetchCliente();
-    fetchCotizacionServicios();
   }, [id, form,cotizacionId]);
   
 
@@ -170,9 +91,9 @@ const GenerarOrdenTrabajo = () => {
           cantidad: concepto.cantidad,
           descripcion: concepto.descripcion,
           ordenTrabajo: ordenTrabajoId,
-          servicio: concepto.servicio,
+          servicio: concepto.servicio.id,
         };
-        console.log("Servicio a crear:", dataServicio);
+        //console.log("Servicio a crear:", dataServicio);
         await createOrdenTrabajoServico(dataServicio);
       }
   
@@ -210,7 +131,7 @@ const GenerarOrdenTrabajo = () => {
 
       // Crear el receptor
       const response = await createReceptor(receptorData);
-      //console.log(response.data);
+      ////console.log(response.data);
       message.success("Receptor creado correctamente");
 
       // Actualiza la lista de receptores
@@ -267,18 +188,16 @@ const receptorSeleccionado = receptor.find(r => r.id === ordenFormValues?.recept
         <h3>Información del cliente</h3>
         {cliente && Object.keys(cliente).length > 0 ? (
           <div>
-            <p><strong>Nombre:</strong> {`${cliente.nombrePila} ${cliente.apPaterno} ${cliente.apMaterno}`}</p>
+            <p><strong>Nombre:</strong> {`${cliente.nombreCompleto} `}</p>
             <p><strong>Email:</strong> {cliente.correo}</p>
-            <p><strong>Teléfono:</strong> {cliente.telefono}</p>
-            <p><strong>Celular:</strong> {cliente.celular}</p>
-            <p><strong>Fax:</strong> {cliente.fax}</p>
-            <p><strong>Dirección:</strong></p>
-            <p><strong>Calle:</strong>{empresas.calle}</p>
-            <p><strong>Número:</strong>{empresas.numero}</p>
-            <p><strong>Colonia:</strong>{empresas.colonia}</p>
-            <p><strong>Ciudad:</strong>{empresas.ciudad}</p>
-            <p><strong>Estado:</strong>{empresas.estado}</p>
-            <p><strong>Código Postal:</strong>{empresas.codigoPostal}</p>
+            <p><strong>Empresa:</strong>{empresas.nombre}</p>
+            <p><strong>Dirección</strong></p>
+            <p><strong>Calle:</strong>{empresas.direccion.calle}</p>
+            <p><strong>Número:</strong>{empresas.direccion.numero}</p>
+            <p><strong>Colonia:</strong>{empresas.direccion.colonia}</p>
+            <p><strong>Ciudad:</strong>{empresas.direccion.ciudad}</p>
+            <p><strong>Estado:</strong>{empresas.direccion.estado}</p>
+            <p><strong>Código Postal:</strong>{empresas.direccion.codigoPostal}</p>
           </div>
         ) : (
           <p>Cargando información del cliente...</p>
@@ -362,18 +281,18 @@ const receptorSeleccionado = receptor.find(r => r.id === ordenFormValues?.recept
               <Row gutter={16}>
                 <Col span={12}>
                   <Form.Item
-                    name={['servicios', servicio.id, 'servicio']}
+                    name={['servicios', servicio.servicio.id, 'servicio']}
                     label="Servicio"
                     rules={[{ required: true, message: "Por favor, seleccione un servicio." }]}
-                    initialValue={servicio.servicio}
+                    initialValue={servicio.servicio.id}
                   >
                     <Select
                       placeholder="Selecciona un servicio"
                       disabled={true}
                     >
                       {servicios.map((servicio) => (
-                        <Select.Option key={servicio.servicio} value={servicio.servicio}>
-                          {servicio.servicioNombre}
+                        <Select.Option key={servicio.servicio.id} value={servicio.servicio.id}>
+                          {servicio.servicio.nombre}
                         </Select.Option>
                       ))}
                     </Select>
@@ -515,7 +434,7 @@ const receptorSeleccionado = receptor.find(r => r.id === ordenFormValues?.recept
       >
         <p>¿Estás seguro de crear esta orden de trabajo?</p>
         <p><strong>Receptor:</strong> {receptorSeleccionado ? `${receptorSeleccionado.nombrePila} ${receptorSeleccionado.apPaterno} ${receptorSeleccionado.apMaterno}` : "N/A"}</p>
-        <p><strong>Cotización asociada:</strong> #{cotizacionId}</p>
+        <p><strong>Cotización asociada:</strong> #{dataCotizacion.numero}</p>
         <p>Se crearán también los servicios asociados automáticamente.</p>
       </Modal>
 

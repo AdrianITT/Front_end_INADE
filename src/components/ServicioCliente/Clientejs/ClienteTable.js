@@ -9,12 +9,13 @@ const ClienteTable = ({ clientes, showAlertModal }) => {
 
   const clienteFilters=Array.from(new Set(clientes.map(item=>item.Cliente)))
   .map(value=>({text: value, value}));
-  
+
   const empresaFilters=Array.from(new Set(clientes.map(item=>item.Empresa)))
   .map(value=>({text:value, value}));
+
   
   const columns = [
-    { title: "#", dataIndex: "key", key: "key",
+    { title: "#", dataIndex: "numero", key: "numero",
       sorter:(a,b)=>a.key -b.key,
       sortDireccions: ['ascend', 'descend'],
      },
@@ -23,6 +24,9 @@ const ClienteTable = ({ clientes, showAlertModal }) => {
       onFilter:(value, record)=>record.Cliente===value,
       filterSearch: true,
      },
+     {title: "Division", dataIndex: "division", key: "division",
+      sorter:(a,b)=>a.division -b.division,
+      sortDireccions: ['ascend', 'descend'],},
     { title: "Empresa", dataIndex: "Empresa", key: "Empresa",
       filters:empresaFilters,
       onFilter:(value,record)=>record.Empresa===value,

@@ -67,7 +67,7 @@ const RegistroCotizacion = () => {
   const fetchServicios = async () => {
     try {
       const response = await getServicioData(organizationId);
-      console.log("Servicios recibidos:", response.data);
+      //("Servicios recibidos:", response.data);
       // Filtra los que no tengan `id`
       const validServices = Array.isArray(response.data)
         ? response.data.filter(s => s && s.id)
@@ -116,7 +116,7 @@ const RegistroCotizacion = () => {
     const fetchCliente = async () => {
       try {
         const response = await getClienteById(clienteId);
-        console.log("Cliente recibido:", response.data);
+        //console.log("Cliente recibido:", response.data);
         setClienteData(response.data);
         if (response.data && response.data.empresa) {
           const empresaId = response.data.empresa;

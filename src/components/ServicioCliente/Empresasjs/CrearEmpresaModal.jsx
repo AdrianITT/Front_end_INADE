@@ -123,7 +123,7 @@ const CreateEmpresaModal = ({ visible, onCancel, onCreate, regimenFiscal,usosCfd
             </Form.Item>
             <Form.Item
               label="Número externo:"
-              name="numero"
+              name="numeroExterior"
               rules={[{ required: true, message: 'Número requerido' }]}
             >
               <Input />
