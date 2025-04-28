@@ -24,9 +24,13 @@ const ClienteTable = ({ clientes, showAlertModal }) => {
       onFilter:(value, record)=>record.Cliente===value,
       filterSearch: true,
      },
-     {title: "Division", dataIndex: "division", key: "division",
-      sorter:(a,b)=>a.division -b.division,
-      sortDireccions: ['ascend', 'descend'],},
+    {title: "Division", dataIndex: "division", key: "division",
+      sorter:(a,b)=>{ const divisionA = a.division || ""; // para evitar errores con null
+        const divisionB = b.division || "";
+        return divisionA.localeCompare(divisionB);},
+      sortDireccions: ['ascend', 'descend'],
+      render: (division) => division ? division : "Sin división asignada",
+    },
     { title: "Empresa", dataIndex: "Empresa", key: "Empresa",
       filters:empresaFilters,
       onFilter:(value,record)=>record.Empresa===value,

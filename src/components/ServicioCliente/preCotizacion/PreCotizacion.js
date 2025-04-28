@@ -37,6 +37,7 @@ const PreCotizacionData = () => {
         const data = filteredPreCotizaciones.map((item) => ({
           key: item.precotizacionId,
           id: item.precotizacionId,
+          numero: item.numero,
           cliente: item.nombreCliente,
           empresa: item.nombreEmpresa,
           estado: item.estado.nombre || "Desconocido",
@@ -57,8 +58,8 @@ const PreCotizacionData = () => {
   const columns = [
     {
       title: "#",
-      dataIndex: "id",
-      key: "id",
+      dataIndex: "numero",
+      key: "numero",
       width: 80,
       sorter:(a, b) => a.id - b.id,
     },

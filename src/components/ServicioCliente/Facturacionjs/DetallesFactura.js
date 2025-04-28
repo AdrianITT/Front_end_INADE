@@ -233,7 +233,7 @@ const DetallesFactura = () => {
   const handleOkPayment = () => {
     form.validateFields()
       .then((values) => {
-        //console.log("Valores del comprobante de pago:", values);
+        console.log("Valores del comprobante de pago:", values);
         setVisiblePaymentModal(false);
       })
       .catch((error) => {

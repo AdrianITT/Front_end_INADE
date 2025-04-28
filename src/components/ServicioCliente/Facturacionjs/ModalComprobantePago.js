@@ -55,7 +55,7 @@ export default function ComprobantePago({ isOpen, onClose, Total }) {
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
-      //console.log("Datos enviados:", values);
+      console.log("Datos enviados:", values);
       message.success("Comprobante generado exitosamente");
       form.resetFields();
       onClose();
