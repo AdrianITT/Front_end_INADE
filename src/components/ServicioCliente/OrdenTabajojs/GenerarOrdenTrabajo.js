@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Form, Input, Select, Button, Row, Col,Checkbox, Modal, message, Divider, Card, Result} from "antd";
+import { Form, Input, Select, Button, Row, Col,Checkbox, Modal, message, Divider, Card, Result, Descriptions, Spin} from "antd";
 //import { CloseCircleOutlined  } from "@ant-design/icons";
 import { useParams, useNavigate } from "react-router-dom";
 import "./cssOrdenTrabajo/GenerarOrdenTrabajo.css";
@@ -45,7 +45,7 @@ const GenerarOrdenTrabajo = () => {
       try {
         const response = await getAllOrdenTrabajoById(id); // <-- usa id directamente desde useParams
         const data = response.data;
-  
+        console.log("data: ", data);
         setCotizacionData(data);           // info general
         setCliente(data.cliente);          // info cliente
         setEmpresa(data.empresa);          // info empresa
@@ -184,25 +184,59 @@ const receptorSeleccionado = receptor.find(r => r.id === ordenFormValues?.recept
         </p>
       </div>
 
-      <div className="orden-trabajo-card">
-        <h3>Información del cliente</h3>
-        {cliente && Object.keys(cliente).length > 0 ? (
-          <div>
-            <p><strong>Nombre:</strong> {`${cliente.nombreCompleto} `}</p>
-            <p><strong>Email:</strong> {cliente.correo}</p>
-            <p><strong>Empresa:</strong>{empresas.nombre}</p>
-            <p><strong>Dirección</strong></p>
-            <p><strong>Calle:</strong>{empresas.direccion.calle}</p>
-            <p><strong>Número:</strong>{empresas.direccion.numero}</p>
-            <p><strong>Colonia:</strong>{empresas.direccion.colonia}</p>
-            <p><strong>Ciudad:</strong>{empresas.direccion.ciudad}</p>
-            <p><strong>Estado:</strong>{empresas.direccion.estado}</p>
-            <p><strong>Código Postal:</strong>{empresas.direccion.codigoPostal}</p>
-          </div>
-        ) : (
-          <p>Cargando información del cliente...</p>
-        )}
-      </div>
+      <div style={{ padding: 20 }}>
+      <h2 style={{ fontWeight: 'bold', marginBottom: 20 }}>Información del cliente</h2>
+
+      {cliente && Object.keys(cliente).length > 0 ? (
+        <Card
+        className="informacion-cliente-card" bordered={false}
+        >
+          <Descriptions
+            column={1}
+            labelStyle={{}}
+            contentStyle={{}}
+            colon={false}
+          >
+            
+            <Descriptions.Item 
+              label={<span className="informacion-cliente-label">Nombre:</span>}
+            >
+              <span className="informacion-cliente-content">{cliente.nombreCompleto}</span>
+            </Descriptions.Item>
+
+            <Descriptions.Item 
+              label={<span className="informacion-cliente-label">Email:</span>}
+            >
+              <span className="informacion-cliente-content">{cliente.correo}</span>
+            </Descriptions.Item>
+
+            <Descriptions.Item 
+              label={<span className="informacion-cliente-label">Dirección Cliente:</span>}
+            >
+              <span className="informacion-cliente-content">
+                {`${cliente.direccion.calle}, ${cliente.direccion.numero}, ${cliente.direccion.colonia}, ${cliente.direccion.ciudad}, ${cliente.direccion.estado}, C.P. ${cliente.direccion.codigoPostal}`}
+              </span>
+            </Descriptions.Item>
+
+            <Descriptions.Item 
+              label={<span className="informacion-cliente-label">Empresa:</span>}
+            >
+              <span className="informacion-cliente-content">{empresas.nombre}</span>
+            </Descriptions.Item>
+
+            <Descriptions.Item 
+              label={<span className="informacion-cliente-label">Dirección Empresa:</span>}
+            >
+              <span className="informacion-cliente-content">
+                {`${empresas.direccion.calle}, ${empresas.direccion.numero}, ${empresas.direccion.colonia}, ${empresas.direccion.ciudad}, ${empresas.direccion.estado}, C.P. ${empresas.direccion.codigoPostal}`}
+              </span>
+            </Descriptions.Item>
+          </Descriptions>
+        </Card>
+      ) : (
+        <Spin tip="Cargando información del cliente..." />
+      )}
+    </div>
 
       <div className="orden-trabajo-warning">
         <p>Agrega un Receptor y Datos del proyecto!</p>

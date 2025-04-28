@@ -59,12 +59,14 @@ const CotizacionInfoCard = ({
       <Col span={8}>
         {cotizacionInfo?.estado?.id > 1 && (
           <Card
+            size="small"
             title="Órdenes"
             bordered
             extra={
               <Link to={`/GenerarOrdenTrabajo/${cotizacionInfo.idCotizacion}`}>
                 <Button
                   type="primary"
+                  size="small"
                   style={{ backgroundColor: "#13c2c2", borderColor: "#13c2c2" }}
                 >
                   Crear Orden de Trabajo
@@ -73,6 +75,25 @@ const CotizacionInfoCard = ({
             }
           />
         )}
+        {cotizacionInfo?.estado?.id > 1 && (
+          <Card
+          size="small"
+            title="Facturas"
+            bordered
+            extra={
+              <Link to={ `/CrearFactura/${cotizacionInfo.idCotizacion}` }>
+              <Button
+                type="primary"
+                size="small"
+                style={{ backgroundColor: '#13c2c2', borderColor: '#13c2c2' }}
+              >
+                Crear Factura
+              </Button>
+              </Link>
+            }
+          />
+        )}
+
 
         <Card
           title="Cuenta"

@@ -216,6 +216,7 @@ const CrearPreCotizaciones = () => {
               precio: servicioSeleccionado.precio || 0,
               precioFinal: concepto.precioFinal || servicioSeleccionado.precio || 0, 
               metodoRelacionado: servicioSeleccionado.metodos || null,
+              metodoCodigo: servicioSeleccionado.metodos || null,
             }
           : concepto
       );
@@ -277,36 +278,7 @@ const CrearPreCotizaciones = () => {
       // Obtener todos los clientes y empresas existentes
       //const clientesExistentes = await getAllCliente();
       const empresasExistentes = await getAllEmpresas();
-  /*
-      // Verificar si el cliente ya existe
-      const clienteExistente = clientesExistentes.data.find(
-        (cliente) =>
-          cliente.nombrePila === nombre && cliente.apPaterno === apellido
-      );
 
-      // Verificar si la empresa ya existe
-      const empresaExistente = empresasExistentes.data.find(
-        (emp) => emp.nombre === empresa
-      ); 
-
-      // Si el cliente o la empresa ya existen, mostrar un error y detener el proceso
-      if (clienteExistente) {
-        message.error("El cliente ya existe.");
-        //console.log('el cliente existe');
-        const textCont='el Cliente ya existe';
-        error(textCont);
-        return;
-      }
-  
-      if (empresaExistente) {
-        
-        message.error("La empresa ya existe.");
-        //console.log('la empresa ya existe');
-        const textEmpresa='La empresa ya existe';
-        error(textEmpresa);
-        return;
-      }*/
-  
       // Si no existen, continuar con la creación de la pre-cotización
       const dataPrecotizacion = {
         nombreEmpresa: empresa,
@@ -332,34 +304,27 @@ const CrearPreCotizaciones = () => {
         //console.log("✅ Pre-cotización creada con ID:", preCotizacionId);
   
         // ✅ 2. Insertar los servicios de la Pre-Cotización
-        const serviciosPromises = conceptos.map(async (concepto) => {
-          if (!concepto.servicio) {
-            console.warn(`⚠️ Concepto con ID ${concepto.id} no tiene servicio seleccionado.`);
-            return;
-          }
-  
+        for (const concepto of conceptos) {
+          if (!concepto.servicio) continue;
+        
           const servicioData = {
             descripcion: concepto.descripcion || "Sin descripción",
-            precio: Number(concepto.precioFinal) || 0,
-            cantidad: Number(concepto.cantidad) || 0,
+            precio:      Number(concepto.precioFinal) || 0,
+            cantidad:    Number(concepto.cantidad)   || 0,
             preCotizacion: preCotizacionId,
-            servicio: concepto.servicio,
+            servicio:    concepto.servicio,
             organizacion: organizationId,
           };
+        
+          try {
+            await createServicioPreCotizacion(servicioData);
+          } catch (err) {
+            console.error(`Error al agregar servicio ${concepto.servicio}:`, err);
+            message.error(`Error al agregar servicio ${concepto.servicio}`);
+          }
+        }
   
-          //console.log("📤 Enviando servicio:", servicioData);
-  
-          return createServicioPreCotizacion(servicioData)
-            .then((res) => {
-              //console.log(`✅ Servicio ${concepto.servicio} agregado con éxito.`);
-            })
-            .catch((err) => {
-              console.error(`❌ Error al agregar servicio ${concepto.servicio}:`, err.response?.data || err);
-              message.error(`Error al agregar servicio ${concepto.servicio}`);
-            });
-        });
-  
-        await Promise.all(serviciosPromises);
+        //await Promise.all(serviciosPromises);
   
         message.success("Pre-cotización y servicios creados exitosamente.");
         navigate("/precotizacion");
@@ -612,7 +577,7 @@ const CrearPreCotizaciones = () => {
                 <Col span={12}>
                   <Form.Item label="Método Relacionado">
                     <Input
-                      value={metodos.find((m) => m.id === concepto.metodoRelacionado)?.codigo || "No asignado"}
+                      value={concepto.metodoCodigo}
                       disabled
                     />
                   </Form.Item>

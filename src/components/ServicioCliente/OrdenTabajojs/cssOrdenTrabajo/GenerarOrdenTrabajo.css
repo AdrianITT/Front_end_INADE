@@ -1,3 +1,20 @@
+.informacion-cliente-card {
+  background-color: #f0f9ff;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.informacion-cliente-label {
+  font-weight: bold;
+  font-size: 14px;
+  color: #333;
+}
+
+.informacion-cliente-content {
+  font-size: 14px;
+}
+
 /* Contenedor principal */
 .orden-trabajo-container {
   padding: 40px 20px;
@@ -17,14 +34,14 @@
   color: #333;
 }
 
-/* Información del cliente */
+/* Información del cliente 
 .orden-trabajo-card {
   background-color: #e6f7ff;
   padding: 20px;
   margin-bottom: 20px;
   border-radius: 8px;
   border-left: 5px solid #1890ff;
-}
+}*/
 
 .orden-trabajo-warning {
   background-color: #fffbe6;

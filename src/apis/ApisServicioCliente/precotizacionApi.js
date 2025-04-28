@@ -32,3 +32,5 @@ export const deletePrecotizar = (id) => Api_Host.delete(`/precotizacion/${id}/`)
 export const getAllPrecotizacionByOrganizacion = async (id) => Api_Host.get(`/allprecotizaciondata/${id}/`);
 // Obtener todos los datos de una precotización
 export const getAllDataPrecotizacion = async (id) => Api_Host.get(`/detalleprecotizaciondata/${id}`);
+
+export const getAllPrecotizacionCreate = async (id) => Api_Host.get(`/pasarprecotizacion/${id}/`);

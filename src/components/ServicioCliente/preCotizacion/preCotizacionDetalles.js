@@ -2,7 +2,7 @@ import React, { useState, useEffect,useMemo} from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { MailTwoTone, CheckCircleTwoTone, FilePdfTwoTone, FormOutlined, DeleteOutlined,EditTwoTone  } from "@ant-design/icons";
 import { Card, Table, Row, Col, Typography, Spin, message, Menu,Dropdown,Button, Form, Checkbox, Input, Modal, Result, Popconfirm } from "antd";
-import { getPreCotizacionById,updatePrecotizacion, deletePrecotizar} from "../../../apis/ApisServicioCliente/precotizacionApi";
+import { getAllPrecotizacionCreate,updatePrecotizacion, deletePrecotizar} from "../../../apis/ApisServicioCliente/precotizacionApi";
 import { getAllServicioPrecotizacion } from "../../../apis/ApisServicioCliente/ServiciosPrecotizacionApi";
 import { getServicioById } from "../../../apis/ApisServicioCliente/ServiciosApi";
 import { getIvaById } from "../../../apis/ApisServicioCliente/ivaApi";
@@ -30,6 +30,7 @@ const PreCotizacionDetalles = () => {
   const [estadoNombre, setEstadoNombre] = useState("Cargando...");
   const [isConfirmModalVisible, setIsConfirmModalVisible] = useState(false);
   const [isSuccessModalVisible, setIsSuccessModalVisible] = useState(false);
+  const [numeros,setaNumeros]=useState([]);
   const navigate=useNavigate();
 
   useEffect(() => {
@@ -38,7 +39,7 @@ const PreCotizacionDetalles = () => {
         const response = await getAllDataPrecotizacion(id);
         const data = response.data;
         console.log("Pre-Cotización Detalles:", data);   
-  
+        setaNumeros(data.numero);
         setCotizacionInfo(data); // contiene empresa, cliente, moneda, iva, etc.
         setServicios(data.precotizacionservicios); // contiene los servicios listos
         setIvaPorcentaje(parseFloat(data.iva.porcentaje) || 0); // Ej. "0.00" -> 0
@@ -109,7 +110,7 @@ const PreCotizacionDetalles = () => {
 
     const actualizarEstado = async () => {
       if (!cotizacionInfo) {
-        message.error("No se encontró la cotización.");
+        getAllPrecotizacionCreate(id);
         return;
       }
       
@@ -119,14 +120,16 @@ const PreCotizacionDetalles = () => {
     const handleConfirmChange = async () => {
       try {
         console.log("Actualizando solo el estado...");
-    
+        getAllPrecotizacionCreate(id);
         const response = await updatePrecotizacion(id, {
           estado: 7, // Solo se envía el campo necesario
+
         });
     
         setCotizacionInfo((prev) => ({
           ...prev,
           estado: 7,
+
         }));
     
         setIsConfirmModalVisible(false);
@@ -265,7 +268,7 @@ const PreCotizacionDetalles = () => {
   return (
     <Spin spinning={loading}>
       <div className="cotizacion-detalles-container">
-        <Title level={2}>Detalles de la Pre-Cotización #{id}</Title>
+        <Title level={2}>Detalles de la Pre-Cotización #{numeros}</Title>
         {cotizacionInfo && (
           <Row gutter={16}>
             <Col span={12}>

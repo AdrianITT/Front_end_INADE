@@ -15,6 +15,7 @@ import { getAllClaveCDFI } from "../../../apis/ApisServicioCliente/ClavecdfiApi"
 import { getAllUnidadCDFI } from "../../../apis/ApisServicioCliente/unidadcdfiApi";
 import {createMetodo, getAllMetodoData} from "../../../apis/ApisServicioCliente/MetodoApi";
 import {createServicio} from "../../../apis/ApisServicioCliente/ServiciosApi";
+import { onFCP } from "web-vitals";
 
 const { TextArea } = Input;
 
@@ -50,6 +51,7 @@ const RegistroCotizacion = () => {
   const [formMetodo] = Form.useForm();
   const organizationId = useMemo(() => parseInt(localStorage.getItem("organizacion_id"), 10), []);
 
+  
   // Obtener el tipo de cambio del dólar
   useEffect(() => {
     const fetchTipoCambio = async () => {
@@ -94,6 +96,7 @@ const RegistroCotizacion = () => {
       }
       try {
         const metodosResponse = await getAllMetodoData(organizationId);
+        console.log("Métodos recibidos:", metodosResponse.data);
         setMetodos(metodosResponse.data);
       } catch (error) {
         console.error("Error al cargar métodos", error);
@@ -156,15 +159,22 @@ const RegistroCotizacion = () => {
   }, [clienteId]);
 
   const [conceptos, setConceptos] = useState([
-    { id: 1, servicio: "", cantidad: 1, precio: 0,precioFinal: 0, descripcion: "" },
+    { id: 1, servicio: "", cantidad: 1, precio: 0,precioFinal: 0, descripcion: "", orden: 1 },
   ]);
 
   if (!clienteData || !empresas) {
     return <div>Loading...</div>;
   }
 
+  const recalcularOrdenes = arr =>
+    arr.map((c, i) => ({ ...c, orden: i+1 }));
+
   const handleAddConcepto = () => {
-    setConceptos([...conceptos, { id: conceptos.length + 1, servicio: "", cantidad: 1, precio: 0, descripcion: "" }]);
+    const nuevoConcepto = [
+      ...conceptos,
+      { id: conceptos.length + 1, servicio: "", cantidad: 1, precio: 0, descripcion: ""}
+    ];
+    setConceptos(recalcularOrdenes(nuevoConcepto));
   };
 
   const handleRemoveConcepto = (id) => {
@@ -184,6 +194,7 @@ const RegistroCotizacion = () => {
 
   const handleServicioChange = (conceptoId, servicioId) => {
     const servicioSeleccionado = servicios.find(servicio => servicio.id === servicioId);
+    console.log("Servicio seleccionado:", servicioSeleccionado);
     if (servicioSeleccionado) {
       const updatedConceptos = conceptos.map((concepto) =>
         concepto.id === conceptoId ? {
@@ -235,6 +246,7 @@ const RegistroCotizacion = () => {
     };
   };
 
+
   const { subtotal, descuentoValor, subtotalConDescuento, iva, total } = calcularTotales();
 
   const handleSubmit = async () => {
@@ -262,19 +274,18 @@ const RegistroCotizacion = () => {
     try {
       const cotizacionResponse = await createCotizacion(cotizacionDataPreview);
       const cotizacionId = cotizacionResponse.data.id;
-  
-      const conceptosPromises = conceptos.map((concepto) => {
-        const conceptoData = {
-          descripcion: concepto.descripcion,
-          precio: concepto.precioFinal,
-          cantidad: concepto.cantidad,
-          cotizacion: cotizacionId,
-          servicio: concepto.servicio,
-        };
-        return createCotizacionServicio(conceptoData);
+
+    // Aquí, en vez de Promise.all, recorremos secuencialmente:
+    for (const concepto of conceptos) {
+      await createCotizacionServicio({
+        descripcion: concepto.descripcion,
+        precio:     concepto.precioFinal,
+        cantidad:   concepto.cantidad,
+        cotizacion: cotizacionId,
+        servicio:   concepto.servicio,
       });
-  
-      await Promise.all(conceptosPromises);
+    }
+      //await Promise.all(conceptosPromises);
       message.success("Cotización creada correctamente");
       setIsConfirmModalVisible(false);
       setIsModalVisible(true);
@@ -459,14 +470,13 @@ const RegistroCotizacion = () => {
               </Col>
 
               <Col span={12}>
-                <Form.Item label="Método Relacionado">
-                  <Input
-                    value={
-                      metodos.find((m) => m.id === concepto.metodoCodigo)?.codigo || "No asignado"
-                    }
-                    disabled
-                  />
-                </Form.Item>
+              <Form.Item label="Método Relacionado">
+                <Input
+                  value={concepto.metodoCodigo}
+                  
+                  disabled
+                />
+              </Form.Item>
               </Col>
             </Row>
 
