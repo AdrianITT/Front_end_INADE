@@ -129,16 +129,16 @@ const DetalleOrdenTrabajo = () => {
       message.error("Hubo un error al eliminar la orden de trabajo");
     }
   };
-
+  /*<Menu.Item key="2" icon={<FileTextTwoTone />}>
+        <Link to={`/CrearFactura/${orderId}`}>Detalles de Facturar</Link>
+      </Menu.Item> */
   const menu = (
     <Menu>
       <Menu.Item key="1" icon={<RightCircleTwoTone />}>
         <Link to={`/detalles_cotizaciones/${IdCotizacion.id}`}>Ir a cotización</Link>
       </Menu.Item>
 
-      <Menu.Item key="2" icon={<FileTextTwoTone />}>
-        <Link to={`/CrearFactura/${orderId}`}>Detalles de Facturar</Link>
-      </Menu.Item>
+      
       <Menu.Item key="3" icon={<EditTwoTone />} >
       <Link to={`/editarOrdenTrabajo/${orderId}`}>Editar OT</Link>
       </Menu.Item>

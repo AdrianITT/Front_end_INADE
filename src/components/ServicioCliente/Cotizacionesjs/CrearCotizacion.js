@@ -352,7 +352,7 @@ const RegistroCotizacion = () => {
         <div className="cotizacion-info-card">
           <p><strong>RFC:</strong> {empresas.rfc}</p>
           <p><strong>Representante:</strong> {clienteData.nombrePila} {clienteData.apPaterno} {clienteData.apMaterno}</p>
-          <p><strong>Contacto:</strong> {clienteData.correo} - {clienteData.telefono} | {clienteData.celular}</p>
+          <p><strong>Contacto:</strong> {clienteData?.correo||'Correo No disponible'} - {clienteData?.telefono||'Telefono No disponible'} | {clienteData?.celular||'Celular No disponible'}</p>
         </div>
 
         <Row gutter={16}>

@@ -24,6 +24,7 @@ const Factura = () => {
       setLoading(true);
       try {
         const response = await getAllFacturaByOrganozacion(organizationId);
+        console.log("Facturas response:", response);
         const rawFacturas = response.data || [];
 
         const responseFacturama = await getAllfacturafacturama();
@@ -53,7 +54,7 @@ const Factura = () => {
           return {
             key: index.toString(),
             id: factura.folio,
-            codigoOrdenTrabajo: factura.codigoOrdenTrabajo,
+            numeroCotizacion: factura.numeroCotizacion,
             nombreCliente: factura.cliente,
             nombreEmpresa: factura.empresa,
             fechaExpedicion: formattedFechaExpedicion,
@@ -118,9 +119,9 @@ const Factura = () => {
       key: "id",
     },
     {
-      title: "Código Orden de Trabajo",
-      dataIndex: "codigoOrdenTrabajo",
-      key: "codigoOrdenTrabajo",
+      title: "Cotización",
+      dataIndex: "numeroCotizacion",
+      key: "numeroCotizacion",
       filters: [...new Set(data.map((item) => item.codigoOrdenTrabajo))].map((codigo) => ({
         text: codigo,
         value: codigo,

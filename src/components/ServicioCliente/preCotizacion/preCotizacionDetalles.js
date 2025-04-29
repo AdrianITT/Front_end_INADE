@@ -3,12 +3,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { MailTwoTone, CheckCircleTwoTone, FilePdfTwoTone, FormOutlined, DeleteOutlined,EditTwoTone  } from "@ant-design/icons";
 import { Card, Table, Row, Col, Typography, Spin, message, Menu,Dropdown,Button, Form, Checkbox, Input, Modal, Result, Popconfirm } from "antd";
 import { getAllPrecotizacionCreate,updatePrecotizacion, deletePrecotizar} from "../../../apis/ApisServicioCliente/precotizacionApi";
-import { getAllServicioPrecotizacion } from "../../../apis/ApisServicioCliente/ServiciosPrecotizacionApi";
-import { getServicioById } from "../../../apis/ApisServicioCliente/ServiciosApi";
-import { getIvaById } from "../../../apis/ApisServicioCliente/ivaApi";
 import { Api_Host } from "../../../apis/api";
-import { getInfoSistema } from "../../../apis/ApisServicioCliente/InfoSistemaApi";
-import {getEstadoById} from "../../../apis/ApisServicioCliente/EstadoApi";
 import {getAllDataPrecotizacion} from "../../../apis/ApisServicioCliente/precotizacionApi";
 
 const { Title, Text } = Typography;

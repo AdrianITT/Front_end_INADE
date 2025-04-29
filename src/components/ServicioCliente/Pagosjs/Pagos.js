@@ -23,6 +23,7 @@ const diccionario = {
 const Pagos = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const organizationId = parseInt(localStorage.getItem("organizacion_id"), 10);
   // Función para formatear la fecha a "año/día/mes"
@@ -95,14 +96,23 @@ const Pagos = () => {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
+      setError(null);
       try {
         const respFacturas = await getAllComprobantepagoFactura();
+        if(!respFacturas || !respFacturas.data){
+          throw new Error("No se encontraron datos de facturas");
+        }
         const facturas = respFacturas.data;
   
         // Usar Set para no repetir llamada a getComprobantepagoById
         const facturaIdsUnicos = [
           ...new Set(facturas.map((f) => f.factura)),
         ];
+
+        if (facturaIdsUnicos.length === 0) {
+          console.log("No hay facturas únicas para procesar.");
+          return;
+        }
   
         const allDetalles = await Promise.all(
           facturaIdsUnicos.map(async (facturaId) => {

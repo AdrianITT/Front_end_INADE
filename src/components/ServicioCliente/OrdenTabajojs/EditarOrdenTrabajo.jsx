@@ -281,7 +281,7 @@ const EditarOrdenTrabajo = () => {
                         onChange={(e) =>
                           handleInputChange(index, "descripcion", e.target.value)
                         }
-                        disabled={true}
+
                       />
                     </Form.Item>
                   </Card>

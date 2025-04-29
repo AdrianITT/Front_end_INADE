@@ -186,25 +186,23 @@ const DetallesFactura = () => {
         console.log("Datos de la factura completa:", data);
         // Seteamos directamente los datos
         setFactura(data); // puedes eliminar este estado si solo usas los campos individuales
-        setOrdenCodigo(data.codigoOrdenTrabajo);
-        setMoneda({ codigo: data.moneda.includes("USD") ? "USD" : "MXN", descripcion: data.moneda });
+        setMoneda({ codigo: data.monedaCodigo.includes("USD") ? "USD" : "MXN", descripcion: data.monedaCodigo});
         setCliente({
           nombrePila: data.contacto.split(" ")[0],
-          apPaterno: data.contacto.split(" ")[1] || "",
           correo: data.correo
         });
-        setEmpresa({ nombre: data.empresa, rfc: data.rfc });
+        setEmpresa({ nombre: data.empresa, rfc: data.rfcEmpresa });
         setServicios(
           data.servicios.map(serv => ({
             key: serv.servicioId,
             servicio: serv.servicio.nombre,
-            cantidad: serv.ordenTrabajoServicio.cantidad,
-            precioUnitario: parseFloat(serv.cotizacionServicio.precio),
-            total: parseFloat(serv.cotizacionServicio.precio) * serv.ordenTrabajoServicio.cantidad,
+            cantidad: serv.cantidad,
+            precioUnitario: parseFloat(serv.precioUnitario),
+            total: parseFloat(serv.subtotal) ,
           }))
         );
   
-        setSubtotal(parseFloat(data.valores.subtotal));
+        setSubtotal(data.valores);
         setDescuento(parseFloat(data.valores.descuento));
         setPorcentajeIVA(parseFloat(data.valores.iva));
         setImporteTotal(parseFloat(data.valores.importe));
@@ -459,12 +457,7 @@ const confirmDeleteFactura = async () => {
 const montoRestante =hasPagos 
 ? facturaPagos.montototal - facturaPagos.montopago 
 : 0;
-//console.log('facturaPagos: ',facturaPagos)
-//console.log('importeTotal: ',importeTotal);
-//console.log('totalPagado: ',totalPagado);
-//console.log('montoRestante: ',montoRestante);
 
-  // Cuando el modal se abre, arranca un temporizador de 2s que lo cierra automáticamente
   useEffect(() => {
     let timer;
     if (isSuccessModalVisible) {
@@ -518,7 +511,7 @@ const montoRestante =hasPagos
                     <Descriptions.Item label="RFC">{empresa.rfc}</Descriptions.Item>
                     <Descriptions.Item label="Contacto">{cliente.nombrePila} {cliente.apPaterno} {cliente.apMaterno}</Descriptions.Item>
                     <Descriptions.Item label="Contacto">{cliente.correo} </Descriptions.Item>
-                    <Descriptions.Item label="Porcentaje">{factura.porcentaje}% </Descriptions.Item>
+                    <Descriptions.Item label="Porcentaje">{factura.porcentajeFactura}% </Descriptions.Item>
                   </Descriptions>
                   </Col>
                 </Row>
@@ -560,20 +553,20 @@ const montoRestante =hasPagos
               )}
               <Card title="Cuenta" bordered style={{ marginTop: "20px" , padding:"40px"}}>
                 <p><strong>Subtotal: </strong>{" "}
-                { subtotal.toFixed(2) }
+                { subtotal.subtotal }
                 {" "}
                 { esUSD ? "USD" : "MXN" }</p>
-                <p><strong>Descuento:</strong> {descuento}%</p>
+                <p><strong>Descuento:</strong> {subtotal.descuentoCotizacion}%</p>
                 <p><strong>Subtotal - Descuento:</strong>{" "}
-                { ((subtotal - (subtotal * descuento / 100)) ).toFixed(2) }
+                { subtotal.valorDescuento}
                 {" "}
                 { esUSD ? "USD" : "MXN" }</p>
                 <p><strong>IVA :</strong>{" "}
-                { (((subtotal - (subtotal * descuento / 100)) * (porcentajeIVA)) ).toFixed(2) }
+                { subtotal.ivaPct }
                 {" "}
                 { esUSD ? "USD" : "MXN" }</p>
                 <p><strong>Importe:</strong>{" "}
-                { (importeTotal ).toFixed(2) }
+                { subtotal.totalFinal  }
                 {" "}
                 { esUSD ? "USD" : "MXN" }</p>
               </Card>
