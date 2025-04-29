@@ -130,7 +130,6 @@ const Usuario = () => {
   };
 
   const columns = [
-    { title: "Id", dataIndex: "id", key: "id" },
     { title: "Username", dataIndex: "username", key: "username" },
     { title: "Correo", dataIndex: "email", key: "email" },
     { title: "Nombre", dataIndex: "first_name", key: "first_name" },

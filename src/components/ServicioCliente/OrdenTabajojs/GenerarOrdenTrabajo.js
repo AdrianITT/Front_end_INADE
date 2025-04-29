@@ -364,7 +364,6 @@ const receptorSeleccionado = receptor.find(r => r.id === ordenFormValues?.recept
                     onChange={(e) =>
                       handleInputChange(index, "descripcion", e.target.value)
                     }
-                    disabled={true}
                   />
                 </Form.Item>
                 </Col>

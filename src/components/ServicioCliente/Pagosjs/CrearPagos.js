@@ -87,6 +87,7 @@ const [comprobantesData, setComprobantesData] = useState([]);
       setLoadingClientes(true);
       try {
         const response = await getFormaPagoByOrganizacionId(organizationId);
+        console.log('response.data',response.data);
         setClientesData(response.data);
       } catch (error) {
         console.error("Error al obtener clientes:", error);

@@ -1,6 +1,7 @@
 import React from "react";
 import { Card, Row, Col, Typography, Button, Dropdown } from "antd";
 import { Link } from "react-router-dom";
+import { FileAddOutlined, FilePdfOutlined } from "@ant-design/icons";
 
 const { Text } = Typography;
 
@@ -57,42 +58,29 @@ const CotizacionInfoCard = ({
       </Col>
 
       <Col span={8}>
-        {cotizacionInfo?.estado?.id > 1 && (
-          <Card
-            size="small"
-            title="Órdenes"
-            bordered
-            extra={
-              <Link to={`/GenerarOrdenTrabajo/${cotizacionInfo.idCotizacion}`}>
-                <Button
-                  type="primary"
-                  size="small"
-                  style={{ backgroundColor: "#13c2c2", borderColor: "#13c2c2" }}
-                >
-                  Crear Orden de Trabajo
-                </Button>
-              </Link>
-            }
-          />
-        )}
-        {cotizacionInfo?.estado?.id > 1 && (
-          <Card
-          size="small"
-            title="Facturas"
-            bordered
-            extra={
-              <Link to={ `/CrearFactura/${cotizacionInfo.idCotizacion}` }>
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+          {cotizacionInfo?.estado?.id > 1 && (
+            <Link to={`/GenerarOrdenTrabajo/${cotizacionInfo.idCotizacion}`}>
               <Button
                 type="primary"
-                size="small"
-                style={{ backgroundColor: '#13c2c2', borderColor: '#13c2c2' }}
-              >
-                Crear Factura
-              </Button>
-              </Link>
-            }
-          />
-        )}
+                
+                size="middle"
+                style={{ backgroundColor: '#13c2c2' }}
+              >Orden Trabajo</Button>
+            </Link>
+          )}
+          
+          {cotizacionInfo?.estado?.id > 1 && (
+            <Link to={`/CrearFactura/${cotizacionInfo.idCotizacion}`}>
+              <Button
+                type="primary"
+                
+                size="middle"
+                style={{ backgroundColor: '#1890ff' }}
+              >Facturacion</Button>
+            </Link>
+          )}
+        </div>
 
 
         <Card

@@ -96,6 +96,34 @@ const PaymentCards = ({ idFactura, correoCliente,refreshPagos }) => {
     }
   };
 
+  const descargarXML = async (pago) => {
+    try {
+      const pdfUrl = `${Api_Host.defaults.baseURL}/comprobante-xml/${pago.id}/`;
+      //console.log("📌 URL generada:", pdfUrl);
+
+      const response = await fetch(pdfUrl, {
+        method: "GET",
+        headers: { "Content-Type": "application/xml" },
+      });
+
+      if (!response.ok) {
+        throw new Error("No se pudo descargar el XML.");
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `Comprobante_${pago.id}.xml`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error al descargar el XML:", error);
+    }
+  };
   // Abre el modal de eliminación y guarda el ID del pago
   const openDeleteModal = (pagoId) => {
     setPagoToDelete(pagoId);
@@ -204,6 +232,9 @@ const PaymentCards = ({ idFactura, correoCliente,refreshPagos }) => {
           </Menu.Item>
           <Menu.Item key="3" icon={<MailTwoTone />} onClick={() => openEmailModal(pago)}>
             Enviar por correo
+          </Menu.Item>
+          <Menu.Item key="4" icon={<FilePdfTwoTone />} onClick={() => descargarXML(pago)}>
+            Descargar XML
           </Menu.Item>
         </Menu>
       );
