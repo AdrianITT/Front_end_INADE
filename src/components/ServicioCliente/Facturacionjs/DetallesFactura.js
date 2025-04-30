@@ -474,7 +474,7 @@ const montoRestante =hasPagos
   return (
     <Spin spinning={loading}>
     <div style={{ padding: "20px" }}>
-      <h2><center>Factura {id} </center></h2>
+      <h2><center>Factura {factura.numerofactura} - {factura.idcotizacion} </center></h2>
       <Tabs defaultActiveKey="1">
         <Tabs.TabPane tab="Información" key="1">
           <Row gutter={16}>
