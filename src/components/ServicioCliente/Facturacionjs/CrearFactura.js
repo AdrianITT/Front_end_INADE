@@ -237,11 +237,6 @@ const CrearFactura = () => {
     const porcentaje = values.poresentajeFactura ?? 0;      // e.g. 10 → 10%
     const tasaIVA    = tasaIva;                            // e.g. 0.16 → 16%
   
-    // 1) Validar que haya al menos un servicio seleccionado
-    if (selectedRowKeys.length === 0) {
-      message.warning("Debes seleccionar al menos un servicio para facturar.");
-      return;
-    }
   
     // 2) Calcular servicios NO seleccionados
     const noSeleccionados = serviciosCot.filter(
@@ -258,7 +253,7 @@ const CrearFactura = () => {
   
     // 5) Aplicar IVA
     const totalConIva = subtotalConDesc * (1 + tasaIVA);
-  
+    try {
     // 6) Montar payload de la factura
     const datosFactura = {
       notas:         values.notas || "",
@@ -274,7 +269,7 @@ const CrearFactura = () => {
       cotizacion:   id,
     };
   
-    try {
+    
       // 7) Creas la factura
       const response = await createFactura(datosFactura);
       const facturaId = response.data.id;
