@@ -10,7 +10,6 @@ import { getAllMetodopago } from "../../../apis/ApisServicioCliente/MetodoPagoAp
 import {getDataCotizacionBy} from "../../../apis/ApisServicioCliente/CotizacionApi";
 import {createServicioFactura } from "../../../apis/ApisServicioCliente/FacturaServicio";
 //import { getAllServicio } from "../../../apis/ApisServicioCliente/ServiciosApi";
-import { getAllCSD } from "../../../apis/ApisServicioCliente/csdApi";
 import { createFactura,getAllDataFacturaById } from "../../../apis/ApisServicioCliente/FacturaApi";
 import { getInfoSistema } from "../../../apis/ApisServicioCliente/InfoSistemaApi";
 
