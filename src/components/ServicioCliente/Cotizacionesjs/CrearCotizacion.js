@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useMemo } from "react";
 import "./Crearcotizacion.css";
-import { Form, Input, Button, Row, Col, Select, Checkbox, Divider, message, DatePicker, Card, Modal,Result, InputNumber } from "antd";
+import { Form, Input, Button, Row, Col, 
+  Select, Checkbox, Divider, message, DatePicker, 
+  Card, Modal,Result, Descriptions, Space } from "antd";
+import { MailOutlined, IdcardOutlined, PhoneOutlined, MobileOutlined, UserOutlined, PlusOutlined  } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useParams, useNavigate } from "react-router-dom";
 import { getClienteById } from "../../../apis/ApisServicioCliente/ClienteApi";
@@ -349,11 +352,59 @@ const RegistroCotizacion = () => {
         <div className="cotizacion-info-message">
           <strong>Por favor, complete todos los campos requeridos con la información correcta.</strong>
         </div>
-        <div className="cotizacion-info-card">
-          <p><strong>RFC:</strong> {empresas.rfc}</p>
-          <p><strong>Representante:</strong> {clienteData.nombrePila} {clienteData.apPaterno} {clienteData.apMaterno}</p>
-          <p><strong>Contacto:</strong> {clienteData?.correo||'Correo No disponible'} - {clienteData?.telefono||'Telefono No disponible'} | {clienteData?.celular||'Celular No disponible'}</p>
-        </div>
+        <Card
+          style={{
+            marginBottom: 24,
+            borderRadius: 8,
+            boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+          }}
+          bodyStyle={{ background: "#fff", padding: "24px" }}
+          headStyle={{
+            background: "#e6f7ff",
+            borderRadius: "8px 8px 0 0",
+            fontSize: 16,
+            fontWeight: 600,
+          }}
+          title="Información del Cliente"
+        >
+          <Descriptions
+            bordered
+            layout="vertical"
+            size="small"
+            column={{ xs: 1, sm: 2, md: 3, lg: 4 }}
+          >
+            <Descriptions.Item
+              label={<><IdcardOutlined /> RFC</>}
+            >
+              {empresas.rfc}
+            </Descriptions.Item>
+
+            <Descriptions.Item
+              label={<><UserOutlined /> Representante</>}
+              span={2}
+            >
+              {`${clienteData.nombrePila} ${clienteData.apPaterno} ${clienteData.apMaterno}`}
+            </Descriptions.Item>
+
+            <Descriptions.Item
+              label={<><MailOutlined /> Correo</>}
+            >
+              {clienteData?.correo || "No disponible"}
+            </Descriptions.Item>
+
+            <Descriptions.Item
+              label={<><PhoneOutlined /> Teléfono</>}
+            >
+              {clienteData?.telefono || "No disponible"}
+            </Descriptions.Item>
+
+            <Descriptions.Item
+              label={<><MobileOutlined /> Celular</>}
+            >
+              {clienteData?.celular || "No disponible"}
+            </Descriptions.Item>
+          </Descriptions>
+        </Card>
 
         <Row gutter={16}>
           <Col span={12}>
@@ -541,11 +592,15 @@ const RegistroCotizacion = () => {
           </Card>
         </div>
           ))}
-          <div style={{ padding: '20px' }}>
-            <Button type="primary" onClick={handleAddConcepto} style={{ marginBottom: "16px" }}>
+          <Space>
+            <Button
+              type="dashed"
+              icon={<PlusOutlined />}
+              onClick={handleAddConcepto}
+            >
               Añadir Concepto
             </Button>
-          </div>
+          </Space>
         
           <center>
 

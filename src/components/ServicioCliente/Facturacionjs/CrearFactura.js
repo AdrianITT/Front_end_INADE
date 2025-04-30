@@ -232,52 +232,75 @@ const CrearFactura = () => {
   
 
 
-  const handlecrearFactura=async(values)=>{
-    const importeEnMoneda = parseFloat(resumenCot.subtotal) ;
-    const porcentaje = values.poresentajeFactura ?? 0;
-    const preioDescuento = parseFloat(importeEnMoneda) * ((100-porcentaje ) / 100);
-    const datosFactura={
-      notas:values.notas|| "",
-      ordenCompra: values.ordenCompra||"",
-      fechaExpedicion: values.fechaExpedicion.format("YYYY-MM-DDTHH:mm:ss[Z]"),  // Formato correcto de fecha
-      ordenTrabajo: parseInt(id),  // ID de la orden de trabajo
-      tipoCfdi: values.tipoCfdi,  // ID del CFDI seleccionado
-      formaPago: values.formaPago,  // ID de la forma de pago seleccionada
-      metodoPago: values.metodoPago, // ID del método de pago seleccionado
-      importe: preioDescuento.toFixed(2),
-      tipoMoneda: tipoMoneda.codigo,
-      porcentaje:values?.poresentajeFactura||0,
-      cotizacion: id,
-    }
-    console.log("Datos de la selectedRowKeys:", selectedRowKeys);
-    try {
-      message.success("Factura creada con éxito");
-      const response = await createFactura( datosFactura);
-      const facturaId = response.data.id; // Suponiendo que la API retorna el ID en response.data.id
-      const noSeleccionados = serviciosCot.filter(
-        servicio => !selectedRowKeys.includes(servicio.id)
-      );
+  const handlecrearFactura = async (values) => {
+    // 0) Obtener porcentaje de descuento y tasa de IVA
+    const porcentaje = values.poresentajeFactura ?? 0;      // e.g. 10 → 10%
+    const tasaIVA    = tasaIva;                            // e.g. 0.16 → 16%
   
-      // 3) Por cada uno, llamas a createServicioFactura
+    // 1) Validar que haya al menos un servicio seleccionado
+    if (selectedRowKeys.length === 0) {
+      message.warning("Debes seleccionar al menos un servicio para facturar.");
+      return;
+    }
+  
+    // 2) Calcular servicios NO seleccionados
+    const noSeleccionados = serviciosCot.filter(
+      s => !selectedRowKeys.includes(s.id)
+    );
+  
+    // 3) Subtotal de esos servicios
+    const subtotalNoSel = noSeleccionados.reduce((sum, s) => {
+      return sum + parseFloat(s.precio) * s.cantidad;
+    }, 0);
+  
+    // 4) Aplicar descuento global
+    const subtotalConDesc = subtotalNoSel * (1 - porcentaje / 100);
+  
+    // 5) Aplicar IVA
+    const totalConIva = subtotalConDesc * (1 + tasaIVA);
+  
+    // 6) Montar payload de la factura
+    const datosFactura = {
+      notas:         values.notas || "",
+      ordenCompra:   values.ordenCompra || "",
+      fechaExpedicion: values.fechaExpedicion.format("YYYY-MM-DDTHH:mm:ss[Z]"),
+      ordenTrabajo: parseInt(id, 10),
+      tipoCfdi:     values.tipoCfdi,
+      formaPago:    values.formaPago,
+      metodoPago:   values.metodoPago,
+      importe:      totalConIva.toFixed(2),   // <-- usa el nuevo importe
+      tipoMoneda:   tipoMoneda.codigo,
+      porcentaje:   porcentaje,
+      cotizacion:   id,
+    };
+  
+    try {
+      // 7) Creas la factura
+      const response = await createFactura(datosFactura);
+      const facturaId = response.data.id;
+  
+      // 8) Guardas los servicios NO seleccionados en tu tabla intermedia
       await Promise.all(
         noSeleccionados.map(s =>
           createServicioFactura({
             descripcion: s.descripcion,
-            precio: parseFloat(s.precio),
-            cantidad: s.cantidad,
-            factura: facturaId,
-            servicio: s.servicio.id   // o s.servicio si tu campo es solo el id
+            precio:      parseFloat(s.precio),
+            cantidad:    s.cantidad,
+            factura:     facturaId,
+            servicio:    s.servicio.id
           })
         )
       );
+  
       message.success("Factura creada con éxito");
-      ////console.log("Factura creada:", response.data);
       navigate(`/detallesfactura/${facturaId}`);
-  } catch (error) {
+    } catch (error) {
       console.error("Error al crear la factura:", error);
-      message.error("Error al crear la factura");
-  }
-  }
+      message.error("Ocurrió un error al crear la factura.");
+    }
+  };
+  
+
   const toFixedSeguro = (value, decimals = 2) => {
     const num = parseFloat(value);
     return isNaN(num) ? "0.00" : num.toFixed(decimals);
@@ -426,7 +449,7 @@ const CrearFactura = () => {
           <Form.Item label="ordenCompra:" name="ordenCompra">
             <Input />
             </Form.Item>
-            <Form.Item label="Poresentaje a pagar:" name="poresentajeFactura">
+            <Form.Item label="Porcentaje a pagar:" name="poresentajeFactura">
               <NumericInput
                 value={form.getFieldValue("poresentajeFactura")}
                 onChange={(val) => form.setFieldsValue({ poresentajeFactura: val })}
