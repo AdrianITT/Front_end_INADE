@@ -6,6 +6,8 @@ export const updateCotizacion = (id, data) => Api_Host.patch(`/cotizacion/${id}/
 
 export const createCotizacion = (data) => Api_Host.post('/cotizacion/', data);
 
+export const deleteCotizacion = (id) => Api_Host.delete(`/cotizacion/${id}/`);
+
 export const getCotizacionById = async (id) => Api_Host.get(`/cotizacion/${id}/`);
 
 export const getAllcotizacionesdata = async (id) => Api_Host.get(`/allcotizacionesdata/${id}/`);//`//${id}/`

@@ -53,6 +53,7 @@ const Factura = () => {
   
           return {
             key: index.toString(),
+            IdFactura: factura.id,
             id: factura.folio,
             numeroCotizacion: factura.numeroCotizacion,
             nombreCliente: factura.cliente,
@@ -162,7 +163,7 @@ const Factura = () => {
       title: "Opciones",
       key: "opciones",
       render: (_, record) => (
-        <Link to={`/detallesfactura/${record.id}`}>
+        <Link to={`/detallesfactura/${record.IdFactura}`}>
           <Button type="primary" size="small">
             Detalles
           </Button>

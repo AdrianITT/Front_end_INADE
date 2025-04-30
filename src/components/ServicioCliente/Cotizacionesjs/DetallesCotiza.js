@@ -6,14 +6,15 @@ import { MailTwoTone,
   EditTwoTone, 
   CheckCircleTwoTone, 
   FilePdfTwoTone,
-  CopyTwoTone }
+  CopyTwoTone,
+  CloseCircleTwoTone }
    from "@ant-design/icons";
 import { Api_Host } from "../../../apis/api";
 import { useCotizacionDetails } from "../Cotizacionesjs/CotizacionDetalles/useCotizacionDetails";
 import ServiciosTable from "../Cotizacionesjs/CotizacionDetalles/ServiciosTable";
 import CotizacionInfoCard from "../Cotizacionesjs/CotizacionDetalles/CotizacionInfoCard";
-import { SendEmailModal, EditCotizacionModal, ResultModal,SuccessDuplicarModal,ConfirmDuplicarModal } from "../Cotizacionesjs/CotizacionDetalles/CotizacionModals";
-import { updateCotizacion, getDuplicarCotizacion} from "../../../apis/ApisServicioCliente/CotizacionApi";
+import { SendEmailModal, EditCotizacionModal, ResultModal,SuccessDuplicarModal,ConfirmDuplicarModal,DeleteCotizacionModal } from "../Cotizacionesjs/CotizacionDetalles/CotizacionModals";
+import { updateCotizacion, getDuplicarCotizacion, deleteCotizacion} from "../../../apis/ApisServicioCliente/CotizacionApi";
 import "./cotizar.css";
 
 const { Title, Text } = Typography;
@@ -34,6 +35,9 @@ const CotizacionDetalles = () => {
   const [emailLoading, setEmailLoading] = useState(false);
   const [isDuplicarModalVisible, setIsDuplicarModalVisible] = useState(false);
   const [isDuplicarSuccessModalVisible, setIsDuplicarSuccessModalVisible] = useState(false);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [selectedId, setSelectedId] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false)
 
 
 
@@ -138,7 +142,29 @@ const CotizacionDetalles = () => {
       setLoading(false);
     }
   };  
-  
+  const showDeleteModal = (id) => {
+    setSelectedId(id);
+    setDeleteModalVisible(true);
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteModalVisible(false);
+    setSelectedId(null);
+    navigate("/cotizar");
+  };
+
+  const handleDeleteConfirm = async () => {
+    setDeleteLoading(true);
+    try {
+      await deleteCotizacion(selectedId);
+      message.success("Cotización eliminada");
+      handleDeleteCancel();
+    } catch (err) {
+      message.error("Error al eliminar");
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
 
   
   // Definición del menú de acciones (enviar correo, editar, actualizar estado, ver PDF)
@@ -150,7 +176,7 @@ const CotizacionDetalles = () => {
       <Menu.Item key="3" icon={<EditTwoTone />} onClick={() => navigate(`/EditarCotizacion/${id}`)}>
         Editar
       </Menu.Item>
-      <Menu.Item key="4" icon={<CheckCircleTwoTone />} onClick={() => {  updateEstadoCotizacion(2) }}>
+      <Menu.Item key="4" icon={<CheckCircleTwoTone />} onClick={() => { updateEstadoCotizacion(2) }}>
         Actualizar estado
       </Menu.Item>
       <Menu.Item key="5" icon={<FilePdfTwoTone />} onClick={handleDownloadPDF}>
@@ -158,6 +184,9 @@ const CotizacionDetalles = () => {
       </Menu.Item>
       <Menu.Item key="6" icon={<CopyTwoTone />} onClick={() => setIsDuplicarModalVisible(true)}>
         Duplicar
+      </Menu.Item>
+      <Menu.Item key="7" icon={<CloseCircleTwoTone twoToneColor="#eb2f96"/> } onClick={() => showDeleteModal(id)}>
+        Eliminar Cotización 
       </Menu.Item>
     </Menu>
   );
@@ -225,6 +254,13 @@ const CotizacionDetalles = () => {
             setIsDuplicarModalVisible(false);
             await handleDuplicarCotizacion(selectedOption);
           }}
+        />
+              
+        <DeleteCotizacionModal
+        visible={deleteModalVisible}
+        loading={deleteLoading}
+        onCancel={handleDeleteCancel}
+        onConfirm={handleDeleteConfirm}
         />
 
         <SuccessDuplicarModal visible={isDuplicarSuccessModalVisible} />

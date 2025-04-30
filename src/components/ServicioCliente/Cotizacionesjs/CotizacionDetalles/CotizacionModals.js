@@ -175,3 +175,47 @@ export const ResultModal = ({
     <Result title={<p style={{ color: resultStatus === "success" ? "green" : "red" }}>{resultMessage}</p>} />
   </Modal>
 );
+
+export const DeleteCotizacionModal=({
+  visible,
+  onCancel,
+  onConfirm,
+  loading=false,
+}) => {
+  const [confirmationText, setConfirmationText] = useState("");
+  const handleOk = () => {
+    if (confirmationText === "ELIMINAR") {
+      onConfirm();
+    } else {
+      alert("Por favor, escribe 'ELIMINAR' para confirmar.");
+    }
+  }
+  return (
+    <Modal
+      title="Confirmar eliminación"
+      open={visible}               // coincide con los otros modales que usan `open`
+      onOk={handleOk}
+      onCancel={() => {
+        setConfirmationText("");
+        onCancel();
+      }}
+      okText="Eliminar"
+      cancelText="Cancelar"
+      confirmLoading={loading}
+      okButtonProps={{ disabled: confirmationText !== "COTIZACION" }}
+    >
+      <p>
+        ¿Está seguro de que desea eliminar esta cotización? Esta acción no se puede
+        deshacer.
+      </p>
+      <p>
+        <strong>Para confirmar, escriba <em>"ELIMINAR"</em></strong>
+      </p>
+      <Input
+        placeholder='Escribe "COTIZACION" para confirmar'
+        value={confirmationText}
+        onChange={(e) => setConfirmationText(e.target.value)}
+      />
+    </Modal>
+  );
+};
