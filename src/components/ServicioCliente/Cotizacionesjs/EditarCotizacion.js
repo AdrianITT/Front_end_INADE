@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect,useMemo  } from "react";
 import "./Crearcotizacion.css";
 import { Form, Input, Button, Row, Col, Select, Checkbox, Divider, message, DatePicker, Card, Modal, Result, Text,InputNumber } from "antd";
 import dayjs from "dayjs";
@@ -7,8 +7,9 @@ import { getCotizacionById, updateCotizacion } from "../../../apis/ApisServicioC
 import { getAllCotizacionServicio, updateCotizacionServicio, createCotizacionServicio, deleteCotizacionServicio } from "../../../apis/ApisServicioCliente/CotizacionServicioApi";
 import { getAllTipoMoneda } from "../../../apis/ApisServicioCliente/Moneda";
 import { getAllIva } from "../../../apis/ApisServicioCliente/ivaApi";
-import { getAllServicio, getServicioById } from "../../../apis/ApisServicioCliente/ServiciosApi";
+import { getAllServicio, getServicioById,getServicioData } from "../../../apis/ApisServicioCliente/ServiciosApi";
 import { getInfoSistema } from "../../../apis/ApisServicioCliente/InfoSistemaApi";
+import {getAllMetodoData} from "../../../apis/ApisServicioCliente/MetodoApi";
 
 const { TextArea } = Input;
 
@@ -28,6 +29,8 @@ const EditarCotizacion = () => {
      const [conceptos, setConceptos] = useState([]);
      const [isModalVisible, setIsModalVisible] = useState(false);
      const [serviciosRelacionados, setServiciosRelacionados] = useState([]);
+     const [metodosData, setMetodosData] = useState([]);
+     const organizationId = useMemo(() => parseInt(localStorage.getItem("organizacion_id"), 10), []);
    
      // Obtener tipo de cambio del dólar
      useEffect(() => {
@@ -86,6 +89,7 @@ const EditarCotizacion = () => {
                     descripcion: record.descripcion,
                     cotizacion: record.cotizacion,
                     precioEditable: record ? record.precio : parseFloat(servicioResponse.data.precio) || 0,
+                    metodoCodigo: record.metodo || servicioResponse.data.metodos,
                   };
                 })
               );
@@ -126,13 +130,22 @@ const EditarCotizacion = () => {
    
        const fetchServicios = async () => {
          try {
-           const response = await getAllServicio();
+           const response = await getServicioData(organizationId);
            setServicios(response.data);
          } catch (error) {
            console.error("Error al cargar los servicios", error);
          }
        };
-   
+
+       const fetchMetodos = async () => {
+        try {
+          const response = await getAllMetodoData(organizationId);
+          setMetodosData(response.data);
+        } catch (error) {
+          console.error("Error al cargar los métodos de pago", error);
+        }
+       };
+       fetchMetodos();
        fetchTipoMoneda();
        fetchIva();
        fetchServicios();
@@ -240,6 +253,7 @@ const EditarCotizacion = () => {
                     precio: servicioSeleccionado.precio || 0, // ✅ Asignamos el precio correcto
                     precioEditable: servicioSeleccionado.precio || 0, // ✅ También en precioFinal
                     nombreServicio: servicioSeleccionado.nombreServicio, // ✅ Mantenemos el nombre
+                    metodoCodigo: servicioSeleccionado.metodos,
                   }
                 : concepto
             );
@@ -515,6 +529,26 @@ const EditarCotizacion = () => {
                                 ))}
                               </Select>
                             </Form.Item>
+                          </Col>
+                          <Col span={8}>
+                          <Form.Item label="Método Relacionado">
+                            <Select
+                              value={concepto.metodoCodigo}
+                              disabled
+                              showSearch
+                              optionFilterProp="label"
+                            >
+                              {metodosData.map(m => (
+                                <Select.Option
+                                  key={m.id}
+                                  value={m.id}
+                                  label={`${m.codigo}`}
+                                >
+                                  {`${m.codigo}`}
+                                </Select.Option>
+                              ))}
+                            </Select>
+                          </Form.Item>
                           </Col>
 
                           <Col span={8}>

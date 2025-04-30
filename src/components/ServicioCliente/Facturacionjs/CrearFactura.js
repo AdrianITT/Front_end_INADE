@@ -247,13 +247,14 @@ const CrearFactura = () => {
     const subtotalNoSel = noSeleccionados.reduce((sum, s) => {
       return sum + parseFloat(s.precio) * s.cantidad;
     }, 0);
-  
+    
+    const subtotalDes=subtotalNoSel -(dataID.valores.valorDescuento);
     // 4) Aplicar descuento global
-    const subtotalConDesc = subtotalNoSel * (1 - porcentaje / 100);
+    const subtotalConDesc = subtotalDes * (1 - porcentaje / 100);
   
     // 5) Aplicar IVA
     const totalConIva = subtotalConDesc * (1 + tasaIVA);
-    try {
+    
     // 6) Montar payload de la factura
     const datosFactura = {
       notas:         values.notas || "",
@@ -273,7 +274,7 @@ const CrearFactura = () => {
       // 7) Creas la factura
       const response = await createFactura(datosFactura);
       const facturaId = response.data.id;
-  
+    try {
       // 8) Guardas los servicios NO seleccionados en tu tabla intermedia
       await Promise.all(
         noSeleccionados.map(s =>
@@ -481,7 +482,7 @@ const CrearFactura = () => {
           <Button
             type="danger"
             style={{ backgroundColor: "#f5222d", borderColor: "#f5222d" }}
-            onClick={() => navigate(`/DetalleOrdenTrabajo/${id}`)}
+            onClick={() => navigate(`/detalles_cotizaciones/${id}`)}
           >
             Cancelar
           </Button>
