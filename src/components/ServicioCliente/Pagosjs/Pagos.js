@@ -104,8 +104,8 @@ const Pagos = () => {
   
         const detalles = pagos.map((pago) => ({
           key: `${pago.folioComprobantePago}-${pago.folioFactura}`,
-          comprobantepago: pago.folioComprobantePago,
-          numerofactura: pago.numeroComprobantePago,
+          comprobantepago: pago.numeroComprobantePago,
+          numerofactura: pago.numeroFactura,
           factura: pago.folioFactura,
           montototal: pago.montototal,
           montopago: pago.montopago,
