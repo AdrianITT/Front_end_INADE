@@ -233,51 +233,54 @@ const CrearFactura = () => {
 
 
   const handlecrearFactura = async (values) => {
-    // 0) Obtener porcentaje de descuento y tasa de IVA
-    const porcentaje = values.poresentajeFactura ?? 0;      // e.g. 10 → 10%
-    const tasaIVA    = tasaIva;                            // e.g. 0.16 → 16%
+    const porcentajeFactura = values.poresentajeFactura ?? 0;    // e.g. 50
+    const tasaIVA = tasaIva;                                    // e.g. 0.16
   
-  
-    // 2) Calcular servicios NO seleccionados
-    const noSeleccionados = serviciosCot.filter(
+    // 1) Servicios que ELIMINAMOS (los seleccionados) y por tanto facturamos los NO seleccionados
+    const serviciosAFacturar = serviciosCot.filter(
       s => !selectedRowKeys.includes(s.id)
     );
   
-    // 3) Subtotal de esos servicios
-    const subtotalNoSel = noSeleccionados.reduce((sum, s) => {
-      return sum + parseFloat(s.precio) * s.cantidad;
-    }, 0);
-    
-    const subtotalDes=subtotalNoSel -(dataID.valores.valorDescuento);
-    // 4) Aplicar descuento global
-    const subtotalConDesc = subtotalDes * (1 - porcentaje / 100);
+    // 2) Subtotal de esos servicios
+    const subtotal = serviciosAFacturar.reduce((sum, s) =>
+      sum + parseFloat(s.precio) * s.cantidad, 0
+    );
   
-    // 5) Aplicar IVA
-    const totalConIva = subtotalConDesc * (1 + tasaIVA);
+    // 3) Porcentaje de descuento original de la cotización
+    const descuentoCotPct = parseFloat(dataID.valores.descuentoPorcentaje) / 100;
     
-    // 6) Montar payload de la factura
+    // 4) Aplicar descuento original
+    const subtotalConDescOriginal = subtotal * (1 - descuentoCotPct);
+  
+    // 5) Aplicar % de la factura
+    const subtotalConPctFactura = subtotalConDescOriginal * (1 - (porcentajeFactura / 100));
+  
+    // 6) Aplicar IVA
+    const totalConIva = subtotalConPctFactura * (1 + tasaIVA);
+  
+    // 7) Armar payload
     const datosFactura = {
-      notas:         values.notas || "",
-      ordenCompra:   values.ordenCompra || "",
+      notas:           values.notas || "",
+      ordenCompra:     values.ordenCompra || "",
       fechaExpedicion: values.fechaExpedicion.format("YYYY-MM-DDTHH:mm:ss[Z]"),
-      ordenTrabajo: parseInt(id, 10),
-      tipoCfdi:     values.tipoCfdi,
-      formaPago:    values.formaPago,
-      metodoPago:   values.metodoPago,
-      importe:      totalConIva.toFixed(2),   // <-- usa el nuevo importe
-      tipoMoneda:   tipoMoneda.codigo,
-      porcentaje:   porcentaje,
-      cotizacion:   id,
+      ordenTrabajo:    parseInt(id, 10),
+      tipoCfdi:        values.tipoCfdi,
+      formaPago:       values.formaPago,
+      metodoPago:      values.metodoPago,
+      porcentaje:      porcentajeFactura,
+      importe:         totalConIva.toFixed(2),
+      tipoMoneda:      tipoMoneda.codigo,
+      cotizacion:      id,
     };
   
-    
-      // 7) Creas la factura
-      const response = await createFactura(datosFactura);
-      const facturaId = response.data.id;
+    // 8) Crear factura
+    const response = await createFactura(datosFactura);
+    const facturaId = response.data.id;
+  
     try {
-      // 8) Guardas los servicios NO seleccionados en tu tabla intermedia
+      // 9) Guardar solo los servicios NO seleccionados
       await Promise.all(
-        noSeleccionados.map(s =>
+        serviciosAFacturar.map(s =>
           createServicioFactura({
             descripcion: s.descripcion,
             precio:      parseFloat(s.precio),
@@ -287,7 +290,6 @@ const CrearFactura = () => {
           })
         )
       );
-  
       message.success("Factura creada con éxito");
       navigate(`/detallesfactura/${facturaId}`);
     } catch (error) {
