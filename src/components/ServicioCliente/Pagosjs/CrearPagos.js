@@ -167,18 +167,17 @@ const facturasConMontorestanteCero = useMemo(() => {
         console.log("Facturas del cliente:", res);
         const facturas = res.data.map(f => ({
           id: f.factura_id,
-          ordenTrabajo: {
-            id: f.ordenTrabajo_id,
-            codigo: f.ordenTrabajo_codigo
-          },
+          numero: f.facturanumero,
           importe: f.importe,
-          tipoMoneda: f.tipoMoneda,
-          cotizacion: f.cotizacion_id,
+          cotizacion: f.cotizacion.cotizacion_id,
+          cotizacionNumero: f.cotizacion.numero,
+          tipoMoneda: f.tipoMoneda.codigo,
           cliente: f.cliente.cliente_id
         }));
         setSubtotal(facturas.importe);
         setTotal(facturas.importe);
         setFacturasPorCliente(facturas); // este lo usas en `obtenerFacturasDisponibles`
+        console.log("Facturas filtradas:", facturas);
       } catch (error) {
         console.error("Error al obtener facturas por cliente:", error);
       } finally {
@@ -625,8 +624,8 @@ const handleRemoveConcepto = (facturaId, e) => {
                 {obtenerFacturasDisponibles(factura.id).map((f) => {
                   const nombreCliente = clientesFactura[f.id]; // busca si ya está
                   const label = nombreCliente
-                    ? `Factura ${f.id} - ${f.ordenTrabajo.codigo} - ${nombreCliente}`
-                    : `Factura ${f.id} - ${f.ordenTrabajo.codigo}`;
+                    ? `Factura ${f.numero} - cotizacion ${f.cotizacionNumero} - ${nombreCliente}`
+                    : `Factura ${f.numero} - cotizacion ${f.cotizacionNumero}`;
                   
                   return (
                     <Select.Option

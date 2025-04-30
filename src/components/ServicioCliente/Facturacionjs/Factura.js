@@ -43,7 +43,7 @@ const Factura = () => {
               })
             : "Desconocida";
             // 🔴 ¿Está faltante en Facturama?
-            const isMissing = !facturamaIds.has(factura.folio);
+            const isMissing = !facturamaIds.has(factura.id);
   
           let recent = false;
           if (expedicionDate) {

@@ -56,8 +56,8 @@ const Pagos = () => {
     },
     {
       title: diccionario.columnas.idFactura,
-      dataIndex: "factura",
-      key: "factura",
+      dataIndex: "numerofactura",
+      key: "numerofactura",
     },
     {
       title: diccionario.columnas.fechaPago,
@@ -98,41 +98,26 @@ const Pagos = () => {
       setLoading(true);
       setError(null);
       try {
-        const respFacturas = await getAllComprobantepagoFactura();
-        if(!respFacturas || !respFacturas.data){
-          throw new Error("No se encontraron datos de facturas");
-        }
-        const facturas = respFacturas.data;
+        // Solo llamamos a la API de pagos por organización
+        const pagosResponse = await getComprobantepagoById(organizationId);
+        const pagos = pagosResponse.data;
   
-        // Usar Set para no repetir llamada a getComprobantepagoById
-        const facturaIdsUnicos = [
-          ...new Set(facturas.map((f) => f.factura)),
-        ];
-
-        if (facturaIdsUnicos.length === 0) {
-          console.log("No hay facturas únicas para procesar.");
-          return;
-        }
+        const detalles = pagos.map((pago) => ({
+          key: `${pago.folioComprobantePago}-${pago.folioFactura}`,
+          comprobantepago: pago.folioComprobantePago,
+          numerofactura: pago.numeroComprobantePago,
+          factura: pago.folioFactura,
+          montototal: pago.montototal,
+          montopago: pago.montopago,
+          montorestante: pago.montorestante,
+          fechaPago: formatToYDM(pago.fechaPago),
+          rawFechaPago: new Date(pago.fechaPago).getTime(),
+        }));
   
-        const allDetalles = await Promise.all(
-          facturaIdsUnicos.map(async (facturaId) => {
-            const pagosPorFactura = await getComprobantepagoById(organizationId);
-            return pagosPorFactura.data.map((pago) => ({
-              key: `${pago.folioComprobantePago}-${pago.folioFactura}`,
-              comprobantepago: pago.folioComprobantePago,
-              factura: pago.folioFactura,
-              montototal: pago.montototal,
-              montopago: pago.montopago,
-              montorestante: pago.montorestante,
-              fechaPago: formatToYDM(pago.fechaPago),
-              rawFechaPago: new Date(pago.fechaPago).getTime(),
-            }));
-          })
-        );
-        console.log("Detalles de pagos:", allDetalles);
-        setData(allDetalles.flat());
+        setData(detalles);
       } catch (error) {
         console.error("Error al cargar comprobantes de pago:", error);
+        setError(error.message || "Error desconocido");
       } finally {
         setLoading(false);
       }
@@ -140,6 +125,7 @@ const Pagos = () => {
   
     fetchData();
   }, []);
+  
   
   
 
