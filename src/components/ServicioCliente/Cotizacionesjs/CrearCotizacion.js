@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import "./Crearcotizacion.css";
 import { Form, Input, Button, Row, Col, 
   Select, Checkbox, Divider, message, DatePicker, 
-  Card, Modal,Result, Descriptions, Space } from "antd";
+  Card, Modal,Result, Descriptions, Space,Spin } from "antd";
 import { MailOutlined, IdcardOutlined, PhoneOutlined, MobileOutlined, UserOutlined, PlusOutlined  } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useParams, useNavigate } from "react-router-dom";
@@ -49,6 +49,7 @@ const RegistroCotizacion = () => {
   const [unidad, setUnidad] = useState([]);
   const [clavecdfi, setClavecdfi] = useState([]);
   const [metodos, setMetodos] = useState([]);
+  const [loadings, setLoadings] = useState(false);
 
   const [formNuevoServicio] = Form.useForm();
   const [formMetodo] = Form.useForm();
@@ -253,6 +254,7 @@ const RegistroCotizacion = () => {
   const { subtotal, descuentoValor, subtotalConDescuento, iva, total } = calcularTotales();
 
   const handleSubmit = async () => {
+    setLoadings(true);
     try {
       await form.validateFields();
   
@@ -271,9 +273,12 @@ const RegistroCotizacion = () => {
       setIsConfirmModalVisible(true);
     } catch (error) {
       message.error("Por favor completa todos los campos requeridos.");
+    }finally {
+      setLoadings(false);
     }
   };
   const handleConfirmCreate = async () => {
+    setLoadings(true);
     try {
       const cotizacionResponse = await createCotizacion(cotizacionDataPreview);
       const cotizacionId = cotizacionResponse.data.id;
@@ -297,7 +302,7 @@ const RegistroCotizacion = () => {
     } catch (error) {
       console.error("Error al crear la cotización", error);
       message.error("Error al crear la cotización");
-    }
+    }finally {setLoadings(false);}
   };
   
   
@@ -306,6 +311,7 @@ const RegistroCotizacion = () => {
     setIsModalOpenMetodos(false);
   };
   const handleOkMetodos = async () => {
+    setLoadings(true);
       try {
         // Recoger los datos del formulario (lo que el usuario ha ingresado)
         const values = await formMetodo.validateFields(); // Usando Antd form.validateFields para obtener los valores
@@ -335,7 +341,7 @@ const RegistroCotizacion = () => {
         message.success("Método creado con éxito.");
       } catch (error) {
         message.error("Error al crear el método.");
-      }
+      }finally {setLoadings(false);}
     };
 
     const showModalMetodos = () => {
@@ -344,6 +350,7 @@ const RegistroCotizacion = () => {
 
   return (
     <div className="cotizacion-container">
+      <Spin spinning={loadings} tip="Cargando datos...">
       <h1 className="cotizacion-title">Registro de Cotización</h1>
       <Form 
       form={form}
@@ -621,7 +628,7 @@ const RegistroCotizacion = () => {
         </div>
           </center>
       </Form>
-
+      </Spin>
       <Modal
         title="Información"
         open={isModalVisible}
