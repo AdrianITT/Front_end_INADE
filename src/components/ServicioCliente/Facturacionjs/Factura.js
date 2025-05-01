@@ -202,7 +202,7 @@ const Factura = () => {
       </div>
       <div style={{ display: "flex",justifyContent: "center",marginBottom: "20px"  }}>
       <Link to="/FacturaOTMultiples">
-        <Button type="primary">
+        <Button type="primary" disabled>
           Crear Factura de Multiples OT
         </Button>
         </Link>
