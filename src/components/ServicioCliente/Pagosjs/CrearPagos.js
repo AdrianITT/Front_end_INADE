@@ -65,6 +65,8 @@ const [comprobantesData, setComprobantesData] = useState([]);
       precioRestante: '',
     },
   ]);
+  const [confirmModalVisible, setConfirmModalVisible] = useState(false);
+
 
   /*useEffect(() => {
     // Cuando el cliente cambia, limpiamos el select de factura y los campos
@@ -286,9 +288,13 @@ const facturasConMontorestanteCero = useMemo(() => {
   
 
   const [form] = Form.useForm();
+  const handleCrearPagos = () => {
+    setConfirmModalVisible(true); // Mostrar modal personalizado de confirmación
+  };
+  
 
   // ✅ Función para crear el comprobante de pago
-  const handleCrearPagos = async () => {
+  const handleConfirmCrearPagos = async () => {
       // Validar que para cada factura el precio a pagar no sea mayor al precio total
   for (const facturaItem of facturas) {
     if (Number(facturaItem.precioPagar) > Number(facturaItem.precioTotal)) {
@@ -743,6 +749,17 @@ const handleRemoveConcepto = (facturaId, e) => {
         >
           Crear pagos
         </Button>
+        <Modal
+          title="Confirmar registro de pago"
+          visible={confirmModalVisible}
+          onOk={handleConfirmCrearPagos}
+          onCancel={() => setConfirmModalVisible(false)}
+          okText="Registrar pago"
+          cancelText="Cancelar"
+        >
+          <p>¿Estás seguro de que deseas registrar este pago?</p>
+        </Modal>
+
         <Modal
         title="Pago Registrado"
         visible={isModalVisible}

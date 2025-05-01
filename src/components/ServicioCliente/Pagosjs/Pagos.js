@@ -14,7 +14,7 @@ const diccionario = {
     montoTotal: "Monto Total",
     montoRestante: "Monto Restante",
     montoPago: "Monto Pago",
-    idFactura: "Folio Factura",
+    numeroFactura: "Folio Factura",
     acciones: "Acciones",
     verDetalles: "Ver Detalles",
   },
@@ -55,9 +55,9 @@ const Pagos = () => {
       filterSearch: true,
     },
     {
-      title: diccionario.columnas.idFactura,
-      dataIndex: "numerofactura",
-      key: "numerofactura",
+      title: diccionario.columnas.numeroFactura,
+      dataIndex: "numeroFactura",
+      key: "numeroFactura",
     },
     {
       title: diccionario.columnas.fechaPago,
@@ -101,11 +101,12 @@ const Pagos = () => {
         // Solo llamamos a la API de pagos por organización
         const pagosResponse = await getComprobantepagoById(organizationId);
         const pagos = pagosResponse.data;
+        console.log("Pagos:", pagos);
   
         const detalles = pagos.map((pago) => ({
           key: `${pago.folioComprobantePago}-${pago.folioFactura}`,
-          comprobantepago: pago.folioComprobantePago,
-          numerofactura: pago.numeroComprobantePago,
+          comprobantepago: pago.numeroComprobantePago,
+          numeroFactura: pago.numeroFactura,
           factura: pago.folioFactura,
           montototal: pago.montototal,
           montopago: pago.montopago,
