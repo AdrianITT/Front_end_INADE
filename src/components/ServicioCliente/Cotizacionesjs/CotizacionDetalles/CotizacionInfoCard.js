@@ -66,7 +66,7 @@ const CotizacionInfoCard = ({
                 
                 size="middle"
                 style={{ backgroundColor: '#13c2c2' }}
-              >Orden Trabajo</Button>
+              >Orden de Trabajo</Button>
             </Link>
           )}
           

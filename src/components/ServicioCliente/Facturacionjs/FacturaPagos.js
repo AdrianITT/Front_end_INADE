@@ -34,6 +34,7 @@ const PaymentCards = ({ idFactura, correoCliente,refreshPagos }) => {
           ...p,
           isPDFVisible: p.facturama_id !== null,
         }));
+        console.log("Pagos obtenidos:", pagosConFlag);
         setPagos(pagosConFlag);
       }else {
         setPagos([]);
@@ -52,6 +53,7 @@ const PaymentCards = ({ idFactura, correoCliente,refreshPagos }) => {
   // Función para realizar el pago
   const handleRealizarPago = async (pagoId) => {
     try {
+      console.log("Realizando pago para el ID:", pagoId);
       const reponse =await getAllFacturaPagosFacturama(pagoId);
       console.log("Respuesta del servidor:", reponse);
     } catch (error) {
@@ -247,6 +249,7 @@ const PaymentCards = ({ idFactura, correoCliente,refreshPagos }) => {
       );
     } else {
       return (
+        <>
         <Button
           type="primary"
           style={{
@@ -259,6 +262,9 @@ const PaymentCards = ({ idFactura, correoCliente,refreshPagos }) => {
         >
           Realizar Pago
         </Button>
+        <Button icon={<DeleteOutlined style={{ color: 'red' }} />} 
+        onClick={() => openDeleteModal(pago.id)}>Eliminar Complemento</Button>
+        </>
       );
     }
   };
