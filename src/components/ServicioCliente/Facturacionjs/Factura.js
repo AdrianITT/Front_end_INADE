@@ -123,11 +123,11 @@ const Factura = () => {
       title: "Cotización",
       dataIndex: "numeroCotizacion",
       key: "numeroCotizacion",
-      filters: [...new Set(data.map((item) => item.codigoOrdenTrabajo))].map((codigo) => ({
+      filters: [...new Set(data.map((item) => item.numeroCotizacion))].map((codigo) => ({
         text: codigo,
         value: codigo,
       })),
-      onFilter: (value, record) => record.codigoOrdenTrabajo.includes(value),
+      onFilter: (value, record) => record.numeroCotizacion.includes(value),
       render: (text) => <Tag color="geekblue">{text}</Tag>,
     },
     {

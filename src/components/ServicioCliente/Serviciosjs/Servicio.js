@@ -1,13 +1,15 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { Tabs, Table, Input, Button, Modal, Form, Row, Col, Select, Checkbox, message } from "antd";
+import React, { useState, useEffect, useMemo, useRef } from "react";
+import { Tabs, Table, Input, Button, Modal, Form, Row, Col, Select, Checkbox, message, Space } from "antd";
 import "./Servicio.css"
+import Highlighter from 'react-highlight-words';
 //import { Link} from "react-router-dom";
-import { ExclamationCircleOutlined, EditOutlined, CloseOutlined } from "@ant-design/icons";
+import { ExclamationCircleOutlined, EditOutlined, CloseOutlined, SearchOutlined } from "@ant-design/icons";
 import { deleteServicio, createServicio, updateServicio, getServicioData } from "../../../apis/ApisServicioCliente/ServiciosApi";
 import { createMetodo , deleteMetodo, getAllMetodoData} from "../../../apis/ApisServicioCliente/MetodoApi";
 import { getAllClaveCDFI } from "../../../apis/ApisServicioCliente/ClavecdfiApi";
 import { getAllUnidadCDFI } from "../../../apis/ApisServicioCliente/unidadcdfiApi";
 import { getAllObjectImpuesto_Api } from "../../../apis/ApisServicioCliente/ObjetoimpuestoApi";
+
 
 
 
@@ -36,6 +38,103 @@ const Servicio = () => {
   // Al inicio del componente, declara el estado y la función
   const [metodoSeleccionado, setMetodoSeleccionado] = useState(null);
   const organizationId = useMemo(() => parseInt(localStorage.getItem("organizacion_id"), 10), []);
+
+    const [searchText, setSearchText] = useState('');
+    const [searchedColumn, setSearchedColumn] = useState('');
+    const searchInput = useRef(null);
+  
+    // Lógica de búsqueda
+    const handleSearch = (selectedKeys, confirm, dataIndex) => {
+      confirm();
+      setSearchText(selectedKeys[0]);
+      setSearchedColumn(dataIndex);
+    };
+  
+    const handleReset = (clearFilters) => {
+      clearFilters();
+      setSearchText('');
+    };
+  
+    // Column helper
+    const getColumnSearchProps = (dataIndex) => ({
+      filterDropdown: ({ 
+        setSelectedKeys, 
+        selectedKeys, 
+        confirm, 
+        clearFilters, 
+        close 
+      }) => (
+        <div style={{ padding: 8 }} onKeyDown={(e) => e.stopPropagation()}>
+          <Input
+            ref={searchInput}
+            placeholder={`Buscar ${dataIndex}`}
+            value={selectedKeys[0]}
+            onChange={(e) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+            onPressEnter={() => handleSearch(selectedKeys, confirm, dataIndex)}
+            style={{ marginBottom: 8, display: 'block' }}
+          />
+          <Space>
+            <Button
+              type="primary"
+              onClick={() => handleSearch(selectedKeys, confirm, dataIndex)}
+              icon={<SearchOutlined />}
+              size="small"
+              style={{ width: 90 }}
+            >
+              Buscar
+            </Button>
+            <Button
+              onClick={() => {
+                if (clearFilters) handleReset(clearFilters);
+              }}
+              size="small"
+              style={{ width: 90 }}
+            >
+              Reiniciar
+            </Button>
+            <Button
+              type="link"
+              size="small"
+              onClick={() => {
+                confirm({ closeDropdown: false });
+                setSearchText(selectedKeys[0]);
+                setSearchedColumn(dataIndex);
+              }}
+            >
+              Filtrar
+            </Button>
+            <Button
+              type="link"
+              size="small"
+              onClick={() => {
+                close();
+              }}
+            >
+              Cerrar
+            </Button>
+          </Space>
+        </div>
+      ),
+      filterIcon: (filtered) => (
+        <SearchOutlined style={{ color: filtered ? '#1677ff' : undefined }} />
+      ),
+      onFilter: (value, record) =>
+        record[dataIndex]
+          ?.toString()
+          .toLowerCase()
+          .includes(value.toLowerCase()),
+      render: (text) =>
+        searchedColumn === dataIndex ? (
+          <Highlighter
+            highlightStyle={{ backgroundColor: '#ffc069', padding: 0 }}
+            searchWords={[searchText]}
+            autoEscape
+            textToHighlight={text ? text.toString() : ''}
+          />
+        ) : (
+          text
+        ),
+    });
 
 const handleMetodoChange = (value) => {
   setMetodoSeleccionado(value);
@@ -177,10 +276,13 @@ const handleMetodoChange = (value) => {
     
     try {
       const values = await formEdit.validateFields();
+      console.log("Metodos:", metodos);
+      console.log("Valores del formulario editado:", values);
       const dataToSend = {
         ...values,
         estado: values.estado || 5,
       };
+      console.log("Data a enviar:", dataToSend);
       
       // Verifica si los campos necesarios están presentes
       if ( !values.unidadCfdi || !values.claveCfdi ) {
@@ -309,26 +411,11 @@ const handleConfirmDeleteService = async () => {
   const handleCancelMetodos = () => {
     setIsModalOpenMetodos(false);
   };
-  /*
-  const showModalAlert = (id) => {
-    setCurrentServiceId(id);
-    setIsModalVisible(true);
-  };
-
-  const handleOkAlert = () => {
-    handleDeleteServicio(currentServiceId); // Eliminar el servicio
-    setIsModalVisible(false);
-  };
-
-  const handleCancelAlert = () => {
-
-    setIsModalVisible(false);
-  }; */
 
   //datos de la tabla 
   const columnsServicios = [
     { title: "Código", dataIndex: "numero", key: "numero" },
-    { title: "Nombre", dataIndex: "nombreServicio", key: "nombreServicio" },
+    { title: "Nombre", dataIndex: "nombreServicio", key: "nombreServicio", ...getColumnSearchProps('nombreServicio') },
     { title: "Método", dataIndex: "metodos", key: "metodos"},
     { title: "Precio", dataIndex: "precio", key: "precio" },
     {
@@ -354,7 +441,7 @@ const handleConfirmDeleteService = async () => {
 
   const columnsMetodos = [
     { title: "#", dataIndex: "numero", key: "numero" },
-    { title: "codigo", dataIndex: "codigo", key: "codigo"},
+    { title: "codigo", dataIndex: "codigo", key: "codigo",...getColumnSearchProps('codigo')},
     {
       title: "Acción",
       key: "action",
@@ -526,17 +613,6 @@ const handleConfirmDeleteService = async () => {
                   ))}
                 </Select>
               </Form.Item>
-              {/* 
-              <Form.Item label="Objeto impuesto:" name="objetoImpuesto" rules={[{ required: true }]}>
-                <Select>
-              {objetoimpuesto.map((oi)=>(
-                    <Select.Option key={oi.id}
-                    value={oi.id}>
-                      {oi.nombre}
-                    </Select.Option>
-                  ))}
-                  </Select>
-              </Form.Item>*/}
               <Form.Item
                 label="Método"
                 name="metodos"
@@ -544,6 +620,7 @@ const handleConfirmDeleteService = async () => {
               >
                 <Select
                   placeholder="Selecciona un método"
+                  
                   showSearch
                   optionFilterProp="label"
                   filterOption={(input, option) =>
@@ -728,7 +805,6 @@ const handleConfirmDeleteService = async () => {
                     <Select.Option 
                       key={metodo.id} 
                       value={metodo.id}
-                      label={metodo.codigo}
                     >
                       {metodo.codigo}
                     </Select.Option>
