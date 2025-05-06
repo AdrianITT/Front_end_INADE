@@ -184,10 +184,10 @@ export const DeleteCotizacionModal=({
 }) => {
   const [confirmationText, setConfirmationText] = useState("");
   const handleOk = () => {
-    if (confirmationText === "ELIMINAR") {
+    if (confirmationText === "COTIZACION") {
       onConfirm();
     } else {
-      alert("Por favor, escribe 'ELIMINAR' para confirmar.");
+      alert("Por favor, escribe 'COTIZACION' para confirmar.");
     }
   }
   return (
@@ -209,7 +209,7 @@ export const DeleteCotizacionModal=({
         deshacer.
       </p>
       <p>
-        <strong>Para confirmar, escriba <em>"ELIMINAR"</em></strong>
+        <strong>Para confirmar, escriba <em>"COTIZACION"</em></strong>
       </p>
       <Input
         placeholder='Escribe "COTIZACION" para confirmar'
