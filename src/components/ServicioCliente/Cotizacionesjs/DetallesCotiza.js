@@ -213,10 +213,6 @@ const CotizacionDetalles = () => {
               factorConversion={factorConversion} 
             />
           </Tabs.TabPane>
-          <Tabs.TabPane tab="Documentos" key="2">
-            <Title level={4}>Documentos relacionados</Title>
-            <Text>No hay documentos disponibles.</Text>
-          </Tabs.TabPane>
         </Tabs>
         
         <SendEmailModal 
