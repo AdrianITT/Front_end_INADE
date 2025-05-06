@@ -1,9 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { getAllFactura, getAllFacturaByOrganozacion } from "../../../apis/ApisServicioCliente/FacturaApi";
-import { getCotizacionById } from "../../../apis/ApisServicioCliente/CotizacionApi";
-import { getClienteById } from "../../../apis/ApisServicioCliente/ClienteApi";
-import { getEmpresaById } from "../../../apis/ApisServicioCliente/EmpresaApi";
-import { getOrdenTrabajoById } from "../../../apis/ApisServicioCliente/OrdenTrabajoApi"; 
+import { getAllFacturaByOrganozacion } from "../../../apis/ApisServicioCliente/FacturaApi";
 import { getAllfacturafacturama } from "../../../apis/ApisServicioCliente/FacturaFacturamaApi";
 import { Table, Input, Button, message, Tag, theme, Space } from "antd";
 import { Link } from "react-router-dom";
@@ -14,7 +10,7 @@ const Factura = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [filteredData, setFilteredData] = useState([]);
-  const { token } = theme.useToken();
+  //const { token } = theme.useToken();
 
   // ID de la organización actual
   const organizationId = parseInt(localStorage.getItem("organizacion_id"), 10);
