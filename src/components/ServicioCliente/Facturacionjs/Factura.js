@@ -194,7 +194,7 @@ const Factura = () => {
         </Space>
       </div>
       <div style={{ display: "flex",justifyContent: "center",marginBottom: "20px"  }}>
-        <Link to="/generar_orden">
+        <Link to="/cliente">
         <Button type="primary">
           Crear Factura
         </Button>

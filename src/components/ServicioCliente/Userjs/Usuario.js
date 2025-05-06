@@ -22,13 +22,29 @@ const Usuario = () => {
   useEffect(() => {
     const loadUsers = async () => {
       try {
-        const response = await getAllUser();
-        // Filtrar usuarios por organizacion_id
-        const filteredUsers = response.data.filter(
-          (user) => user.organizacion === organizationId
-        );
-        setDataSource(filteredUsers);
-        setFilteredData(filteredUsers); // Por defecto, todo se muestra
+        // Cargar en paralelo para mejor rendimiento
+      const [usersResponse, rolesResponse] = await Promise.all([
+        getAllUser(),
+        getAllRol()
+      ]);
+
+      // Filtrar roles (id 2 o 3)
+      const filteredRoles = rolesResponse.data.filter(role => role.id === 1 || role.id === 2 || role.id === 3);
+      setRoles(filteredRoles);
+
+      // Filtrar usuarios por organización y mapear con nombres de rol
+      const filteredUsers = usersResponse.data
+        .filter(user => user.organizacion === organizationId)
+        .map(user => {
+          const userRole = filteredRoles.find(role => role.id === user.rol);
+          return {
+            ...user,
+            rolName: userRole ? userRole.name : 'Sin rol'
+          };
+        });
+
+      setDataSource(filteredUsers);
+      setFilteredData(filteredUsers);
       } catch (error) {
         console.error("Error al cargar los usuarios", error);
       }
@@ -134,7 +150,14 @@ const Usuario = () => {
     { title: "Correo", dataIndex: "email", key: "email" },
     { title: "Nombre", dataIndex: "first_name", key: "first_name" },
     { title: "Apellidos", dataIndex: "last_name", key: "last_name" },
-    { title: "Rol", dataIndex: "rol", key: "rol" },
+    { title: "Rol", dataIndex: "rolName", key: "rolName", 
+      filters: roles.map(role => ({
+      text: role.name,
+      value: role.name,
+    })),
+    onFilter: (value, record) => record.rolName === value,
+    filterMultiple: false,
+    sorter: (a, b) => a.rolName.localeCompare(b.rolName) },
     {
       title: "Opciones",
       key: "actions",
