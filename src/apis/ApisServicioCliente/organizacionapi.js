@@ -28,3 +28,5 @@ export const updateOrganizacion = async (id, data) => {
 };
 
 export const getOrganizacionById = async (id) => Api_Host.get(`/organizacion/${id}/`);
+
+export const getMarcaDeAgua = async (id) => Api_Host.get(`/imagenmarcaagua/${id}/`);
