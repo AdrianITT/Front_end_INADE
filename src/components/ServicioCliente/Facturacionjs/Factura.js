@@ -123,7 +123,7 @@ const Factura = () => {
         text: codigo,
         value: codigo,
       })),
-      onFilter: (value, record) => record.numeroCotizacion.includes(value),
+      onFilter: (value, record) => String(record.numeroCotizacion|| "").includes(value),
       render: (text) => <Tag color="geekblue">{text}</Tag>,
     },
     {
