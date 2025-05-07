@@ -1,9 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { getAllFactura, getAllFacturaByOrganozacion } from "../../../apis/ApisServicioCliente/FacturaApi";
-import { getCotizacionById } from "../../../apis/ApisServicioCliente/CotizacionApi";
-import { getClienteById } from "../../../apis/ApisServicioCliente/ClienteApi";
-import { getEmpresaById } from "../../../apis/ApisServicioCliente/EmpresaApi";
-import { getOrdenTrabajoById } from "../../../apis/ApisServicioCliente/OrdenTrabajoApi"; 
+import { getAllFacturaByOrganozacion } from "../../../apis/ApisServicioCliente/FacturaApi";
 import { getAllfacturafacturama } from "../../../apis/ApisServicioCliente/FacturaFacturamaApi";
 import { Table, Input, Button, message, Tag, theme, Space } from "antd";
 import { Link } from "react-router-dom";
@@ -14,7 +10,7 @@ const Factura = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [filteredData, setFilteredData] = useState([]);
-  const { token } = theme.useToken();
+  //const { token } = theme.useToken();
 
   // ID de la organización actual
   const organizationId = parseInt(localStorage.getItem("organizacion_id"), 10);
@@ -123,11 +119,11 @@ const Factura = () => {
       title: "Cotización",
       dataIndex: "numeroCotizacion",
       key: "numeroCotizacion",
-      filters: [...new Set(data.map((item) => item.codigoOrdenTrabajo))].map((codigo) => ({
+      filters: [...new Set(data.map((item) => item.numeroCotizacion))].map((codigo) => ({
         text: codigo,
         value: codigo,
       })),
-      onFilter: (value, record) => record.codigoOrdenTrabajo.includes(value),
+      onFilter: (value, record) => record.numeroCotizacion.includes(value),
       render: (text) => <Tag color="geekblue">{text}</Tag>,
     },
     {
@@ -194,7 +190,7 @@ const Factura = () => {
         </Space>
       </div>
       <div style={{ display: "flex",justifyContent: "center",marginBottom: "20px"  }}>
-        <Link to="/generar_orden">
+        <Link to="/cliente">
         <Button type="primary">
           Crear Factura
         </Button>

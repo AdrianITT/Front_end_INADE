@@ -58,6 +58,13 @@ const Pagos = () => {
       title: diccionario.columnas.numeroFactura,
       dataIndex: "numeroFactura",
       key: "numeroFactura",
+      // 1) Generar la lista de valores únicos como { text, value }
+      filters: [...new Set(data.map(item => item.numeroFactura))].map(val => ({
+        text: val,
+        value: val,
+      })),
+      // 2) Lógica de filtrado
+      onFilter: (value, record) => record.numeroFactura === value,
     },
     {
       title: diccionario.columnas.fechaPago,

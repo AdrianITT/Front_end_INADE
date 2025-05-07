@@ -1,10 +1,10 @@
 import React, { useCallback,useState, useEffect } from "react";
-import { Tabs, Form, Input, Select, Button, Modal,Upload,Card, message, Result, Alert} from "antd";
+import { Tabs, Form, Input, Select, Button, Modal,Upload,Card, message, Result, Alert, Col,Row} from "antd";
 
 import "./configuracion.css"
 import {  UploadOutlined } from '@ant-design/icons';
 import { Link } from "react-router-dom";
-import { getAllOrganizacion, updateOrganizacion } from "../../../apis/ApisServicioCliente/organizacionapi";
+import { getAllOrganizacion, updateOrganizacion, getMarcaDeAgua } from "../../../apis/ApisServicioCliente/organizacionapi";
 import { getAllRegimenFiscal } from "../../../apis/ApisServicioCliente/Regimenfiscla";
 import { updateInfoOrdenTrabajo,getInfoOrdenTrabajoById, crearInfoOrdenTrabajo } from "../../../apis/ApisServicioCliente/infoordentrabajoApi";
 import { getInfoCotizacionById, updateInfoCotizacion, crearInfoCotizacion } from "../../../apis/ApisServicioCliente/InfoCotizacionApi";
@@ -17,7 +17,7 @@ import { Api_Host } from "../../../apis/api";
 
 const { TextArea } = Input;
 
-const ConfiguraciónOrganizacion=()=>{
+const ConfiguraciónOrganizacion=()=>{  
   const [fromOrdenTrabajo] = Form.useForm();
   const [formCotizacion]= Form.useForm();
   const [form] = Form.useForm();
@@ -26,7 +26,7 @@ const ConfiguraciónOrganizacion=()=>{
   const [regimenfiscal, setRegimenFiscal]=useState([]); 
   const [loading, setLoading] = useState(false); // Para el loading de la actualización
   const [, setinfOrdenTrabajo]=useState([]);
-  const [, setInfCotizacion] = useState(null);
+  const [infoCotizacion, setInfCotizacion] = useState(null);
   const [formConfiguracion] = Form.useForm(); // Formulario de configuración del sistema
   const [infConfiguracion, setInfConfiguracion] = useState(null);
   const [tipoMoneda, setTipoMoneda] = useState([]);
@@ -35,6 +35,8 @@ const ConfiguraciónOrganizacion=()=>{
   const [isErrorModalVisible, setIsErrorModalVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [activeTab,setActiveTab]=useState("1");
+  const [loadings, setLoadings] = useState(false);
+  const [marcaAgua, setMarcaAgua] = useState(null)
 
   // Obtener el id de la organización del usuario autenticado
   const userOrganizationId = ObtenerOrganizacion("organizacion_id" );// O la forma en la que almacenas el ID de la organización
@@ -144,13 +146,28 @@ const fetchIva = useCallback(async () => {
     }
 }, []);
 
+const fetchMarcaDeAgua = useCallback(async (idMarcaAgua) => {
+  try {
+    const res = await getMarcaDeAgua(idMarcaAgua); // este debe ser un endpoint tipo: /api/imagenmarcaagua/:id
+    if (res.data && res.data.imagen) {
+      setMarcaAgua(res.data.imagen);
+    }
+  } catch (err) {
+    console.error("Error al obtener la marca de agua:", err);
+  }
+}, []);
+
+
 useEffect(() => {
+  setLoadings(true);
   fetchTipoMoneda();
   fetchIva();
   fetchRegimenFiscal();
   fetchOrganizacion();
   setIsModalVisible(true);
+  setLoadings(false);
 }, [fetchTipoMoneda, fetchIva, fetchRegimenFiscal, fetchOrganizacion]);
+
 
 
 useEffect(() => {
@@ -183,15 +200,13 @@ useEffect(() => {
   }
 }, [activeTab, organizaciones, fetchInfoConfiguracionSistema]);
 
+useEffect(() => {
+  if (infoCotizacion && infoCotizacion.imagenMarcaAgua) {
+    fetchMarcaDeAgua(infoCotizacion.imagenMarcaAgua);
+  }
+}, [infoCotizacion]); // Este efecto depende de que infoCotizacion ya esté disponible
 
-// useEffect para ejecutar las funciones al montar el componente
-/*useEffect(() => {
-    fetchTipoMoneda();
-    fetchIva();
-    fetchRegimenFiscal();
-    fetchOrganizacion();
-    setIsModalVisible(true); // Mostrar el modal
-}, [fetchTipoMoneda, fetchIva, fetchRegimenFiscal, fetchOrganizacion]); */
+
 
   const handleOk = () => {
     setIsModalVisible(false);
@@ -584,10 +599,25 @@ const CotizacionPureva=()=>{
     /><br/>
    
        <div className="left-column">
-         <Form.Item label="Logo Actual:" name="logo">
-          <Upload>
+       <Form.Item label="Logo Actual:" name="logo">
+        <Upload>
             <Button icon={<UploadOutlined />}>Click to Upload</Button>
-          </Upload></Form.Item>
+          </Upload>
+      </Form.Item>
+      <Form.Item>
+      {organizaciones?.logo ? (
+          <div style={{ marginBottom: 16 }}>
+            <p>Imagen cargada actualmente:</p>
+            <img
+              src={organizaciones.logo}
+              alt="Logo de la organización"
+              style={{ width: 150, height: 'auto', border: '1px solid #ddd', borderRadius: 4 }}
+            />
+          </div>
+        ) : (
+          <p>No hay imagen cargada actualmente.</p>
+        )}
+      </Form.Item>
        </div>
    
      </Form>
@@ -598,9 +628,6 @@ const CotizacionPureva=()=>{
      <div>
        <div>
          <h3>Guía rápida de etiquetas HTML</h3>
-         <p style={{ color: "red" }}>
-           No se ha subido ninguna imagen de marca de agua.
-         </p>
          <div className="html-guide">
            <p>
              En HTML, puedes aplicar varios tipos de formato a tu texto usando
@@ -653,22 +680,24 @@ const CotizacionPureva=()=>{
    
        <div>
          <Form layout="vertical" 
-         className="form-container" 
          form={formCotizacion} 
          onFinish={handleGuardarCotizacion}
          initialValues={infConfiguracion || {}}>
-           <Form.Item label="Nombre formato:" name="nombreFormato" required>
-             <Input placeholder="Ingrese el nombre del formato." />
-           </Form.Item>
-           <Form.Item label="Versión:" name="version">
-             <Input placeholder="Ingrese la versión del formato." />
-           </Form.Item>
-           <Form.Item label="Emisión:" name="fechaEmision">
-             <Input placeholder="Ingrese la fecha de emisión." />
-           </Form.Item>
-           <Form.Item label="Título documento:" name="tituloDocumento">
-             <Input placeholder="Ingrese el título del documento." />
-           </Form.Item>
+          <Row gutter={24}><Col xs={24} md ={12}>
+            <Form.Item label="Nombre formato:" name="nombreFormato" required>
+              <Input placeholder="Ingrese el nombre del formato." />
+            </Form.Item>
+            <Form.Item label="Versión:" name="version">
+              <Input placeholder="Ingrese la versión del formato." />
+            </Form.Item>
+            <Form.Item label="Emisión:" name="fechaEmision">
+              <Input placeholder="Ingrese la fecha de emisión." />
+            </Form.Item>
+            <Form.Item label="Título documento:" name="tituloDocumento">
+              <Input placeholder="Ingrese el título del documento." />
+            </Form.Item>
+          </Col>
+           <Col xs={24} md={12}>
            <Form.Item label="Mensaje propuesta:" name="mensajePropuesta">
              <TextArea
                rows={4}
@@ -681,23 +710,39 @@ const CotizacionPureva=()=>{
            <Form.Item label="Avisos:" name="avisos">
              <TextArea rows={4} placeholder="Ingrese los avisos necesarios." />
            </Form.Item>
-           <p> se usara en cotizacio y ordenes de trabajo</p>
-           <Form.Item
+           <br></br>
+           <p> se usara en cotizacio y ordenes de trabajo</p></Col></Row>
+           <Form.Item>
+        {marcaAgua ? (
+            <>
+            <p>Imagen cargada actualmente:</p>
+            <img
+              src={marcaAgua}
+              alt="Marca de Agua"
+              style={{ width: 100, height: 'auto', opacity: 0.4, border: '1px solid #ddd', borderRadius: 4}}
+            />
+            </>
+          ):(
+            <>
+            <p style={{ color: "red", fontWeight: "bold" }}>
+              No se ha subido ninguna imagen de marca de agua.
+            </p>
+            <br/>
+          </>)}
+        </Form.Item>
+        <Form.Item
           label="Imagen marca de agua:"
           name="marcaDeAgua"
           valuePropName="fileList"
           getValueFromEvent={(e) => e?.fileList}
         >
-          <Alert
-            message="Advertencia"
-            description="Solo Imagenes con la extencion PNG."
-            type="warning"
-            showIcon
-          /><br/>
           <Upload beforeUpload={() => false} maxCount={1}>
             <Button icon={<UploadOutlined />}>Seleccionar archivo</Button>
           </Upload>
         </Form.Item>
+        
+
+
            <div className="button-container">
              <Button type="primary" htmlType="submit" loading={loading} style={{ marginRight: "8px" }}>
                Guardar Cotización
@@ -712,9 +757,6 @@ const CotizacionPureva=()=>{
    const renderOrdenesTrabajo = () => (
     <div style={{ maxWidth: "600px", margin: "0 auto" }}>
       <h1>Órdenes de Trabajo</h1>
-      <p style={{ color: "red", fontWeight: "bold" }}>
-        No se ha subido ninguna imagen de marca de agua.
-      </p>
       <Form
         form={fromOrdenTrabajo} // Vincula el formulario con fromOrdenTrabajo
         layout="vertical"
@@ -747,6 +789,24 @@ const CotizacionPureva=()=>{
           <Upload beforeUpload={() => false} maxCount={1}>
             <Button icon={<UploadOutlined />}>Seleccionar archivo</Button>
           </Upload>
+        </Form.Item>
+        <Form.Item>
+        {marcaAgua ? (
+            <>
+            <p>Imagen cargada actualmente:</p>
+            <img
+              src={marcaAgua}
+              alt="Marca de Agua"
+              style={{ width: 100, height: 'auto', opacity: 0.4, border: '2px solid #ddd', borderRadius: 4 }}
+            />
+            </>
+          ):(
+            <>
+            <p style={{ color: "red", fontWeight: "bold" }}>
+              No se ha subido ninguna imagen de marca de agua.
+            </p>
+            <br/>
+          </>)}
         </Form.Item>
         <Button type="primary" htmlType="submit" style={{ width: "100%" }}>
           Guardar Orden

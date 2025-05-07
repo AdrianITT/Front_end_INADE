@@ -45,7 +45,8 @@ const Proyectos = () => {
 
           return {
             key: cotizacion.id,
-            cotizacion: `000${cotizacion.id}`, // Formato de número de cotización
+            numero:cotizacion.numero,
+            cotizacion: `000${cotizacion.numero}`, // Formato de número de cotización
             empresa: empresa ? empresa.nombre : "N/A", // Nombre de la empresa
             contacto: cliente ? `${cliente.nombrePila} ${cliente.apPaterno} ${cliente.apMaterno}` : "N/A", // Nombre completo del cliente
             solicitud: cotizacion.fechaSolicitud || "N/A", // Fecha de solicitud
@@ -123,7 +124,7 @@ const Proyectos = () => {
           <div key={orden.id}>
             <Link to={`/DetalleOrdenTrabajo/${orden.id}`}>
               • <span style={{ color: "green" }}>
-                ID:{orden.id} Estado:{orden.estado}
+                ID:{orden.numero} Estado:{orden.estado}
               </span>
             </Link>
           </div>
