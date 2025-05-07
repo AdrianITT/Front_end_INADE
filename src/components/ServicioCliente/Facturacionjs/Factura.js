@@ -114,6 +114,12 @@ const Factura = () => {
       title: "Folio",
       dataIndex: "id",
       key: "id",
+      filters: [...new Set(data.map((item) => item.id))].map((Id) => ({
+        text: Id,
+        value: Id,
+      })),
+      onFilter: (value, record) => String(record.id|| "").includes(value),
+      render: (text) => <Tag color="geekblue">{text}</Tag>,
     },
     {
       title: "Cotización",
