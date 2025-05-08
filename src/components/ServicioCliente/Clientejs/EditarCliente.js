@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Form, Input, Button, Row, Col, Select, message, Modal, Result, Divider } from "antd";
+import { Form, Input, Button, Row, Col, Select, message, Modal, Result, Divider,Alert } from "antd";
 import { useNavigate, useParams } from "react-router-dom"; // Importa useNavigate
 import "./Cliente.css";
 import { updateCliente, getClienteById, getClienteDataById } from "../../../apis/ApisServicioCliente/ClienteApi";
@@ -214,7 +214,8 @@ const EditarCliente = () => {
           </Col>
         </Row>
         <Row gutter={30}>
-            <Divider>Direccion del cliente</Divider>
+            <Divider>Direccion del cliente<Alert message="se muestra la misma direccion de la empresa cuando el cliente es nuevo" type="warning" /></Divider>
+            
               <Col span={12}>
                 <Form.Item
                   label="Calle:"

@@ -1,6 +1,6 @@
 // src/components/Cliente.js
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { Tabs, Input, Button, Modal, Form, Spin, Table, Checkbox, Result, Row, Col, Select, Divider } from "antd";
+import { Tabs, Input, Button, Modal, Form, Spin, Table, Checkbox, Result, Row, Col, Select, Divider} from "antd";
 import StickyBox from "react-sticky-box";
 import { useNavigate } from "react-router-dom";
 import {ExclamationCircleOutlined } from "@ant-design/icons";
@@ -35,10 +35,10 @@ const Cliente = () => {
   const loadClientes = useCallback(async () => {
     try {
       const res = await getAllClienteData(organizationId); // <-- nueva función
-  
+      console.log(res.data);
       const clientesFormateados = res.data.map((cliente) => {
         const datosIncompletos =
-          !cliente.nombrePila || !cliente.apPaterno || !cliente.empresa?.nombre || !cliente.empresa.codigoPostal;
+          !cliente.nombrePila || !cliente.apPaterno || !cliente.empresa?.nombre || !cliente.empresa.codigoPostal || !cliente.codigopostalcliente;
 
         return {
           key: cliente.id,
@@ -354,6 +354,7 @@ const Cliente = () => {
           </Row>
           <Row gutter={30}>
             <Divider>Direccion del cliente</Divider>
+            
               <Col span={12}>
                 <Form.Item
                   label="Calle:"
