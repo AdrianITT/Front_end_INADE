@@ -56,7 +56,7 @@ const EditarOrdenTrabajo = () => {
     const fetchOrdenData = async () => {
       try {
         const response = await EditOrdenTrabajoData(id);
-        console.log("Orden de trabajo data:", response.data);
+        //console.log("Orden de trabajo data:", response.data);
         const data = response.data;
         setOrdenData(data.ordenTrabajo);
     
@@ -121,7 +121,7 @@ const EditarOrdenTrabajo = () => {
     setLoading(true);
     try {
       const serviciosArray = values.servicios || [];
-      console.log("Servicios a guardar:", serviciosArray);
+      //console.log("Servicios a guardar:", serviciosArray);
   
       // 👉 ACTUALIZAR RECEPTOR DE LA ORDEN
       await updateOrdenTrabajo(id, {
@@ -130,10 +130,10 @@ const EditarOrdenTrabajo = () => {
   
       // Separar servicios marcados para eliminar
       const serviciosAEliminar = serviciosArray.filter((item) => item.eliminar && item.id);
-      console.log("Servicios a eliminar:", serviciosAEliminar);
+      //console.log("Servicios a eliminar:", serviciosAEliminar);
   
       const serviciosExistentes = serviciosArray.filter((item) => item.id && !item.eliminar);
-      console.log("Servicios existentes:", serviciosExistentes);
+      //console.log("Servicios existentes:", serviciosExistentes);
   
       const serviciosNuevos = serviciosArray.filter((item) => !item.id && !item.eliminar);
       const insertarPromises = serviciosNuevos.map((item) => {

@@ -146,7 +146,7 @@ const handleMetodoChange = (value) => {
     const fetchMetodos = async () => {
       try {
         const response = await getAllMetodoData(organizationId);
-        console.log("Métodos:", response.data);
+        //console.log("Métodos:", response.data);
         setMetodos(response.data); // Almacenar los métodos en el estado
       } catch (error) {
         console.error("Error al cargar los métodos", error);
@@ -169,10 +169,10 @@ const handleMetodoChange = (value) => {
       ]);
 
       setServicios(serviciosRes.data);
-      console.log("Servicios:", serviciosRes.data);
+      //console.log("Servicios:", serviciosRes.data);
       setFilteredServicios(serviciosRes.data);
       setMetodos(metodosRes.data);
-      console.log("Métodos:", metodosRes.data);
+      //console.log("Métodos:", metodosRes.data);
       setClaveCDFI(claveCDFIRes.data);
       setUnidadCDFI(unidadCDFIRes.data);
       setObjetoImpuesto(objetoImpuestoRes.data);
@@ -276,13 +276,13 @@ const handleMetodoChange = (value) => {
     
     try {
       const values = await formEdit.validateFields();
-      console.log("Metodos:", metodos);
-      console.log("Valores del formulario editado:", values);
+      //console.log("Metodos:", metodos);
+      //console.log("Valores del formulario editado:", values);
       const dataToSend = {
         ...values,
         estado: values.estado || 5,
       };
-      console.log("Data a enviar:", dataToSend);
+      //console.log("Data a enviar:", dataToSend);
       
       // Verifica si los campos necesarios están presentes
       if ( !values.unidadCfdi || !values.claveCfdi ) {

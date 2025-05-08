@@ -34,7 +34,7 @@ const PaymentCards = ({ idFactura, correoCliente,refreshPagos }) => {
           ...p,
           isPDFVisible: p.facturama_id !== null,
         }));
-        console.log("Pagos obtenidos:", pagosConFlag);
+        //console.log("Pagos obtenidos:", pagosConFlag);
         setPagos(pagosConFlag);
       }else {
         setPagos([]);
@@ -53,9 +53,9 @@ const PaymentCards = ({ idFactura, correoCliente,refreshPagos }) => {
   // Función para realizar el pago
   const handleRealizarPago = async (pagoId) => {
     try {
-      console.log("Realizando pago para el ID:", pagoId);
+      //console.log("Realizando pago para el ID:", pagoId);
       const reponse =await getAllFacturaPagosFacturama(pagoId);
-      console.log("Respuesta del servidor:", reponse);
+      //console.log("Respuesta del servidor:", reponse);
     } catch (error) {
       console.log("Se recibió un error del servidor (500), pero se ignora:", error);
     } finally {
@@ -135,7 +135,7 @@ const PaymentCards = ({ idFactura, correoCliente,refreshPagos }) => {
   // Confirma eliminación del complemento
   const handleConfirmDeleteComplemento = async () => {
     try {
-      console.log("Complemento de pago eliminado exitosamente", pagoToDelete);
+      //console.log("Complemento de pago eliminado exitosamente", pagoToDelete);
       await DeleteComprobantePagoFacturama(pagoToDelete);
       //await deleteComprobantepago(pagoToDelete);
       

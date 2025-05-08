@@ -30,10 +30,10 @@ const PreCotizacionData = () => {
 
         // 🔹 Obtener pre-cotizaciones
         const response = await getAllPrecotizacionByOrganizacion(organizationId);
-        console.log("Pre-Cotizaciones:", response.data);
+        //console.log("Pre-Cotizaciones:", response.data);
         // 🔸 Filtrar si necesitas excluir los estados 7 y 8:
         const filteredPreCotizaciones = response.data;       
-        console.log("Filtered Pre-Cotizaciones:", filteredPreCotizaciones);
+        //console.log("Filtered Pre-Cotizaciones:", filteredPreCotizaciones);
         const data = filteredPreCotizaciones.map((item) => ({
           key: item.precotizacionId,
           id: item.precotizacionId,

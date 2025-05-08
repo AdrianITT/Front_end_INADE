@@ -1,7 +1,7 @@
 import React, {useState, useEffect} from "react";
 import moment from 'moment';
 import { Form, Input, Button, Select, Row, Col,DatePicker, message, Table } from "antd";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, data } from "react-router-dom";
 import "./crearfactura.css";
 import { NumericInput } from "../../NumericInput/NumericInput";
 import { getAllTipoCDFI } from "../../../apis/ApisServicioCliente/TipoCFDIApi";
@@ -53,6 +53,9 @@ const CrearFactura = () => {
     // Estados
     const [tasaIva, setTasaIva] = useState(8);
     const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+    const [selectedRows, setSelectedRows] = useState([]);
+    const [descuentoGlobal, setDescuentoGlobal] = useState(0);
+    const [totalServicios, setTotalServicios] = useState(0);
     //const factorConversion = esUSD ? tipoCambioDolar : 1;
 
     // Cargar datos al montar el componente
@@ -68,7 +71,7 @@ const CrearFactura = () => {
       try {
         const res = await getDataCotizacionBy(id);
         const d = res.data;
-        console.log("1data: ", d);
+        //console.log("1data: ", d);
         setDataID(d);
         // EMISOR / RECEPTOR
         setOrganizacion(d.emisor);   // antes ponías d.empresa, ahora es d.emisor
@@ -106,10 +109,44 @@ const CrearFactura = () => {
   }, [id]);
   
 
+  useEffect(() => {
+    const calcularTotalesExcluyendoSeleccionados = async () => {
+      if (!dataID || !dataID.valores) return;
+      
+      const serviciosNoSeleccionados = serviciosCot.filter(
+        item => !selectedRowKeys.includes(item.id)
+      );
   
-  const onSelectChange = newSelectedRowKeys => {
-    console.log('selectedRowKeys changed: ', newSelectedRowKeys);
+      const subtotal = serviciosNoSeleccionados.reduce(
+        (acc, item) => acc + (Number(item.cantidad) * Number(item.precio)),
+        0
+      );
+      console.log("subtotal: ", dataID);
+  
+      const valorDescuento = subtotal * (dataID.valores.descuentoPorcentaje|| 0) / 100;
+      const subtotalConDescuento = subtotal - valorDescuento;
+      const ivaValor = subtotalConDescuento * (tasaIva || 0.16);
+      const importe = subtotalConDescuento + ivaValor;
+  
+      setResumenCot({
+        subtotal,
+        descuento: valorDescuento,
+        iva: ivaValor,
+        importe
+      });
+    };
+  
+    calcularTotalesExcluyendoSeleccionados();
+  }, [selectedRowKeys, serviciosCot, tasaIva]);
+  
+  
+  
+  
+  const onSelectChange = (newSelectedRowKeys,newSelectedRows) => {
+    //console.log('selectedRowKeys changed: ', newSelectedRowKeys);
     setSelectedRowKeys(newSelectedRowKeys);
+    setSelectedRows(newSelectedRows);
+    
   };
   const rowSelection = {
     selectedRowKeys,
@@ -148,7 +185,7 @@ const CrearFactura = () => {
       },
     ],
   };
-  
+
   
   const fetchTipoCambio = async () => {
         try {
@@ -179,7 +216,13 @@ const CrearFactura = () => {
   const obtenerFormaPago = async () => {
       try {
           const response = await getAllFormaPago();
-          setFormaPagoList(response.data);
+          const sortedList = response.data.sort((a, b) => {
+            if (a.codigo === "99") return -1; // a va primero
+            if (b.codigo === "99") return 1;  // b va primero
+            return 0; // no cambia el orden
+          });
+          console.log("Forma de Pago:", sortedList);
+          setFormaPagoList(sortedList);
       } catch (error) {
           console.error("Error al obtener Forma de Pago", error);
           message.error("Error al obtener Forma de Pago.");
@@ -430,7 +473,7 @@ const CrearFactura = () => {
         </div>
 
         <Table
-              rowSelection={rowSelection}
+              rowSelection={{rowSelection,onChange: onSelectChange}}
               dataSource={serviciosCot}
               columns={columns}
               loading={loading}

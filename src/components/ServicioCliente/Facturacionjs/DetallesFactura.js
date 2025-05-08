@@ -99,7 +99,7 @@ const DetallesFactura = () => {
         //console.log("Último pago actualizado:", ultimoPago);
       } else {
         setFacturaPagos(null); // O lo que corresponda si no hay pagos
-        console.log("No hay pagos registrados.");
+        //console.log("No hay pagos registrados.");
       }
     } catch (error) {
       console.error("Error al refrescar los pagos:", error);
@@ -183,7 +183,7 @@ const DetallesFactura = () => {
         setLoading(true);
         const response = await getAllDataFactura(id);
         const data = response.data;
-        console.log("Datos de la factura completa:", data);
+        //console.log("Datos de la factura completa:", data);
         // Seteamos directamente los datos
         setFactura(data); // puedes eliminar este estado si solo usas los campos individuales
         setMoneda({ codigo: data.monedaCodigo.includes("USD") ? "USD" : "MXN", descripcion: data.monedaCodigo});
@@ -231,7 +231,7 @@ const DetallesFactura = () => {
   const handleOkPayment = () => {
     form.validateFields()
       .then((values) => {
-        console.log("Valores del comprobante de pago:", values);
+        //console.log("Valores del comprobante de pago:", values);
         setVisiblePaymentModal(false);
       })
       .catch((error) => {

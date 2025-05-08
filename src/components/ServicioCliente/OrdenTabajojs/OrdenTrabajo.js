@@ -63,7 +63,7 @@ const Generarorden = () => {
       try {
         setIsLoading(true);
         const response = await getAllOrdenesTrabajoData(organizationId);
-        console.log("Órdenes de trabajo response:", response);
+        //console.log("Órdenes de trabajo response:", response);
         setOrdenes(response.data);
 
         const filtered = filterData(response.data, searchText);

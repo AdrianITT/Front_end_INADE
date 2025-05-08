@@ -67,7 +67,10 @@ const EditEmpresaModal = ({ visible, onCancel, onEdit, regimenFiscal, empresa,us
             <Form.Item
               label="RFC"
               name="rfc"
-              rules={[{ required: true, message: 'RFC requerido' }]}
+              rules={[{ required: true, message: 'RFC requerido' },
+                { len: 13, message: 'Debe tener 13 caracteres' },
+                {pattern: /^[A-Z]+$/, message:'Solo letras mayúsculas permitidas'}
+              ]}
             >
               <Input />
             </Form.Item>
@@ -138,7 +141,9 @@ const EditEmpresaModal = ({ visible, onCancel, onEdit, regimenFiscal, empresa,us
             <Form.Item
               label="Numero:"
               name="numeroExterior"
-              rules={[{ required: true, message: 'Número requerido' }]}
+              rules={[{ required: true, message: 'Número requerido' },
+                { pattern: /^\d+$/, message: 'Sólo dígitos permitidos' },
+              ]}
             >
               <Input />
             </Form.Item>

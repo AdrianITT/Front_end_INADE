@@ -1,5 +1,5 @@
 import React, { useCallback,useState, useEffect } from "react";
-import { Tabs, Form, Input, Select, Button, Modal,Upload,Card, message, Result, Alert, Col,Row} from "antd";
+import { Tabs, Form, Input, Select, Button, Modal,Upload,Card, message, Result, Alert, Col,Row, Spin} from "antd";
 
 import "./configuracion.css"
 import {  UploadOutlined } from '@ant-design/icons';
@@ -42,6 +42,7 @@ const ConfiguraciónOrganizacion=()=>{
   const userOrganizationId = ObtenerOrganizacion("organizacion_id" );// O la forma en la que almacenas el ID de la organización
 
   const fetchOrganizacion = useCallback(async () => {
+    setLoading(true);
     try {
       const response = await getAllOrganizacion();
       const org = response.data.find(item => item.id === userOrganizationId);
@@ -60,6 +61,7 @@ const ConfiguraciónOrganizacion=()=>{
       if (org?.infoSistema) {
         await fetchInfoConfiguracionSistema(org.infoSistema);
       }
+      setLoading(false);
     } catch (error) {
       console.error("Error al obtener las organizaciones", error);
       message.error("Error al obtener la organización.");
@@ -172,15 +174,19 @@ useEffect(() => {
 
 useEffect(() => {
   if (activeTab === "1") {
+    setLoading(true);
     fetchOrganizacion();
     fetchRegimenFiscal();
+    setLoading(false);
   }
 }, [activeTab, fetchOrganizacion, fetchRegimenFiscal]);
 
 useEffect(() => {
   if (activeTab === "2") {
+    setLoading(true);
     fetchTipoMoneda();
     fetchIva();
+    setLoading(false);
     if (organizaciones?.infoCotizacion) {
       fetchInfoCotizacion(organizaciones.infoCotizacion);
     }
@@ -189,14 +195,18 @@ useEffect(() => {
 
 useEffect(() => {
   if (activeTab === "3" && organizaciones?.infoOrdenTrabajo) {
+    setLoading(true);
     fetchInfOrdenTrabajo(organizaciones.infoOrdenTrabajo);
+    setLoading(false);
   }
 }, [activeTab, organizaciones, fetchInfOrdenTrabajo]);
 
 
 useEffect(() => {
   if (activeTab === "4" && organizaciones?.infoSistema) {
+    setLoading(true);
     fetchInfoConfiguracionSistema(organizaciones.infoSistema);
+    setLoading(false);
   }
 }, [activeTab, organizaciones, fetchInfoConfiguracionSistema]);
 
@@ -520,6 +530,7 @@ const CotizacionPureva=()=>{
   
 
   const renderOrganizacion = () => (
+    <Spin spinning={loading} tip="Cargando datos...">
      <Form layout="vertical"
      form={form}
       className="form-container"
@@ -620,7 +631,7 @@ const CotizacionPureva=()=>{
       </Form.Item>
        </div>
    
-     </Form>
+     </Form></Spin>
    );
    
 

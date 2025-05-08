@@ -33,7 +33,7 @@ const PreCotizacionDetalles = () => {
       try {
         const response = await getAllDataPrecotizacion(id);
         const data = response.data;
-        console.log("Pre-Cotización Detalles:", data);   
+        //console.log("Pre-Cotización Detalles:", data);   
         setaNumeros(data.numero);
         setCotizacionInfo(data); // contiene empresa, cliente, moneda, iva, etc.
         setServicios(data.precotizacionservicios); // contiene los servicios listos
@@ -114,7 +114,7 @@ const PreCotizacionDetalles = () => {
     
     const handleConfirmChange = async () => {
       try {
-        console.log("Actualizando solo el estado...");
+        //console.log("Actualizando solo el estado...");
         getAllPrecotizacionCreate(id);
         const response = await updatePrecotizacion(id, {
           estado: 7, // Solo se envía el campo necesario

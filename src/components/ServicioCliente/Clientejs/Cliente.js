@@ -126,7 +126,7 @@ const Cliente = () => {
   // Función para crear un cliente (y crear empresa si es necesario)
   const createClientAndReturnId = async (formValues, createCompanyFlag) => {
     let empresaId = formValues.empresa;
-    console.log("formValues: ", formValues);
+    //console.log("formValues: ", formValues);
     if (createCompanyFlag) {
       const empresaData = {
         nombre: formValues.nombre,
@@ -134,7 +134,7 @@ const Cliente = () => {
         regimenFiscal: parseInt(formValues.regimenFiscal, 10),
         condicionPago: formValues.condicionPago,
         calle: formValues.calle,
-        numeroExterior: formValues.numero,
+        numeroExterior: formValues.numeroExterior,
         colonia: formValues.colonia,
         ciudad: formValues.ciudad,
         codigoPostal: formValues.codigoPostal,
@@ -331,7 +331,7 @@ const Cliente = () => {
               <Form.Item
                 label="Correo Electrónico:"
                 name="correo"
-                rules={[{ required: true, message: "Por favor ingresa un correo electrónico." }]}
+                rules={[{type:'email', message: 'El correo no es válido'},{ required: true, message: "Por favor ingresa un correo electrónico." }]}
               >
                 <Input placeholder="Correo electrónico" />
               </Form.Item>
@@ -474,7 +474,10 @@ const Cliente = () => {
                   <Form.Item
                     label="RFC:"
                     name="rfc"
-                    rules={[{ required: true, message: "Por favor ingresa el RFC." }]}
+                    rules={[{ required: true, message: "Por favor ingresa el RFC." },
+                      { len: 13, message: 'Debe tener 13 caracteres' },
+                      {pattern: /^[A-Z]+$/, message:'Solo letras mayúsculas permitidas'}
+                    ]}
                   >
                     <Input placeholder="Ingrese RFC" />
                   </Form.Item>
@@ -488,9 +491,11 @@ const Cliente = () => {
                     <Input placeholder="Calle" />
                   </Form.Item>
                   <Form.Item
-                    label="Número:"
-                    name="numero"
-                    rules={[{ required: true, message: "Por favor ingresa el número." }]}
+                    label="Número externo:"
+                    name="numeroExterior"
+                    rules={[{ required: true, message: "Por favor ingresa el número." },
+                      { pattern: /^\d+$/, message: 'Sólo dígitos permitidos' },
+                    ]}
                   >
                     <Input placeholder="Número" />
                   </Form.Item>
@@ -511,14 +516,17 @@ const Cliente = () => {
                   <Form.Item
                     label="Código Postal:"
                     name="codigoPostal"
-                    rules={[{ required: true, message: "Por favor ingresa el código postal." }]}
+                    rules={[{ required: true, message: "Por favor ingresa el código postal." },
+                      { len: 5, message: 'Debe tener 5 caracteres' },
+                      { pattern: /^\d+$/, message: 'Sólo dígitos permitidos' },
+                    ]}
                   >
                     <Input placeholder="Código Postal" />
                   </Form.Item>
                   <Form.Item
                     label="Estado:"
                     name="estado"
-                    rules={[{ required: true, message: "Por favor ingresa el estado." }]}
+                    rules={[{ required: true, message: "Por favor ingresa el estado." },]}
                   >
                     <Input placeholder="Estado" />
                   </Form.Item>

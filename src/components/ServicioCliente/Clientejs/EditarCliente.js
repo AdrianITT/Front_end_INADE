@@ -27,14 +27,14 @@ const EditarCliente = () => {
   
         // Ahora intenta obtener dirección
         const direccionRes = await getClienteDataById(clienteId);
-        console.log("Dirección del cliente:", direccionRes.data);
+        //console.log("Dirección del cliente:", direccionRes.data);
         const direccion = direccionRes.data;
-        console.log("Dirección del cliente1:", direccion.cliente.empresa.calle);
+        //console.log("Dirección del cliente1:", direccion.cliente.empresa.calle);
         // Solo si el cliente NO tiene dirección, usamos la de la empresa
         const direccionActual = form.getFieldsValue(["calleCliente", "numeroCliente"]);
-        console.log("Dirección actual:", direccionActual);
+        //console.log("Dirección actual:", direccionActual);
         const sinDireccion = !direccionActual.calleCliente || !direccionActual.numeroCliente;
-        console.log("Sin dirección:", sinDireccion);
+        //console.log("Sin dirección:", sinDireccion);
   
         if (sinDireccion && direccion?.cliente?.empresa) {
           form.setFieldsValue({

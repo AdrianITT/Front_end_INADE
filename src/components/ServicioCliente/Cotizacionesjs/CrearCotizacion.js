@@ -100,7 +100,7 @@ const RegistroCotizacion = () => {
       }
       try {
         const metodosResponse = await getAllMetodoData(organizationId);
-        console.log("Métodos recibidos:", metodosResponse.data);
+        //console.log("Métodos recibidos:", metodosResponse.data);
         setMetodos(metodosResponse.data);
       } catch (error) {
         console.error("Error al cargar métodos", error);
@@ -198,7 +198,7 @@ const RegistroCotizacion = () => {
 
   const handleServicioChange = (conceptoId, servicioId) => {
     const servicioSeleccionado = servicios.find(servicio => servicio.id === servicioId);
-    console.log("Servicio seleccionado:", servicioSeleccionado);
+    //console.log("Servicio seleccionado:", servicioSeleccionado);
     if (servicioSeleccionado) {
       const updatedConceptos = conceptos.map((concepto) =>
         concepto.id === conceptoId ? {
@@ -229,26 +229,35 @@ const RegistroCotizacion = () => {
     };
     
 
-  const calcularTotales = () => {
-    const subtotal = conceptos.reduce((acc, curr) => acc + curr.cantidad * curr.precioFinal, 0);
-    const descuentoValor = subtotal * (descuento / 100);
-    const subtotalConDescuento = subtotal - descuentoValor;
-    const ivaPorcentaje = (ivasData.find(iva => iva.id === ivaSeleccionado)?.porcentaje || 16);
-    const iva = subtotalConDescuento * (ivaPorcentaje);
-    const total = subtotalConDescuento + iva;
-
-    // Aplicar el tipo de cambio si la moneda es USD (id = 2)
-    const esUSD = tipoMonedaSeleccionada === 2;
-    const factorConversion = esUSD ? tipoCambioDolar : 1;
-
-    return {
-      subtotal: subtotal / factorConversion,
-      descuentoValor: descuentoValor / factorConversion,
-      subtotalConDescuento: subtotalConDescuento / factorConversion,
-      iva: iva / factorConversion,
-      total: total / factorConversion,
+    const calcularTotales = () => {
+      const subtotal = conceptos.reduce(
+        (acc, curr) => acc + (Number(curr.cantidad || 0) * Number(curr.precioFinal || 0)),
+        0
+      );
+    
+      const descuentoSeguro = Number(descuento || 0) / 100;
+      const descuentoValor = subtotal * descuentoSeguro;
+      const subtotalConDescuento = subtotal - descuentoValor;
+    
+      const ivaPorcentaje = Number(
+        ivasData.find(iva => iva.id === ivaSeleccionado)?.porcentaje
+      ) || 0.16; // default 16%
+    
+      const iva = subtotalConDescuento * ivaPorcentaje;
+      const total = subtotalConDescuento + iva;
+    
+      const esUSD = tipoMonedaSeleccionada === 2;
+      const factorConversion = Number(esUSD ? tipoCambioDolar : 1) || 1;
+    
+      return {
+        subtotal: +(subtotal / factorConversion).toFixed(2),
+        descuentoValor: +(descuentoValor / factorConversion).toFixed(2),
+        subtotalConDescuento: +(subtotalConDescuento / factorConversion).toFixed(2),
+        iva: +(iva / factorConversion).toFixed(2),
+        total: +(total / factorConversion).toFixed(2),
+      };
     };
-  };
+    
 
 
   const { subtotal, descuentoValor, subtotalConDescuento, iva, total } = calcularTotales();
@@ -415,7 +424,8 @@ const RegistroCotizacion = () => {
 
         <Row gutter={16}>
           <Col span={12}>
-            <Form.Item label="Fecha Solicitada" rules={[{ required: true, message: 'Por favor ingresa la fecha.' }]}>
+            <Form.Item label="Fecha Solicitada" 
+            name="fechaSolicitada" rules={[{ required: true, message: 'Por favor ingresa la fecha.' }]}>
               <DatePicker
                 value={fechaSolicitada}
                 onChange={handleFechaSolicitadaChange}
@@ -425,7 +435,8 @@ const RegistroCotizacion = () => {
             </Form.Item>
           </Col>
           <Col span={12}>
-            <Form.Item label="Fecha Caducidad" rules={[{ required: true, message: 'Por favor ingresa la fecha.' }]}>
+            <Form.Item label="Fecha Caducidad"
+             rules={[{ required: true, message: 'Por favor ingresa la fecha.' }]}>
               <DatePicker
                 value={fechaCaducidad}
                 format="DD/MM/YYYY"
@@ -438,7 +449,8 @@ const RegistroCotizacion = () => {
 
         <Row gutter={16}>
           <Col span={12}>
-            <Form.Item label="Tipo de Moneda" rules={[{ required: true, message: 'Por favor selecciona el tipo de moneda.' }]}>
+            <Form.Item label="Tipo de Moneda" 
+            name="tipoMonedaSeleccionada" rules={[{ required: true, message: 'Por favor selecciona el tipo de moneda.' }]}>
               <Select
                 value={tipoMonedaSeleccionada}
                 onChange={(value) => setTipoMonedaSeleccionada(value)}
@@ -452,7 +464,8 @@ const RegistroCotizacion = () => {
             </Form.Item>
           </Col>
           <Col span={12}>
-            <Form.Item label="Tasa del IVA actual" rules={[{ required: true, message: 'Por favor selecciona el IVA.' }]}>
+            <Form.Item label="Tasa del IVA actual" 
+            name="ivaSeleccionado" rules={[{ required: true, message: 'Por favor selecciona el IVA.' }]}>
               <Select
                 value={ivaSeleccionado}
                 onChange={(value) => setIvaSeleccionado(value)}
@@ -467,7 +480,8 @@ const RegistroCotizacion = () => {
           </Col>
         </Row>
 
-        <Form.Item label="Descuento (%)" rules={[{ required: true, message: 'Por favor ingresa el descuento.' }]}>
+        <Form.Item label="Descuento (%)" 
+         rules={[{ required: true, message: 'Por favor ingresa el descuento.' }]}>
           <Input
             type="number"
             min="0"
@@ -620,7 +634,7 @@ const RegistroCotizacion = () => {
             <p>Total: {total.toFixed(2)} {tipoMonedaSeleccionada === 2 ? "USD" : "MXN"}</p>
           </div>
           <div className="cotizacion-action-buttons">
-            <div className="margin-button"><Button type="default" danger>Cancelar</Button></div>
+            <div className="margin-button"><Button type="default" danger onClick={() => navigate('/cliente')}>Cancelar</Button></div>
             <div className="margin-button">
               <Button type="primary" onClick={handleSubmit}>Crear</Button>
             </div>
