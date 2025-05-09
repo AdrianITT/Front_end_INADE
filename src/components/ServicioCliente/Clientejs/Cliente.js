@@ -5,7 +5,7 @@ import StickyBox from "react-sticky-box";
 import { useNavigate } from "react-router-dom";
 import {ExclamationCircleOutlined } from "@ant-design/icons";
 import ClienteTable from "./ClienteTable";
-import { createEmpresas } from "../../../apis/ApisServicioCliente/EmpresaApi";
+import { createEmpresas,getEmpresaById } from "../../../apis/ApisServicioCliente/EmpresaApi";
 import { useCatalogos } from "../Clientejs/useCatalogos";
 import { getAllCliente, createCliente, deleteCliente, getAllClienteData } from "../../../apis/ApisServicioCliente/ClienteApi";
 import { getAllTitulo } from "../../../apis/ApisServicioCliente/TituloApi";
@@ -35,7 +35,7 @@ const Cliente = () => {
   const loadClientes = useCallback(async () => {
     try {
       const res = await getAllClienteData(organizationId); // <-- nueva función
-      console.log(res.data);
+      //console.log(res.data);
       const clientesFormateados = res.data.map((cliente) => {
         const datosIncompletos =
           !cliente.nombrePila || !cliente.apPaterno || !cliente.empresa?.nombre || !cliente.empresa.codigoPostal || !cliente.codigopostalcliente;
@@ -150,7 +150,28 @@ const Cliente = () => {
         return null;
       }
     }
-  
+    let direccionEmpresaNuevo = {
+      calle: "",
+      numeroExterior: "",
+      colonia: "",
+      ciudad: "",
+      codigoPostal: "",
+      estado: "",
+    };
+    //console.log("formValues: ", formValues);
+    if(!formValues.calle && !formValues.numeroExterior && !formValues.colonia && !formValues.ciudad && !formValues.codigoPostal && !formValues.estado){
+      const empresaData = await getEmpresaById(empresaId);
+      direccionEmpresaNuevo = {
+        calle: empresaData.data.calle,
+        numeroExterior: empresaData.data.numeroExterior,
+        colonia: empresaData.data.colonia,
+        ciudad: empresaData.data.ciudad,
+        codigoPostal: empresaData.data.codigoPostal,
+        estado: empresaData.data.estado,
+      };
+    }
+    //console.log("direccionEmpresaNuevo: ", direccionEmpresaNuevo);
+
     const clienteData = {
       nombrePila: formValues.nombrePila,
       apPaterno: formValues.apPaterno,
@@ -161,12 +182,12 @@ const Cliente = () => {
       fax: formValues.fax || "No disponible",
       empresa: empresaId,
       titulo: formValues.titulo,
-      calleCliente: formValues.calleCliente,
-      numeroCliente: formValues.numeroCliente,
-      coloniaCliente: formValues.coloniaCliente,
-      ciudadCliente: formValues.ciudadCliente,
-      codigoPostalCliente: formValues.codigoPostalCliente,
-      estadoCliente: formValues.estadoCliente,
+      calleCliente: formValues?.calleCliente || direccionEmpresaNuevo.calle,
+      numeroCliente: formValues?.numeroCliente || direccionEmpresaNuevo.numeroExterior,
+      coloniaCliente: formValues?.coloniaCliente || direccionEmpresaNuevo.colonia,
+      ciudadCliente: formValues?.ciudadCliente || direccionEmpresaNuevo.ciudad,
+      codigoPostalCliente: formValues?.codigoPostalCliente || direccionEmpresaNuevo.codigoPostal,
+      estadoCliente: formValues?.estadoCliente || direccionEmpresaNuevo.estado,
       division:formValues.SubDivision,
     };
   
