@@ -1,4 +1,4 @@
-import React, { useCallback,useState, useEffect } from "react";
+import React, { useCallback,useState, useEffect, useMemo } from "react";
 import { Tabs, Form, Input, Select, Button, Modal,Upload,Card, message, Result, Alert, Col,Row, Spin} from "antd";
 
 import "./configuracion.css"
@@ -14,6 +14,7 @@ import { updateInfoSistema,getInfoSistemaById } from "../../../apis/ApisServicio
 import { getAllTipoMoneda } from "../../../apis/ApisServicioCliente/Moneda";
 import { getAllIva } from "../../../apis/ApisServicioCliente/ivaApi";
 import { Api_Host } from "../../../apis/api";
+import {getIdCotizacionBy } from "../../../apis/ApisServicioCliente/CotizacionApi";
 
 const { TextArea } = Input;
 
@@ -40,6 +41,8 @@ const ConfiguraciónOrganizacion=()=>{
 
   // Obtener el id de la organización del usuario autenticado
   const userOrganizationId = ObtenerOrganizacion("organizacion_id" );// O la forma en la que almacenas el ID de la organización
+
+  const organizationId = useMemo(() => parseInt(localStorage.getItem("organizacion_id"), 10), []);
 
   const fetchOrganizacion = useCallback(async () => {
     setLoading(true);
@@ -522,9 +525,10 @@ const showErrorModal = (error) => {
   setIsErrorModalVisible(true);
 };
 
-const CotizacionPureva=()=>{
+const CotizacionPureva= async ()=>{
+  const idCoti=await getIdCotizacionBy(organizationId);
   const user_id = localStorage.getItem("user_id");
-  window.open(`${Api_Host.defaults.baseURL}/cotizacion/1/pdf/?user_id=${user_id}`);
+  window.open(`${Api_Host.defaults.baseURL}/cotizacion/${idCoti.data.id}/pdf/?user_id=${user_id}`);
 }
 
   
@@ -721,11 +725,12 @@ const CotizacionPureva=()=>{
            <Form.Item label="Avisos:" name="avisos">
              <TextArea rows={4} placeholder="Ingrese los avisos necesarios." />
            </Form.Item>
-           <br></br>
-           <p> se usara en cotizacio y ordenes de trabajo</p></Col></Row>
+           </Col>
+           </Row>
            <Form.Item>
         {marcaAgua ? (
             <>
+            <p> se usara en cotizacio y ordenes de trabajo</p>
             <p>Imagen cargada actualmente:</p>
             <img
               src={marcaAgua}
@@ -758,6 +763,7 @@ const CotizacionPureva=()=>{
              <Button type="primary" htmlType="submit" loading={loading} style={{ marginRight: "8px" }}>
                Guardar Cotización
              </Button>
+             
              <Button type="submit" onClick={CotizacionPureva}>Generar Cotización de Prueba Formato Actual</Button>
            </div>
          </Form>

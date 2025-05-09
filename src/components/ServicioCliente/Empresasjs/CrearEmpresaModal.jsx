@@ -128,7 +128,7 @@ const CreateEmpresaModal = ({ visible, onCancel, onCreate, regimenFiscal,usosCfd
               label="Número externo:"
               name="numeroExterior"
               rules={[{ required: true, message: 'Número requerido' },
-                { pattern: /^\d+$/, message: 'Sólo dígitos permitidos' },
+                { pattern: /^\d+$/, message: 'Sólo numeros' },
               ]}
             >
               <Input />
@@ -153,7 +153,7 @@ const CreateEmpresaModal = ({ visible, onCancel, onCreate, regimenFiscal,usosCfd
               name="codigoPostal"
               rules={[{ required: true, message: 'Código postal requerido' },
                 { len: 5, message: 'Debe tener 5 caracteres' },
-                { pattern: /^\d+$/, message: 'Sólo dígitos permitidos' },
+                { pattern: /^\d+$/, message: 'Sólo numeros' },
               ]}
             >
               <Input />
