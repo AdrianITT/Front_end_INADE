@@ -163,10 +163,12 @@ const EditarCotizacion = () => {
    
      // Actualizar estado de los campos del formulario
      const handleInputChange = (id, field, value) => {
-       setConceptos(conceptos.map(concepto =>
-         concepto.id === id ? { ...concepto, [field]: value } : concepto
-       ));
-     };
+      setConceptos(prev =>
+        prev.map(c =>
+          c.id === id ? { ...c, [field]: value } : c
+        )
+      );
+    };
 
        /*const handleRemoveConcepto = (id) => {
          if (conceptos.length > 1) {
@@ -230,15 +232,6 @@ const EditarCotizacion = () => {
         };
 
         const handleServicioChange = (conceptoId, servicioId) => {
-          // Verificar si el servicio ya está seleccionado en otro concepto
-          /*const servicioYaSeleccionado = conceptos.some(
-            (c) => c.servicio === servicioId && c.id !== conceptoId
-          ); 
-        
-          if (servicioYaSeleccionado) {
-            message.warning("Este servicio ya está seleccionado en otro concepto.");
-            return; // Evita que se agregue duplicado
-          }*/
         
           // Obtener el servicio seleccionado de la lista de servicios
           const servicioSeleccionado = servicios.find(servicio => servicio.id === servicioId);
@@ -283,7 +276,7 @@ const EditarCotizacion = () => {
      */
 
      const handleAddConcepto = () => {
-          setConceptos([...conceptos, { id: null, servicio: "", cantidad: 1, precio: 0, descripcion: "" }]);
+          setConceptos([...conceptos, {  id: Date.now(), servicio: "", cantidad: 1, precio: 0, descripcion: "" , esNuevo: true}]);
         };
    
      const { subtotal, descuentoValor, subtotalConDescuento, iva, total } = calcularTotales();
@@ -339,11 +332,13 @@ const EditarCotizacion = () => {
           const servicioId = parseInt(concepto.servicio, 10);
           const servicioYaEnCotizacion = idsServiciosEnCotizacion.includes(servicioId);
     
-          if (concepto.id) {
-            serviciosExistentes.push(concepto);
-          } else {
-            nuevosServicios.push(concepto);
-          }
+
+            if (concepto.esNuevo) {
+              nuevosServicios.push(concepto);
+            } else {
+              serviciosExistentes.push(concepto);
+            }
+
         });
     
         // Actualizar los servicios existentes
@@ -487,7 +482,7 @@ const EditarCotizacion = () => {
                       <Card key={concepto.id} style={{ marginBottom: "24px", borderRadius: 12 }}>
                         <Row justify="space-between" align="middle" style={{ marginBottom: "10px" }}>
                           <Col>
-                            <h3 style={{ margin: 0 }}>🧾 Concepto {concepto.id}</h3>
+                            <h3 style={{ margin: 0 }}>🧾 Concepto {concepto.id.toString().slice(-2)}</h3>
                           </Col>
                           <Col>
                             <Checkbox
@@ -556,11 +551,11 @@ const EditarCotizacion = () => {
                               label="Cantidad de servicios"
                               rules={[{ required: true, message: 'Por favor ingresa la cantidad.' }]}
                             >
-                              <InputNumber
+                              <Input
                                 min={1}
                                 style={{ width: "100%" }}
                                 value={concepto.cantidad}
-                                onChange={(value) => handleInputChange(concepto.id, "cantidad", value)}
+                                onChange={(e) => handleInputChange(concepto.id, "cantidad", e.target.value)}
                               />
                             </Form.Item>
                           </Col>
@@ -589,7 +584,7 @@ const EditarCotizacion = () => {
                                 min={0}
                                 style={{ width: "100%" }}
                                 value={concepto.precioEditable}
-                                onChange={(value) => handleInputChange(concepto.id, "precioEditable", value)}
+                                onChange={(e) => handleInputChange(concepto.id, "precioFinal", e.target.value)}
                               />
                             </Form.Item>
                           </Col>
