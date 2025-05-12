@@ -31,7 +31,7 @@ const DetalleOrdenTrabajo = () => {
         // Llamada al nuevo endpoint
         const detailResponse = await getDetalleOrdenTrabajoDataById(orderId);
         const data = detailResponse.data;
-        console.log("data: ", data);
+        //console.log("data: ", data);
         const Ot= await getOrdenTrabajoById(orderId);
         
         setClientData(data.cliente);

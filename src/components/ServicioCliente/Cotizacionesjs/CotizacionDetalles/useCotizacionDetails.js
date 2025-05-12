@@ -16,7 +16,7 @@ export const useCotizacionDetails = (id) => {
     try {
       const response = await getDetallecotizaciondataById(id);
       const data = response.data;
-        console.log("data: ", data);
+        //console.log("data: ", data);
       // Puedes darle formato si lo necesitas
       setCotizacionInfo({
         ...data,

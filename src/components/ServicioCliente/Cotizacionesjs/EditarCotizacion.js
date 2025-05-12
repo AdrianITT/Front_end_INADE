@@ -387,7 +387,7 @@ const EditarCotizacion = () => {
               descripcion: concepto.descripcion,
               cotizacion: parseInt(id, 10),
             };
-            console.log("📤 Enviando nuevo servicio:", data);
+            //console.log("📤 Enviando nuevo servicio:", data);
             return createCotizacionServicio(data);
           });
           const createServiciosResults = await Promise.allSettled(createServiciosPromises);

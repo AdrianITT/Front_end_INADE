@@ -28,7 +28,7 @@ const CargarCSD = () => {
     try {
       //const response = await FacturamaCSD(organizationId);
       const response =await getAllCsdData(organizationId);
-      console.log("📌 Datos del CSD actual:", response.data);
+      //console.log("📌 Datos del CSD actual:", response.data);
       if (Array.isArray(response.data) && response.data.length > 0 && response.data[0].rfc) {
         setCsdActual(response.data[0]);
       } else {

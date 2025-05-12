@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Form, Input, Button, Row, Col, Select, message, Modal, Result, Divider } from "antd";
+import { Form, Input, Button, Row, Col, Select, message, Modal, Result, Divider,Alert } from "antd";
 import { useNavigate, useParams } from "react-router-dom"; // Importa useNavigate
 import "./Cliente.css";
 import { updateCliente, getClienteById, getClienteDataById } from "../../../apis/ApisServicioCliente/ClienteApi";
@@ -27,14 +27,14 @@ const EditarCliente = () => {
   
         // Ahora intenta obtener dirección
         const direccionRes = await getClienteDataById(clienteId);
-        console.log("Dirección del cliente:", direccionRes.data);
+        //console.log("Dirección del cliente:", direccionRes.data);
         const direccion = direccionRes.data;
-        console.log("Dirección del cliente1:", direccion.cliente.empresa.calle);
+        //console.log("Dirección del cliente1:", direccion.cliente.empresa.calle);
         // Solo si el cliente NO tiene dirección, usamos la de la empresa
         const direccionActual = form.getFieldsValue(["calleCliente", "numeroCliente"]);
-        console.log("Dirección actual:", direccionActual);
+        //console.log("Dirección actual:", direccionActual);
         const sinDireccion = !direccionActual.calleCliente || !direccionActual.numeroCliente;
-        console.log("Sin dirección:", sinDireccion);
+        //console.log("Sin dirección:", sinDireccion);
   
         if (sinDireccion && direccion?.cliente?.empresa) {
           form.setFieldsValue({
@@ -214,7 +214,8 @@ const EditarCliente = () => {
           </Col>
         </Row>
         <Row gutter={30}>
-            <Divider>Direccion del cliente</Divider>
+            <Divider>Direccion del cliente<Alert message="se muestra la misma direccion de la empresa cuando el cliente es nuevo" type="warning" /></Divider>
+            
               <Col span={12}>
                 <Form.Item
                   label="Calle:"

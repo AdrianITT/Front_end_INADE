@@ -64,9 +64,9 @@ const EditarPreCotizacion = () => {
           precio: parseFloat(serv.precio),
           eliminar: false,
         }));
-        console.log("Servicios mapeados:", serviciosMapped);
-        console.log("Datos de la precotización:", data);
-        console.log("Datos de la precotización:", data.cliente.nombreCompleto);
+        //console.log("Servicios mapeados:", serviciosMapped);
+        //console.log("Datos de la precotización:", data);
+        //console.log("Datos de la precotización:", data.cliente.nombreCompleto);
         // Asignar campos al formulario
         form.setFieldsValue({
           servicios: serviciosMapped,
@@ -144,7 +144,7 @@ const EditarPreCotizacion = () => {
   
       const serviciosOriginales = form.getFieldValue("servicios") || [];
       const serviciosGuardados = serviciosOriginales.map((s) => s.id);
-      console.log("Servicios guardados:", serviciosGuardados);
+      //console.log("Servicios guardados:", serviciosGuardados);
       const eliminados = serviciosEliminados;
 
 
@@ -155,9 +155,9 @@ const EditarPreCotizacion = () => {
       const monedaSeleccionada = tiposMonedaData.find((m) => m.id === tipoMonedaSeleccionada)
       //const serviciosSeleccionados = serviciosForm.map((s) => s.servicio);
   
-      console.log("Nuevos:", nuevos);
-      console.log("Existentes:", existentes);
-      console.log("Eliminados:", eliminados);
+      //console.log("Nuevos:", nuevos);
+      //console.log("Existentes:", existentes);
+      //console.log("Eliminados:", eliminados);
       // Actualizar datos generales de la precotización
       await updatePrecotizacion(id, {
         nombreCliente: values.nombre,
@@ -201,7 +201,7 @@ const EditarPreCotizacion = () => {
           preCotizacion: id,
         })
       );
-      console.log("Create promises:", createPromises);
+      //console.log("Create promises:", createPromises);
   
       // Eliminar servicios (si tienes un endpoint tipo deleteServicioPreCotizacionById)
       const deletePromises = eliminados.map((idServicio) =>
@@ -231,7 +231,7 @@ const EditarPreCotizacion = () => {
     };
 
   return (
-    <div className="editar-orden-container">
+    <div className="cotizacion-container">
       <Form layout="vertical" form={form}>
            <Row gutter={16}>
                 <Col span={12}>
@@ -281,6 +281,7 @@ const EditarPreCotizacion = () => {
                           label="Correo"
                           name="correo"
                           rules={[
+                            {type:'email', message: 'El correo no es válido'},
                           {
                           required: true,
                           },

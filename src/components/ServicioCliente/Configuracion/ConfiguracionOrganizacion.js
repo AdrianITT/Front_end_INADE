@@ -1,5 +1,5 @@
-import React, { useCallback,useState, useEffect } from "react";
-import { Tabs, Form, Input, Select, Button, Modal,Upload,Card, message, Result, Alert, Col,Row} from "antd";
+import React, { useCallback,useState, useEffect, useMemo } from "react";
+import { Tabs, Form, Input, Select, Button, Modal,Upload,Card, message, Result, Alert, Col,Row, Spin} from "antd";
 
 import "./configuracion.css"
 import {  UploadOutlined } from '@ant-design/icons';
@@ -14,6 +14,7 @@ import { updateInfoSistema,getInfoSistemaById } from "../../../apis/ApisServicio
 import { getAllTipoMoneda } from "../../../apis/ApisServicioCliente/Moneda";
 import { getAllIva } from "../../../apis/ApisServicioCliente/ivaApi";
 import { Api_Host } from "../../../apis/api";
+import {getIdCotizacionBy } from "../../../apis/ApisServicioCliente/CotizacionApi";
 
 const { TextArea } = Input;
 
@@ -41,7 +42,10 @@ const ConfiguraciónOrganizacion=()=>{
   // Obtener el id de la organización del usuario autenticado
   const userOrganizationId = ObtenerOrganizacion("organizacion_id" );// O la forma en la que almacenas el ID de la organización
 
+  const organizationId = useMemo(() => parseInt(localStorage.getItem("organizacion_id"), 10), []);
+
   const fetchOrganizacion = useCallback(async () => {
+    setLoading(true);
     try {
       const response = await getAllOrganizacion();
       const org = response.data.find(item => item.id === userOrganizationId);
@@ -60,6 +64,7 @@ const ConfiguraciónOrganizacion=()=>{
       if (org?.infoSistema) {
         await fetchInfoConfiguracionSistema(org.infoSistema);
       }
+      setLoading(false);
     } catch (error) {
       console.error("Error al obtener las organizaciones", error);
       message.error("Error al obtener la organización.");
@@ -172,15 +177,19 @@ useEffect(() => {
 
 useEffect(() => {
   if (activeTab === "1") {
+    setLoading(true);
     fetchOrganizacion();
     fetchRegimenFiscal();
+    setLoading(false);
   }
 }, [activeTab, fetchOrganizacion, fetchRegimenFiscal]);
 
 useEffect(() => {
   if (activeTab === "2") {
+    setLoading(true);
     fetchTipoMoneda();
     fetchIva();
+    setLoading(false);
     if (organizaciones?.infoCotizacion) {
       fetchInfoCotizacion(organizaciones.infoCotizacion);
     }
@@ -189,14 +198,18 @@ useEffect(() => {
 
 useEffect(() => {
   if (activeTab === "3" && organizaciones?.infoOrdenTrabajo) {
+    setLoading(true);
     fetchInfOrdenTrabajo(organizaciones.infoOrdenTrabajo);
+    setLoading(false);
   }
 }, [activeTab, organizaciones, fetchInfOrdenTrabajo]);
 
 
 useEffect(() => {
   if (activeTab === "4" && organizaciones?.infoSistema) {
+    setLoading(true);
     fetchInfoConfiguracionSistema(organizaciones.infoSistema);
+    setLoading(false);
   }
 }, [activeTab, organizaciones, fetchInfoConfiguracionSistema]);
 
@@ -512,14 +525,16 @@ const showErrorModal = (error) => {
   setIsErrorModalVisible(true);
 };
 
-const CotizacionPureva=()=>{
+const CotizacionPureva= async ()=>{
+  const idCoti=await getIdCotizacionBy(organizationId);
   const user_id = localStorage.getItem("user_id");
-  window.open(`${Api_Host.defaults.baseURL}/cotizacion/1/pdf/?user_id=${user_id}`);
+  window.open(`${Api_Host.defaults.baseURL}/cotizacion/${idCoti.data.id}/pdf/?user_id=${user_id}`);
 }
 
   
 
   const renderOrganizacion = () => (
+    <Spin spinning={loading} tip="Cargando datos...">
      <Form layout="vertical"
      form={form}
       className="form-container"
@@ -620,7 +635,7 @@ const CotizacionPureva=()=>{
       </Form.Item>
        </div>
    
-     </Form>
+     </Form></Spin>
    );
    
 
@@ -710,11 +725,12 @@ const CotizacionPureva=()=>{
            <Form.Item label="Avisos:" name="avisos">
              <TextArea rows={4} placeholder="Ingrese los avisos necesarios." />
            </Form.Item>
-           <br></br>
-           <p> se usara en cotizacio y ordenes de trabajo</p></Col></Row>
+           </Col>
+           </Row>
            <Form.Item>
         {marcaAgua ? (
             <>
+            <p> se usara en cotizacio y ordenes de trabajo</p>
             <p>Imagen cargada actualmente:</p>
             <img
               src={marcaAgua}
@@ -747,6 +763,7 @@ const CotizacionPureva=()=>{
              <Button type="primary" htmlType="submit" loading={loading} style={{ marginRight: "8px" }}>
                Guardar Cotización
              </Button>
+             
              <Button type="submit" onClick={CotizacionPureva}>Generar Cotización de Prueba Formato Actual</Button>
            </div>
          </Form>

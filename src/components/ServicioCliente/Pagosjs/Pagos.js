@@ -108,7 +108,7 @@ const Pagos = () => {
         // Solo llamamos a la API de pagos por organización
         const pagosResponse = await getComprobantepagoById(organizationId);
         const pagos = pagosResponse.data;
-        console.log("Pagos:", pagos);
+        //console.log("Pagos:", pagos);
   
         const detalles = pagos.map((pago) => ({
           key: `${pago.folioComprobantePago}-${pago.folioFactura}`,

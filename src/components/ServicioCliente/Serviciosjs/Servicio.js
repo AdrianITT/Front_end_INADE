@@ -4,7 +4,7 @@ import "./Servicio.css"
 import Highlighter from 'react-highlight-words';
 //import { Link} from "react-router-dom";
 import { ExclamationCircleOutlined, EditOutlined, CloseOutlined, SearchOutlined } from "@ant-design/icons";
-import { deleteServicio, createServicio, updateServicio, getServicioData } from "../../../apis/ApisServicioCliente/ServiciosApi";
+import { deleteServicio, createServicio, updateServicio, getServicioData, getServicioById } from "../../../apis/ApisServicioCliente/ServiciosApi";
 import { createMetodo , deleteMetodo, getAllMetodoData} from "../../../apis/ApisServicioCliente/MetodoApi";
 import { getAllClaveCDFI } from "../../../apis/ApisServicioCliente/ClavecdfiApi";
 import { getAllUnidadCDFI } from "../../../apis/ApisServicioCliente/unidadcdfiApi";
@@ -146,7 +146,7 @@ const handleMetodoChange = (value) => {
     const fetchMetodos = async () => {
       try {
         const response = await getAllMetodoData(organizationId);
-        console.log("Métodos:", response.data);
+        //console.log("Métodos:", response.data);
         setMetodos(response.data); // Almacenar los métodos en el estado
       } catch (error) {
         console.error("Error al cargar los métodos", error);
@@ -169,13 +169,14 @@ const handleMetodoChange = (value) => {
       ]);
 
       setServicios(serviciosRes.data);
-      console.log("Servicios:", serviciosRes.data);
+      //console.log("Servicios:", serviciosRes.data);
       setFilteredServicios(serviciosRes.data);
       setMetodos(metodosRes.data);
-      console.log("Métodos:", metodosRes.data);
+      //console.log("Métodos:", metodosRes.data);
       setClaveCDFI(claveCDFIRes.data);
       setUnidadCDFI(unidadCDFIRes.data);
       setObjetoImpuesto(objetoImpuestoRes.data);
+
     } catch (error) {
       console.error("Error al cargar los datos", error);
       message.error("Error al cargar los datos");
@@ -262,9 +263,18 @@ const handleMetodoChange = (value) => {
   };
 
   // Mostrar modal para editar un servicio existente
-  const showModalServiciosEdit = (service) => {
+  const showModalServiciosEdit = async (service) => {
+    //console.log("Servicio a editar:", service);
+    const datasevicio= await getServicioById(service.id);
+    //console.log("Datos del servicio:", datasevicio);
     setServiceToEdit(service);
-    formEdit.setFieldsValue(service);
+    formEdit.setFieldsValue({
+      nombreServicio: datasevicio.data.nombreServicio,
+      precio: datasevicio.data.precio,
+      unidadCfdi: datasevicio.data.unidadCfdi,   // 👈 asegurarte que sea el ID
+      claveCfdi: datasevicio.data.claveCfdi,     // 👈 lo mismo aquí
+      metodos: datasevicio.data.metodos,
+    });
     setIsModalOpenServiciosEdit(true);
   };
 
@@ -276,13 +286,13 @@ const handleMetodoChange = (value) => {
     
     try {
       const values = await formEdit.validateFields();
-      console.log("Metodos:", metodos);
-      console.log("Valores del formulario editado:", values);
+      //console.log("Metodos:", metodos);
+      //console.log("Valores del formulario editado:", values);
       const dataToSend = {
         ...values,
         estado: values.estado || 5,
       };
-      console.log("Data a enviar:", dataToSend);
+      //console.log("Data a enviar:", dataToSend);
       
       // Verifica si los campos necesarios están presentes
       if ( !values.unidadCfdi || !values.claveCfdi ) {
@@ -777,16 +787,6 @@ const handleConfirmDeleteService = async () => {
                 ))}
               </Select>
             </Form.Item>
-              {/*
-              <Form.Item label="Objeto impuesto:" name="objetoImpuesto" rules={[{ required: true }]}>
-                <Select>
-                  {objetoimpuesto.map((oi) => (
-                    <Select.Option key={oi.id} value={oi.id}>
-                      {oi.nombre}
-                    </Select.Option>
-                  ))}
-                </Select>
-              </Form.Item> */}
               <Form.Item label="Método:" name="metodos" rules={[{ required: true, message: 'Por favor selecciona un método.' }]}>
                 <Select
                   placeholder="Selecciona un método"

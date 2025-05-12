@@ -20,7 +20,7 @@ const Factura = () => {
       setLoading(true);
       try {
         const response = await getAllFacturaByOrganozacion(organizationId);
-        console.log("Facturas response:", response);
+        //console.log("Facturas response:", response);
         const rawFacturas = response.data || [];
 
         const responseFacturama = await getAllfacturafacturama();
@@ -196,7 +196,7 @@ const Factura = () => {
         </Space>
       </div>
       <div style={{ display: "flex",justifyContent: "center",marginBottom: "20px"  }}>
-        <Link to="/cliente">
+        <Link to="/cotizar">
         <Button type="primary">
           Crear Factura
         </Button>

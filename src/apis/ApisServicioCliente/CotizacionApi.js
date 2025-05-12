@@ -19,3 +19,5 @@ export const getDuplicarCotizacion =(id, idCliente)=> Api_Host.get(`/duplicarCot
 export const getAllCotizacionByCliente = (id) => Api_Host.get(`/listaClientes/${id}/`);
 
 export const getDataCotizacionBy = (id) => Api_Host.get(`/crearFactura/${id}/`);
+
+export const getIdCotizacionBy = (id) => Api_Host.get(`primera_cotizacion/${id}/`);

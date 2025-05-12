@@ -45,7 +45,7 @@ const GenerarOrdenTrabajo = () => {
       try {
         const response = await getAllOrdenTrabajoById(id); // <-- usa id directamente desde useParams
         const data = response.data;
-        console.log("data: ", data);
+        //console.log("data: ", data);
         setCotizacionData(data);           // info general
         setCliente(data.cliente);          // info cliente
         setEmpresa(data.empresa);          // info empresa

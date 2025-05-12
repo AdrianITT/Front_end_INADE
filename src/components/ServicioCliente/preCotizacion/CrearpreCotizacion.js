@@ -93,7 +93,7 @@ const CrearPreCotizaciones = () => {
       const validServices = Array.isArray(response.data)
         ? response.data.filter(s => s && s.id)
         : [];
-      console.log("Servicios válidos:", validServices);
+      //console.log("Servicios válidos:", validServices);
       setServicios(validServices);
     } catch (error) {
       console.error("Error al cargar los servicios", error);
@@ -455,6 +455,7 @@ const CrearPreCotizaciones = () => {
                       label="Correo"
                       name="correo"
                       rules={[
+                        {type:'email', message: 'El correo no es válido'},
                       {
                       required: true,
                       },
