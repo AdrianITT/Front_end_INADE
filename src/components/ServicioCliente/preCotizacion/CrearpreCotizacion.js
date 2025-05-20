@@ -16,6 +16,7 @@ import { getAllMetodo,createMetodo} from "../../../apis/ApisServicioCliente/Meto
 import {createServicio} from "../../../apis/ApisServicioCliente/ServiciosApi";
 import { getAllUnidadCDFI } from "../../../apis/ApisServicioCliente/unidadcdfiApi";
 import { getAllClaveCDFI } from "../../../apis/ApisServicioCliente/ClavecdfiApi";
+import {getUserById}from "../../../apis/ApisServicioCliente/UserApi";
 //import ErrorModal from "./PreCotizacionesModal/PreCotizacionModal";
 
 const { TextArea } = Input;
@@ -268,6 +269,9 @@ const CrearPreCotizaciones = () => {
   
   const handleSubmit = async () => {
     setLoadings(true);
+    const idLocalUser = localStorage.getItem("user_id")
+    const userResponse = await getUserById(idLocalUser);
+    let usrNameData=userResponse.data.first_name + " " + userResponse.data.last_name;
     try {
       // Validar campos del formulario
       await form.validateFields();
@@ -295,6 +299,7 @@ const CrearPreCotizaciones = () => {
         organizacion: organizationId,
         tipoMoneda: tipoMonedaSeleccionada,
         estado: 8,
+        nombreusuario:usrNameData,
       };
   
       // ✅ 1. Crear la Pre-Cotización y obtener el ID
