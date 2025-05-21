@@ -1,15 +1,20 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Card, Row, Col, Button, Table, Tabs, Dropdown, Menu, Modal, Select, Input, Form, DatePicker, Flex, Alert, Checkbox,message,Descriptions, Result, Spin  } from "antd";
 import { useParams, Link ,useNavigate } from "react-router-dom";
+import { Text} from '@react-pdf/renderer';
 import{FileTextTwoTone,MailTwoTone,FilePdfTwoTone,CloseCircleTwoTone, FileAddTwoTone} from "@ant-design/icons";
-import { createPDFfactura, deleteFactura, getAllDataFactura } from "../../../apis/ApisServicioCliente/FacturaApi";
+import { createPDFfactura, deleteFactura, getAllDataFactura, getAllDataPreFactura } from "../../../apis/ApisServicioCliente/FacturaApi";
 import { getEmpresaById } from "../../../apis/ApisServicioCliente/EmpresaApi";
 import { Api_Host } from "../../../apis/api";
 import PaymentCards from "../Facturacionjs/FacturaPagos"
 import { getAllFacturaPagos } from "../../../apis/ApisServicioCliente/FacturaPagosApi";
+
+import {getOrganizacionById} from '../../../apis/ApisServicioCliente/organizacionapi';
 //import axios from "axios";
 import {  getAllfacturafacturama } from "../../../apis/ApisServicioCliente/FacturaFacturamaApi";
 import { getInfoSistema } from "../../../apis/ApisServicioCliente/InfoSistemaApi";
+import PDFpreFactura from "./Plantilla/PDFpreFactura";
+import { PDFDownloadLink} from '@react-pdf/renderer';
 import ComprobantePago from "./ModalComprobantePago";
 import "./estiloDetalleFactura.css";
 //import MenuItem from "antd/es/menu/MenuItem";
@@ -48,12 +53,14 @@ const DetallesFactura = () => {
   const [facturaPagos, setFacturaPagos] = useState([]);
   const [isSuccessModalVisible, setIsSuccessModalVisible] = useState(false);
   const [confirmLoading, setConfirmLoading] = useState(false);
+  const [dataFactura, setDataFactura] = useState(null);
+  const [dataLogo, setDataLogo] = useState(null);
   // Texto dinámico que aparece dentro del Modal de éxito
   const [modalText, setModalText] = useState(
     "La factura ha sido cancelada. Serás redirigido al listado de facturas."
   );
   
-
+  const organizationId = useMemo(() => parseInt(localStorage.getItem("organizacion_id"), 10), []);
   const esUSD = moneda.codigo === "USD";
   const factorConversion = esUSD ? tipoCambioDolar : 1;
 
@@ -218,7 +225,17 @@ const DetallesFactura = () => {
   }, [id]);
   
 
-
+  useEffect(() => {
+    const fetchData = async () => {
+      const factura = await getAllDataPreFactura(id);
+      const organizacion = await getOrganizacionById(organizationId);
+      //console.log("Datos de la organización:", organizacion.data);
+      //console.log("Datos de la factura:", factura.data);
+      setDataFactura(factura.data);
+      setDataLogo(organizacion.data);
+    };
+    fetchData();
+  }, []);
   
 
 
@@ -533,6 +550,18 @@ const montoRestante =hasPagos
                       >
                         Crear Factura
                       </Button>
+                      <PDFDownloadLink
+                        document={
+                          dataFactura && dataLogo ? (
+                            <PDFpreFactura dataFactura={dataFactura} dataLogo={dataLogo} />
+                          ) : (
+                            <Text>Cargando...</Text>
+                          )
+                        }
+                        fileName={`Pre_factura_${factura.numerofactura}.pdf`}
+                      >
+                        {({ loading }) => (loading ? 'Generando...' : 'Descargar PDF')}
+                      </PDFDownloadLink>
                       <Button
                         onClick={handleDeleteFactura}
                         className="btn-eliminar-factura"

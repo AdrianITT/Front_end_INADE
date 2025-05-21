@@ -18,6 +18,7 @@ import { getAllClaveCDFI } from "../../../apis/ApisServicioCliente/ClavecdfiApi"
 import { getAllUnidadCDFI } from "../../../apis/ApisServicioCliente/unidadcdfiApi";
 import {createMetodo, getAllMetodoData} from "../../../apis/ApisServicioCliente/MetodoApi";
 import {createServicio} from "../../../apis/ApisServicioCliente/ServiciosApi";
+import {getUserById}from "../../../apis/ApisServicioCliente/UserApi";
 import { onFCP } from "web-vitals";
 
 const { TextArea } = Input;
@@ -50,6 +51,7 @@ const RegistroCotizacion = () => {
   const [clavecdfi, setClavecdfi] = useState([]);
   const [metodos, setMetodos] = useState([]);
   const [loadings, setLoadings] = useState(false);
+  const [isModalErrorVisible, setIsModalErrorVisible] = useState(false);
 
   const [formNuevoServicio] = Form.useForm();
   const [formMetodo] = Form.useForm();
@@ -264,6 +266,9 @@ const RegistroCotizacion = () => {
 
   const handleSubmit = async () => {
     setLoadings(true);
+    const idLocalUser = localStorage.getItem("user_id")
+    const userResponse = await getUserById(idLocalUser);
+    let usrNameData=userResponse.data.first_name + " " + userResponse.data.last_name;
     try {
       await form.validateFields();
   
@@ -276,12 +281,14 @@ const RegistroCotizacion = () => {
         estado: 1,
         descuento: descuento,
         tipoMoneda: tipoMonedaSeleccionada,
+        nombreusuario: usrNameData || "",
       };
   
       setCotizacionDataPreview(cotizacionData);
       setIsConfirmModalVisible(true);
     } catch (error) {
       message.error("Por favor completa todos los campos requeridos.");
+      setIsModalErrorVisible(true);
     }finally {
       setLoadings(false);
     }
@@ -309,7 +316,7 @@ const RegistroCotizacion = () => {
 
       // Redirige o limpia si deseas
     } catch (error) {
-      console.error("Error al crear la cotización", error);
+      isModalErrorVisible(true);
       message.error("Error al crear la cotización");
     }finally {setLoadings(false);}
   };
@@ -350,6 +357,7 @@ const RegistroCotizacion = () => {
         message.success("Método creado con éxito.");
       } catch (error) {
         message.error("Error al crear el método.");
+        isModalErrorVisible(true);
       }finally {setLoadings(false);}
     };
 
@@ -868,26 +876,35 @@ const RegistroCotizacion = () => {
           <p style={{ textAlign: "center", fontSize: "16px" }}>{successMessage}</p>
       </Modal>
       <Modal
-  title="Confirmar creación de cotización"
-  open={isConfirmModalVisible}
-  onOk={handleConfirmCreate}
-  onCancel={() => setIsConfirmModalVisible(false)}
-  okText="Crear"
-  cancelText="Cancelar"
->
-  <p>¿Estás seguro de crear esta cotización?</p>
-  {cotizacionDataPreview && (
-    <>
-      <p><strong>Cliente:</strong> {clienteData.nombrePila} {clienteData.apPaterno}</p>
-      <p><strong>Fecha Solicitud:</strong> {cotizacionDataPreview.fechaSolicitud}</p>
-      <p><strong>Fecha Caducidad:</strong> {cotizacionDataPreview.fechaCaducidad}</p>
-      <p><strong>Moneda:</strong> {tipoMonedaSeleccionada === 2 ? "USD" : "MXN"}</p>
-      <p><strong>Descuento:</strong> {cotizacionDataPreview.descuento}%</p>
-      <p><strong>IVA:</strong> {ivasData.find(iva => iva.id === ivaSeleccionado)?.porcentaje || 16}%</p>
-    </>
-  )}
-</Modal>
-
+        title="Confirmar creación de cotización"
+        open={isConfirmModalVisible}
+        onOk={handleConfirmCreate}
+        onCancel={() => setIsConfirmModalVisible(false)}
+        okText="Crear"
+        cancelText="Cancelar"
+      >
+        <p>¿Estás seguro de crear esta cotización?</p>
+        {cotizacionDataPreview && (
+          <>
+            <p><strong>Cliente:</strong> {clienteData.nombrePila} {clienteData.apPaterno}</p>
+            <p><strong>Fecha Solicitud:</strong> {cotizacionDataPreview.fechaSolicitud}</p>
+            <p><strong>Fecha Caducidad:</strong> {cotizacionDataPreview.fechaCaducidad}</p>
+            <p><strong>Moneda:</strong> {tipoMonedaSeleccionada === 2 ? "USD" : "MXN"}</p>
+            <p><strong>Descuento:</strong> {cotizacionDataPreview.descuento}%</p>
+            <p><strong>IVA:</strong> {ivasData.find(iva => iva.id === ivaSeleccionado)?.porcentaje || 16}%</p>
+          </>
+        )}
+      </Modal>
+        <Modal
+        title="Completa todos los campos requeridos"
+        open={isModalErrorVisible}
+        onOk={() => setIsModalErrorVisible(false)}
+        okText="Ok"
+        onCancel={() => setIsModalErrorVisible(false)}
+        cancelText="Cancelar"
+        >
+        <p>Por favor completa todos los campos requeridos.</p>
+        </Modal>
 
     </div>
   );

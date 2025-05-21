@@ -7,6 +7,7 @@ import { getAllReceptor, createReceptor } from "../../../apis/ApisServicioClient
 import { createOrdenTrabajo } from "../../../apis/ApisServicioCliente/OrdenTrabajoApi";
 import { createOrdenTrabajoServico } from "../../../apis/ApisServicioCliente/OrdenTabajoServiciosApi";
 import {getAllOrdenTrabajoById} from "../../../apis/ApisServicioCliente/OrdenTrabajoApi";
+import {getUserById}from "../../../apis/ApisServicioCliente/UserApi";
 const { TextArea } = Input;
 const { Option } = Select;
 
@@ -72,11 +73,15 @@ const GenerarOrdenTrabajo = () => {
   };
 
   const handleConfirmCrearOrden = async () => {
+    const idLocalUser = localStorage.getItem("user_id")
+    const userResponse = await getUserById(idLocalUser);
+    let usrNameData=userResponse.data.first_name + " " + userResponse.data.last_name;
     try {
       const ordenData = {
         receptor: ordenFormValues.receptor,
         cotizacion: cotizacionId,
         estado: 2,
+        nombreusuario: usrNameData,
       };
       const ordenResponse = await createOrdenTrabajo(ordenData);
       const ordenTrabajoId = ordenResponse.data.id;
