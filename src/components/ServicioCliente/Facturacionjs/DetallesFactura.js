@@ -590,8 +590,8 @@ const montoRestante =hasPagos
                 { subtotal.valorDescuento}
                 {" "}
                 { esUSD ? "USD" : "MXN" }</p>
-                <p><strong>IVA :</strong>{" "}
-                { subtotal.ivaPct }
+                <p><strong>IVA ({ subtotal.ivaPct }%):</strong>{" "}
+                { subtotal.ivaValor }
                 {" "}
                 { esUSD ? "USD" : "MXN" }</p>
                 <p><strong>Importe:</strong>{" "}
