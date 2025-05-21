@@ -91,7 +91,7 @@ const PreCotizacionDetalles = () => {
         
     
         // Abrir el PDF en una nueva pestaña, incluyendo el user_id como parámetro
-        window.open(`${Api_Host.defaults.baseURL}/precotizacion/${id}/pdf/?user_id=${user_id}&organizacion_id=${organizationId}`);
+        window.open(`${Api_Host.defaults.baseURL}/precotizacion/${id}/pdf`);
     
         // Si la respuesta es exitosa, puedes procesarla
         message.success("PDF descargado correctamente");

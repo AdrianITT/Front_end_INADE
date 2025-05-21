@@ -94,7 +94,7 @@ const DetalleOrdenTrabajo = () => {
       const user_id = localStorage.getItem("user_id");
   
       // Abrir el PDF en una nueva pestaña, incluyendo el user_id como parámetro
-      window.open(`${Api_Host.defaults.baseURL}/ordentrabajo/${orderId}/pdf?user_id=${user_id}`);
+      window.open(`${Api_Host.defaults.baseURL}/ordentrabajo/${orderId}/pdf`);
   
       // Si la respuesta es exitosa, puedes procesarla
       message.success("PDF descargado correctamente");
