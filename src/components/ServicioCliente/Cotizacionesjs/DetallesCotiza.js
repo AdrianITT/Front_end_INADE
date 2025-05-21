@@ -15,6 +15,7 @@ import ServiciosTable from "../Cotizacionesjs/CotizacionDetalles/ServiciosTable"
 import CotizacionInfoCard from "../Cotizacionesjs/CotizacionDetalles/CotizacionInfoCard";
 import { SendEmailModal, EditCotizacionModal, ResultModal,SuccessDuplicarModal,ConfirmDuplicarModal,DeleteCotizacionModal } from "../Cotizacionesjs/CotizacionDetalles/CotizacionModals";
 import { updateCotizacion, getDuplicarCotizacion, deleteCotizacion} from "../../../apis/ApisServicioCliente/CotizacionApi";
+import {getUserById}from "../../../apis/ApisServicioCliente/UserApi";
 import "./cotizar.css";
 
 const { Title, Text } = Typography;
@@ -125,9 +126,13 @@ const CotizacionDetalles = () => {
   const handleDuplicarCotizacion = async (clienteIdSeleccionado) => {
     setLoading(true);
     try {
+      const idLocalUser = localStorage.getItem("user_id")
+      const userResponse = await getUserById(idLocalUser);
+      const nombreusuario=`${userResponse.data.first_name} ${userResponse.data.last_name}`;
+      console.log("Nombre de usuario:", nombreusuario); 
       //console.log("Duplicando con opción:", clienteIdSeleccionado);
       const idCliente=clienteIdSeleccionado; // úsala aquí si lo necesitas
-      const response = await getDuplicarCotizacion(id,idCliente);
+      const response = await getDuplicarCotizacion(id,idCliente,nombreusuario );
       const duplicatedId = response.data.nueva_cotizacion_id;
   
       setIsDuplicarSuccessModalVisible(true);
