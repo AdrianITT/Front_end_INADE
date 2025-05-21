@@ -53,7 +53,7 @@ const CotizacionDetalles = () => {
   const handleDownloadPDF = async () => {
     try {
       const user_id = localStorage.getItem("user_id");
-      window.open(`${Api_Host.defaults.baseURL}/cotizacion/${id}/pdf?user_id=${user_id}`);
+      window.open(`${Api_Host.defaults.baseURL}/cotizacion/${id}/pdf`);
     } catch (error) {
       console.error("Error al descargar el PDF:", error);
     }
