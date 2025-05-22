@@ -1,7 +1,8 @@
 import React, {useState,useEffect, useMemo} from 'react';
 import { Page, Document, StyleSheet, View, Text, Image } from '@react-pdf/renderer';
-import {getAllDataFactura} from '../../../../apis/ApisServicioCliente/FacturaApi';
-import {getOrganizacionById} from '../../../../apis/ApisServicioCliente/organizacionapi';
+//import { numeroALetras } from 'numero-a-letras';
+//import {getAllDataFactura} from '../../../../apis/ApisServicioCliente/FacturaApi';
+//import {getOrganizacionById} from '../../../../apis/ApisServicioCliente/organizacionapi';
 
 //import {  getAllDataFactura, getOrganizacionById } from '../Api/Factura';
 
@@ -170,7 +171,7 @@ const styles = StyleSheet.create({
 });
 
 // Componente de la factura
-const FacturaPDF = ({ dataFactura, dataLogo }) => {
+const FacturaPDF = ({ dataFactura, dataLogo, centavo,centavotext }) => {
   if (!dataFactura || !dataLogo) return <p>Cargando datos...</p>;
 
   const filasPrimeraPagina = 10;
@@ -187,6 +188,11 @@ const FacturaPDF = ({ dataFactura, dataLogo }) => {
       //  <-- importante
   const hayDescuento = parseFloat(dataFactura.valores.valorDescuento ?? 0) > 0;
   
+  /*const total = parseFloat(dataFactura.valores.subtotal);
+  const parteEntera = Math.floor(total); // ej: 50
+  const centavos = Math.round((total - parteEntera) * 100); // ej: 35 (si el valor fuera 50.35)
+
+  const totalEnLetras = numeroALetras(parteEntera); // "cincuenta */
 
 
   return (
@@ -282,9 +288,9 @@ const FacturaPDF = ({ dataFactura, dataLogo }) => {
           {/* Filas de esta página */}
           {grupo.map((serv, index) => (
             <View key={index} style={styles.tableRow} >
-              <Text style={styles.colProducto}>{serv.servicio?.metodo?.codigo ?? 'sin datos'}</Text>
+              <Text style={styles.colProducto}>{serv.servicio?.claveCfdi?.codigo ?? 'sin datos'}</Text>
               <Text style={styles.colCantidad}>{serv.cantidad}</Text>
-              <Text style={styles.colUnidad}>{serv?.servicio?.claveCfdi?.codigo ?? 'sin datos'} - {serv?.servicio?.claveCfdi?.nombre ?? 'sin datos'}</Text>
+              <Text style={styles.colUnidad}>{serv?.unidadCfdi?.codigo ?? 'sin datos'} - {serv?.unidadCfdi?.nombre ?? 'sin datos'}</Text>
               <Text style={styles.colConcepto}>
                 {serv.servicio.nombre}
                 {'\n'}
@@ -292,11 +298,11 @@ const FacturaPDF = ({ dataFactura, dataLogo }) => {
                 Traslados:{'\n'}
                 IVA:
                 <Text style={styles.textoPequeno}>
-                  {`${(dataFactura.valores.iva ?? 0).toString().padStart(3, '0')}, Base: ${serv.precioUnitario}, Tasa: ${(parseFloat(dataFactura.valores.ivaPct ?? 0)).toFixed(6)}, Importe: $${(parseFloat(serv.precioUnitario ?? 0) * parseFloat(dataFactura.valores.ivaPct ?? 0)).toFixed(2)}`}
+                  {`002, Base: ${serv.precioUnitario}, Tasa: ${(parseFloat(dataFactura.valores.ivaPct ?? 0)).toFixed(6)}, Importe: $${(parseFloat(serv.precioUnitario ?? 0) * parseFloat(dataFactura.valores.ivaPct ?? 0)).toFixed(2)}`}
                 </Text>
               </Text> 
               <Text style={styles.colPrecio}>${serv.precioUnitario}</Text>
-              {hayDescuento && <Text style={styles.colPrecio}>${serv.precioUnitario}</Text>}
+              {hayDescuento && <Text style={styles.colPrecio}>${dataFactura.valores.valorDescuento}</Text>}
               <Text style={styles.colImporte}>${serv.subtotal}</Text>
             </View>
           ))}
@@ -333,13 +339,13 @@ const FacturaPDF = ({ dataFactura, dataLogo }) => {
           <Text>Moneda: { dataFactura.monedaCodigo} - {dataFactura.monedaDesc}</Text>
         </View>
         <View style={[styles.pairContainer, styles.textoPequeno]}>
-          <Text>CIENTO DIECISEIS PESOS 00/{dataFactura.valores.subtotal} { dataFactura.monedaCodigo}</Text>
+          <Text>{centavotext} {centavo} MXN</Text>
         </View>
         
         <View style={[styles.pairContainer]}>
         <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>Total:</Text>
-              <Text style={styles.totalValue}>${dataFactura.valores.subtotalDesc}</Text>
+              <Text style={styles.totalValue}>${dataFactura.valores.totalFinal}</Text>
             </View>
         </View>
       </View>
