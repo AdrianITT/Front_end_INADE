@@ -298,12 +298,12 @@ const FacturaPDF = ({ dataFactura, dataLogo, centavo,centavotext }) => {
                 Traslados:{'\n'}
                 IVA:
                 <Text style={styles.textoPequeno}>
-                  {`002, Base: ${serv.subtotalDesc}, Tasa: ${(parseFloat(dataFactura.valores.ivaPct ?? 0)).toFixed(6)}, Importe: $${(parseFloat(serv.ivaValor ?? 0))}`}
+                  {`002, Base: $ ${parseFloat(serv.subtotalDesc ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}, Tasa: ${parseFloat(dataFactura.valores.ivaPct ?? 0).toFixed(6)}, Importe: $${parseFloat(serv.ivaValor ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                 </Text>
               </Text> 
-              <Text style={styles.colPrecio}>${serv.precioUnitario}</Text>
-              {hayDescuento && <Text style={styles.colPrecio}>%{dataFactura.valores.descuentoCotizacion}</Text>}
-              <Text style={styles.colImporte}>${serv.subtotal}</Text>
+              <Text style={styles.colPrecio}>${parseFloat(serv.precioUnitario).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</Text>
+              {hayDescuento && <Text style={styles.colPrecio}>{parseFloat(dataFactura.valores.descuentoCotizacion).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%</Text>}
+              <Text style={styles.colImporte}>${parseFloat(serv.subtotal).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</Text>
             </View>
           ))}
         </View>
@@ -318,7 +318,7 @@ const FacturaPDF = ({ dataFactura, dataLogo, centavo,centavotext }) => {
             <View style={styles.totalRow}>
             
               <Text style={styles.totalLabel}>Subtotal:</Text>
-              <Text style={styles.totalValue}>${dataFactura.valores.subtotal}</Text>
+              <Text style={styles.totalValue}>${parseFloat(dataFactura.valores.subtotal).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</Text>
             </View>
             <View style={styles.totalRow} >
 
@@ -326,7 +326,7 @@ const FacturaPDF = ({ dataFactura, dataLogo, centavo,centavotext }) => {
             </View>
             <View style={styles.totalRow}>
                 {hayDescuento && <Text style={styles.totalLabel}>Descuento: </Text>}
-                {hayDescuento && <Text style={styles.totalValue}>${dataFactura.valores.valorDescuento}</Text>}
+                {hayDescuento && <Text style={styles.totalValue}>${parseFloat(dataFactura.valores.valorDescuento).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</Text>}
               </View>
                 {hayDescuento &&<View style={styles.totalRow} >
                 <View style={styles.shortLine} />
@@ -334,7 +334,7 @@ const FacturaPDF = ({ dataFactura, dataLogo, centavo,centavotext }) => {
                 }
             <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>IVA {`${(100 * parseFloat(dataFactura.valores.ivaPct ?? 0)).toFixed(0)}`}%:</Text>
-              <Text style={styles.totalValue}>${dataFactura.valores.ivaValor}</Text>
+              <Text style={styles.totalValue}>${parseFloat(dataFactura.valores.ivaValor).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</Text>
             </View>
           </View>
         </View>
@@ -353,9 +353,12 @@ const FacturaPDF = ({ dataFactura, dataLogo, centavo,centavotext }) => {
         
         <View style={[styles.pairContainer]}>
         <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>Total:</Text>
-              <Text style={styles.totalValue}>${dataFactura.valores.totalFinal}</Text>
-            </View>
+          <Text style={styles.totalLabel}>Total:</Text>
+          <Text style={styles.totalValue}>
+            ${parseFloat(dataFactura.valores.totalFinal ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </Text>
+        </View>
+
         </View>
       </View>
       </View>

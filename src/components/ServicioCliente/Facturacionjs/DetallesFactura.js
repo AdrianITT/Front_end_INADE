@@ -33,6 +33,7 @@ const DetallesFactura = () => {
   const [visiblePaymentModal, setVisiblePaymentModal] = useState(false);
   const [isModalVisibleCorreo, setIsModalVisibleCorreo] = useState(false);
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
+  const [isConfirmModalVisible, setIsConfirmModalVisible] = useState(false);
   const [moneda, setMoneda] = useState({ codigo: "", descripcion: "" });
   const [form] = Form.useForm();
   const [cliente, setCliente] = useState({});
@@ -470,7 +471,18 @@ const confirmDeleteFactura = async () => {
   }
 };
 
+const handleOpenConfirmModal = () => {
+  setIsConfirmModalVisible(true);
+};
 
+const handleCancelConfirm = () => {
+  setIsConfirmModalVisible(false);
+};
+
+const handleConfirmCrearFactura = () => {
+  setIsConfirmModalVisible(false);
+  handleCrearFactura();
+};
 
 
   const menu = (
@@ -560,24 +572,46 @@ const montoRestante =hasPagos
                     showIcon
                   />
                 <div className="container-botones">
-                      <Button
-                        onClick={handleCrearFactura}
-                        className="btn-crear-factura"
-                      >
-                        Crear Factura
-                      </Button>
+                  <Button
+                    onClick={handleOpenConfirmModal}
+                    className="btn-crear-factura"
+                    loading={loading}
+                    type="primary"
+                  >
+                    Crear Factura
+                  </Button>
                       <PDFDownloadLink
                         document={
                           dataFactura && dataLogo ? (
-                            <PDFpreFactura dataFactura={dataFactura} dataLogo={dataLogo} centavo={centavos} centavotext={centavostext}/>
+                            <PDFpreFactura
+                              dataFactura={dataFactura}
+                              dataLogo={dataLogo}
+                              centavo={centavos}
+                              centavotext={centavostext}
+                            />
                           ) : (
                             <Text>Cargando...</Text>
                           )
                         }
                         fileName={`Pre_factura_${factura.numerofactura}.pdf`}
                       >
-                        {({ loading }) => (loading ? 'Generando...' : 'Descargar PDF')}
+                        {({ loading }) => (
+                          <button
+                            style={{
+                              backgroundColor: '#007bff',
+                              color: '#fff',
+                              border: 'none',
+                              padding: '10px 16px',
+                              borderRadius: '6px',
+                              cursor: 'pointer',
+                              fontWeight: 'bold'
+                            }}
+                          >
+                            {loading ? 'Generando...' : 'Pre-Factura PDF'}
+                          </button>
+                        )}
                       </PDFDownloadLink>
+
                       <Button
                         onClick={handleDeleteFactura}
                         className="btn-eliminar-factura"
@@ -787,6 +821,22 @@ const montoRestante =hasPagos
       >
         <p>Esta acción no se puede deshacer.</p>
       </Modal>
+
+
+      {/* Modal de confirmación */}
+      <Modal
+        title="¿Estás seguro?"
+        open={isConfirmModalVisible}
+        onOk={handleConfirmCrearFactura}
+        onCancel={handleCancelConfirm}
+        okText="Sí, crear"
+        cancelText="Cancelar"
+        centered
+      >
+        <p>¿Deseas crear la factura? Esta acción no se puede deshacer.</p>
+      </Modal>
+
+      
 
             {/* 
         <Modal
