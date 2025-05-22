@@ -104,11 +104,11 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   totalLabel: {
-    width: 50,
+    width: 60,
     fontWeight: 'bold',
   },
   totalValue: {
-    width: 50,
+    width: 60,
     textAlign: 'right',
   },
   pairContainer: {
@@ -298,11 +298,11 @@ const FacturaPDF = ({ dataFactura, dataLogo, centavo,centavotext }) => {
                 Traslados:{'\n'}
                 IVA:
                 <Text style={styles.textoPequeno}>
-                  {`002, Base: ${serv.precioUnitario}, Tasa: ${(parseFloat(dataFactura.valores.ivaPct ?? 0)).toFixed(6)}, Importe: $${(parseFloat(serv.precioUnitario ?? 0) * parseFloat(dataFactura.valores.ivaPct ?? 0)).toFixed(2)}`}
+                  {`002, Base: ${serv.subtotalDesc}, Tasa: ${(parseFloat(dataFactura.valores.ivaPct ?? 0)).toFixed(6)}, Importe: $${(parseFloat(serv.ivaValor ?? 0))}`}
                 </Text>
               </Text> 
               <Text style={styles.colPrecio}>${serv.precioUnitario}</Text>
-              {hayDescuento && <Text style={styles.colPrecio}>${dataFactura.valores.valorDescuento}</Text>}
+              {hayDescuento && <Text style={styles.colPrecio}>%{dataFactura.valores.descuentoCotizacion}</Text>}
               <Text style={styles.colImporte}>${serv.subtotal}</Text>
             </View>
           ))}
@@ -320,9 +320,18 @@ const FacturaPDF = ({ dataFactura, dataLogo, centavo,centavotext }) => {
               <Text style={styles.totalLabel}>Subtotal:</Text>
               <Text style={styles.totalValue}>${dataFactura.valores.subtotal}</Text>
             </View>
-            <View style={styles.totalRow}>
+            <View style={styles.totalRow} >
+
               <View style={styles.shortLine} />
+            </View>
+            <View style={styles.totalRow}>
+                {hayDescuento && <Text style={styles.totalLabel}>Descuento: </Text>}
+                {hayDescuento && <Text style={styles.totalValue}>${dataFactura.valores.valorDescuento}</Text>}
               </View>
+                {hayDescuento &&<View style={styles.totalRow} >
+                <View style={styles.shortLine} />
+                </View>
+                }
             <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>IVA {`${(100 * parseFloat(dataFactura.valores.ivaPct ?? 0)).toFixed(0)}`}%:</Text>
               <Text style={styles.totalValue}>${dataFactura.valores.ivaValor}</Text>
