@@ -88,7 +88,7 @@ const EditarCotizacion = () => {
                     precio: parseFloat(servicioResponse.data.precio) || 0,
                     descripcion: record.descripcion,
                     cotizacion: record.cotizacion,
-                    precioEditable: record ? record.precio : parseFloat(servicioResponse.data.precio) || 0,
+                    precioFinal: record ? record.precio : parseFloat(servicioResponse.data.precio) || 0,
                     metodoCodigo: record.metodo || servicioResponse.data.metodos,
                   };
                 })
@@ -205,7 +205,7 @@ const EditarCotizacion = () => {
           }
         
           const subtotal = conceptos.reduce((acc, curr) => {
-            const precio = parseFloat(curr.precioEditable) || 0;
+            const precio = parseFloat(curr.precioFinal) || 0;
             const cantidad = parseInt(curr.cantidad, 10) || 0;
             return acc + cantidad * precio;
           }, 0);
@@ -244,7 +244,7 @@ const EditarCotizacion = () => {
                     ...concepto,
                     servicio: servicioSeleccionado.id,
                     precio: servicioSeleccionado.precio || 0, // ✅ Asignamos el precio correcto
-                    precioEditable: servicioSeleccionado.precio || 0, // ✅ También en precioFinal
+                    precioFinal: servicioSeleccionado.precio || 0, // ✅ También en precioFinal
                     nombreServicio: servicioSeleccionado.nombreServicio, // ✅ Mantenemos el nombre
                     metodoCodigo: servicioSeleccionado.metodos,
                   }
@@ -276,7 +276,7 @@ const EditarCotizacion = () => {
      */
 
      const handleAddConcepto = () => {
-          setConceptos([...conceptos, {  id: Date.now(), servicio: "", cantidad: 1, precio: 0, descripcion: "" , esNuevo: true}]);
+          setConceptos([...conceptos, {  id: Date.now(), servicio: "", cantidad: 1, precio: 0, precioFinal:0, descripcion: "" , esNuevo: true}]);
         };
    
      const { subtotal, descuentoValor, subtotalConDescuento, iva, total } = calcularTotales();
@@ -350,7 +350,7 @@ const EditarCotizacion = () => {
           const data = {
             id: concepto.id,
             cantidad: parseInt(concepto.cantidad, 10),
-            precio: parseFloat(concepto.precioEditable),
+            precio: parseFloat(concepto.precioFinal),
             servicio: parseInt(concepto.servicio, 10),
             descripcion: concepto.descripcion,
             cotizacion: parseInt(id, 10),
@@ -377,7 +377,7 @@ const EditarCotizacion = () => {
           const createServiciosPromises = nuevosServicios.map((concepto) => {
             const data = {
               cantidad: parseInt(concepto.cantidad, 10),
-              precio: parseFloat(concepto.precioEditable),
+              precio: parseFloat(concepto.precioFinal),
               servicio: parseInt(concepto.servicio, 10),
               descripcion: concepto.descripcion,
               cotizacion: parseInt(id, 10),
@@ -583,8 +583,8 @@ const EditarCotizacion = () => {
                               <InputNumber
                                 min={0}
                                 style={{ width: "100%" }}
-                                value={concepto.precioEditable}
-                                onChange={(e) => handleInputChange(concepto.id, "precioFinal", e.target.value)}
+                                value={concepto.precioFinal}
+                                onChange={(e) => handleInputChange(concepto.id, "precioFinal", e)}
                               />
                             </Form.Item>
                           </Col>

@@ -17,6 +17,7 @@ import PDFpreFactura from "./Plantilla/PDFpreFactura";
 import { PDFDownloadLink} from '@react-pdf/renderer';
 import ComprobantePago from "./ModalComprobantePago";
 import "./estiloDetalleFactura.css";
+import {NumerosALetras} from "numero-a-letras";
 //import MenuItem from "antd/es/menu/MenuItem";
 
 
@@ -55,6 +56,8 @@ const DetallesFactura = () => {
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [dataFactura, setDataFactura] = useState(null);
   const [dataLogo, setDataLogo] = useState(null);
+  const [centavos, setCentavos] = useState("");
+  const [centavostext, setCentavosText] = useState("");
   // Texto dinámico que aparece dentro del Modal de éxito
   const [modalText, setModalText] = useState(
     "La factura ha sido cancelada. Serás redirigido al listado de facturas."
@@ -229,10 +232,23 @@ const DetallesFactura = () => {
     const fetchData = async () => {
       const factura = await getAllDataPreFactura(id);
       const organizacion = await getOrganizacionById(organizationId);
+      //console.log("Datos de la organización:", NumerosALetras(51));
       //console.log("Datos de la organización:", organizacion.data);
       //console.log("Datos de la factura:", factura.data);
       setDataFactura(factura.data);
       setDataLogo(organizacion.data);
+      const total = parseFloat(factura.data.valores.totalFinal);
+      const parteEntera = Math.floor(total);
+      const centavos = Math.round((total - parteEntera) * 100);
+
+      const letras = NumerosALetras(parteEntera)
+        .replace('M.N.', '') // Elimina "M.N." si lo incluye
+        .replace(/00\/100/g, '') // Elimina centavos si lo incluye
+        .replace(/\s+/g, ' ') // Limpia espacios extra
+        .trim();
+
+      setCentavos(`${centavos.toString().padStart(2, '0')}/100`);
+      setCentavosText(`${letras.toUpperCase()} `);
     };
     fetchData();
   }, []);
@@ -553,7 +569,7 @@ const montoRestante =hasPagos
                       <PDFDownloadLink
                         document={
                           dataFactura && dataLogo ? (
-                            <PDFpreFactura dataFactura={dataFactura} dataLogo={dataLogo} />
+                            <PDFpreFactura dataFactura={dataFactura} dataLogo={dataLogo} centavo={centavos} centavotext={centavostext}/>
                           ) : (
                             <Text>Cargando...</Text>
                           )
