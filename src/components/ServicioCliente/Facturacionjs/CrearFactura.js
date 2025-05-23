@@ -259,14 +259,14 @@ const CrearFactura = () => {
       dataIndex: "precio",
       key: "precio",
       render: precio =>
-        `$${parseFloat(precio).toFixed(2)} ${tipoMoneda.codigo}`
+        `$${parseFloat(precio).toFixed(3)} ${tipoMoneda.codigo}`
     },
     {
       title: "Subtotal",
       dataIndex: "subtotal",
       key: "subtotal",
       render: sub =>
-        `$${parseFloat(sub).toFixed(2)} ${tipoMoneda.codigo}`
+        `$${parseFloat(sub).toFixed(3)} ${tipoMoneda.codigo}`
     },
     
   ];
@@ -310,7 +310,7 @@ const CrearFactura = () => {
       formaPago:       values.formaPago,
       metodoPago:      values.metodoPago,
       porcentaje:      porcentajeFactura,
-      importe:         totalConIva.toFixed(2),
+      importe:         totalConIva.toFixed(3),
       tipoMoneda:      tipoMoneda.codigo,
       cotizacion:      id,
     };
@@ -502,19 +502,19 @@ const CrearFactura = () => {
           <Col span={10}>
             <div className="factura-summary">
             <Form.Item label="Subtotal:">
-              <Input value={`$${resumenCot.subtotal.toFixed(2)} ${tipoMoneda.codigo}`} disabled />
+              <Input value={`$${resumenCot.subtotal.toFixed(3)} ${tipoMoneda.codigo}`} disabled />
             </Form.Item>
             <Form.Item label="Descuento:">
-              <Input value={`$${resumenCot.descuento.toFixed(2)} ${tipoMoneda.codigo}`} disabled />
+              <Input value={`$${resumenCot.descuento.toFixed(3)} ${tipoMoneda.codigo}`} disabled />
             </Form.Item>
             <Form.Item label="Tasa IVA:">
-              <Input value={`${(tasaIva).toFixed(2)}%`} disabled />
+              <Input value={`${(tasaIva).toFixed(3)}%`} disabled />
             </Form.Item>
             <Form.Item label="IVA:">
-              <Input value={`$${resumenCot.iva.toFixed(2)} ${tipoMoneda.codigo}`} disabled />
+              <Input value={`$${resumenCot.iva.toFixed(3)} ${tipoMoneda.codigo}`} disabled />
             </Form.Item>
             <Form.Item label="Total:">
-              <Input value={`$${resumenCot.importe.toFixed(2)} ${tipoMoneda.codigo}`} disabled />
+              <Input value={`$${resumenCot.importe.toFixed(3)} ${tipoMoneda.codigo}`} disabled />
             </Form.Item>
           </div>
           </Col>
