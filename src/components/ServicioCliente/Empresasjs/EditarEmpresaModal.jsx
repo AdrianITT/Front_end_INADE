@@ -68,7 +68,7 @@ const EditEmpresaModal = ({ visible, onCancel, onEdit, regimenFiscal, empresa,us
               label="RFC"
               name="rfc"
               rules={[{ required: true, message: 'RFC requerido' },
-                { min: 11, message: 'Debe tener 13 caracteres' },
+                { min: 11, message: 'Debe tener 11 caracteres' },
 
               ]}
             >

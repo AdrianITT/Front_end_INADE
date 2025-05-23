@@ -94,23 +94,23 @@ const CotizacionInfoCard = ({
         >
           <p>
             <Text strong>Subtotal:</Text>{" "}
-            {(valores.subtotal / factorConversion).toFixed(2)} {moneda}
+            {(valores.subtotal / factorConversion).toFixed(3)} {moneda}
           </p>
           <p>
             <Text strong>Descuento:</Text>{" "}
-            {(valores.valorDescuento / factorConversion).toFixed(2)} {moneda}
+            {(valores.valorDescuento / factorConversion).toFixed(3)} {moneda}
           </p>
           <p>
             <Text strong>Subtotal con descuento:</Text>{" "}
-            {(valores.subtotalDescuento / factorConversion).toFixed(2)} {moneda}
+            {(valores.subtotalDescuento / factorConversion).toFixed(3)} {moneda}
           </p>
           <p>
             <Text strong>IVA ({(parseFloat(valores.iva) * 100).toFixed(0)}%):</Text>{" "}
-            {(valores.ivaValor / factorConversion).toFixed(2)} {moneda}
+            {(valores.ivaValor / factorConversion).toFixed(3)} {moneda}
           </p>
           <p>
             <Text strong>Importe total:</Text>{" "}
-            {(valores.importe / factorConversion).toFixed(2)} {moneda}
+            {(valores.importe / factorConversion).toFixed(3)} {moneda}
           </p>
           <p>
             <Text strong>Estado:</Text>{" "}

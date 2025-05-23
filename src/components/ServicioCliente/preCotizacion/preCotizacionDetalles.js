@@ -72,7 +72,7 @@ const PreCotizacionDetalles = () => {
     { title: "Precio", dataIndex: "precio", key: "precio" },
     {
       title: "Subtotal",
-      render: (_, record) => `${(record.precio * record.cantidad).toFixed(2)}`
+      render: (_, record) => `${(record.precio * record.cantidad).toFixed(3)}`
     },
   ];
   
@@ -292,7 +292,7 @@ const PreCotizacionDetalles = () => {
                 >               
                
                <p><Text strong>Subtotal:</Text> {cotizacionInfo.valores.subtotal} {esUSD ? "USD" : "MXN"}</p>
-               <p><Text strong>Descuento ({cotizacionInfo.valores.descuento || 0}%):</Text> {descuentoConvertido.toFixed(2)} {esUSD ? "USD" : "MXN"}</p>
+               <p><Text strong>Descuento ({cotizacionInfo.valores.descuento || 0}%):</Text> {descuentoConvertido.toFixed(3)} {esUSD ? "USD" : "MXN"}</p>
                <p><Text strong>Subtotal con Descuento:</Text> {cotizacionInfo.valores.subtotalDescuento} {esUSD ? "USD" : "MXN"}</p>
                <p><Text strong>IVA ({cotizacionInfo.valores.iva}%):</Text> {cotizacionInfo.valores.ivaValor} {esUSD ? "USD" : "MXN"}</p>
                <p><Text strong>Total:</Text> {cotizacionInfo.valores.importe} {esUSD ? "USD" : "MXN"}</p>
