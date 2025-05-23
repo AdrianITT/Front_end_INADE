@@ -85,7 +85,7 @@ const DetallesFactura = () => {
       key: "precioUnitario",
       render: (valorEnMXN) => {
         // Convertimos al vuelo si es USD
-        const convertido = (valorEnMXN).toFixed(2);
+        const convertido = (valorEnMXN).toFixed(3);
         return `$${convertido} ${esUSD ? "USD" : "MXN"}`;
       },
     },
@@ -95,7 +95,7 @@ const DetallesFactura = () => {
       key: "total",
       render: (valorEnMXN) => {
         // Convertimos al vuelo si es USD
-        const convertido = (valorEnMXN).toFixed(2);
+        const convertido = (valorEnMXN).toFixed(3);
         return `$${convertido} ${esUSD ? "USD" : "MXN"}`;
       },
     },
