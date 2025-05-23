@@ -52,8 +52,7 @@ const CreateEmpresaModal = ({ visible, onCancel, onCreate, regimenFiscal,usosCfd
               label="RFC"
               name="rfc"
               rules={[{ required: true, message: 'RFC requerido' },
-                { len: 13, message: 'Debe tener 13 caracteres' },
-                {pattern: /^[A-Z]+$/, message:'Solo letras mayúsculas permitidas'}
+                { min: 11, message: 'Debe tener 12 caracteres' }
               ]}
             >
               <Input />
