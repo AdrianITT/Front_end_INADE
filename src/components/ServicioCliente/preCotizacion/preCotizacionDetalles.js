@@ -72,7 +72,7 @@ const PreCotizacionDetalles = () => {
     { title: "Precio", dataIndex: "precio", key: "precio" },
     {
       title: "Subtotal",
-      render: (_, record) => `${(record.precio * record.cantidad).toFixed(3)}`
+      render: (_, record) => `${(record.precio * record.cantidad)}`
     },
   ];
   
