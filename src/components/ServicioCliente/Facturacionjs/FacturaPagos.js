@@ -289,15 +289,15 @@ const PaymentCards = ({ idFactura, correoCliente,refreshPagos }) => {
                 </p>
               <p>
                 <DollarOutlined style={{ marginRight: '8px' }} />
-                Monto Total: ${parseFloat(pago.montototal).toFixed(3)}
+                Monto Total: ${parseFloat(pago.montototal).toFixed(2)}
               </p>
               <p>
                 <DollarOutlined style={{ marginRight: '8px' }} />
-                Monto Pagado: ${parseFloat(pago.montopago).toFixed(3)}
+                Monto Pagado: ${parseFloat(pago.montopago).toFixed(2)}
               </p>
               <p>
                 <DollarOutlined style={{ marginRight: '8px' }} />
-                Monto Restante: ${parseFloat(pago.montorestante).toFixed(3)}
+                Monto Restante: ${parseFloat(pago.montorestante).toFixed(2)}
               </p>
               {renderBotonPago(pago)}
             </Card>
