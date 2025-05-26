@@ -252,11 +252,11 @@ const RegistroCotizacion = () => {
       const factorConversion = Number(esUSD ? tipoCambioDolar : 1) || 1;
     
       return {
-        subtotal: +(subtotal / factorConversion).toFixed(2),
-        descuentoValor: +(descuentoValor / factorConversion).toFixed(2),
-        subtotalConDescuento: +(subtotalConDescuento / factorConversion).toFixed(2),
-        iva: +(iva / factorConversion).toFixed(2),
-        total: +(total / factorConversion).toFixed(2),
+        subtotal: +(subtotal / factorConversion).toFixed(3),
+        descuentoValor: +(descuentoValor / factorConversion).toFixed(3),
+        subtotalConDescuento: +(subtotalConDescuento / factorConversion).toFixed(3),
+        iva: +(iva / factorConversion).toFixed(3),
+        total: +(total / factorConversion).toFixed(3),
       };
     };
     
