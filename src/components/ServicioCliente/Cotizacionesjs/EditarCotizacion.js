@@ -16,6 +16,7 @@ const { TextArea } = Input;
 const EditarCotizacion = () => {
      const navigate = useNavigate();
      const { id } = useParams(); // Obtener el ID de la cotización desde la URL
+     const [contadorId, setContadorId] = useState(1);
      const [cotizacionData, setCotizacionData] = useState(null);
      const [fechaSolicitada, setFechaSolicitada] = useState(null);
      const [fechaCaducidad, setFechaCaducidad] = useState(null);
@@ -276,8 +277,9 @@ const EditarCotizacion = () => {
      */
 
      const handleAddConcepto = () => {
-          setConceptos([...conceptos, {  id: Date.now(), servicio: "", cantidad: 1, precio: 0, precioFinal:0, descripcion: "" , esNuevo: true}]);
-        };
+        setConceptos([...conceptos, {  id: contadorId, servicio: "", cantidad: 1, precio: 0, precioFinal:0, descripcion: "" , esNuevo: true}]);
+        setContadorId(contadorId + 1);
+      };
    
      const { subtotal, descuentoValor, subtotalConDescuento, iva, total } = calcularTotales();
    

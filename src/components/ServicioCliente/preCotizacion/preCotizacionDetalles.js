@@ -271,6 +271,7 @@ const PreCotizacionDetalles = () => {
                 <p><Text strong>Empresa:</Text> {cotizacionInfo.empresa?.nombre}</p>
                 <p><Text strong>Cliente:</Text> {cotizacionInfo.cliente?.nombreCompleto}</p>
                 <p><Text strong>Correo:</Text> {cotizacionInfo.cliente?.correo}</p>
+                <p><Text strong>Correo:</Text> {cotizacionInfo.cliente?.correo}</p>
                 <p><Text strong>Denominación:</Text> {cotizacionInfo.tipoMoneda?.descripcion}-{cotizacionInfo.empresa?.denominacion}</p>
                 <p><Text strong>Fecha de Solicitud:</Text> {cotizacionInfo.fechaSolicitud}</p>
                 <p><Text strong>IVA:</Text> {cotizacionInfo.iva?.porcentaje || "0"}%</p>
