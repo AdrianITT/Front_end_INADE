@@ -310,7 +310,7 @@ const CrearFactura = () => {
       formaPago:       values.formaPago,
       metodoPago:      values.metodoPago,
       porcentaje:      porcentajeFactura,
-      importe:         totalConIva.toFixed(3),
+      importe:         totalConIva.toFixed(2),
       tipoMoneda:      tipoMoneda.codigo,
       cotizacion:      id,
     };
