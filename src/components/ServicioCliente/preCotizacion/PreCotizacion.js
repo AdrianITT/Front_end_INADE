@@ -111,7 +111,7 @@ const PreCotizacionData = () => {
       render: (_, record) => (
         <Space>
           <Link to={`/preCotizacionDetalles/${record.id}`}>
-            <Button type="primary" icon={<FileTwoTone />} />
+            <Button type="primary"> Detalles</Button>
           </Link>
         </Space>
       ),

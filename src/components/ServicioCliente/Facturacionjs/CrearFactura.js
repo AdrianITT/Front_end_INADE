@@ -292,10 +292,10 @@ const CrearFactura = () => {
     const descuentoCotPct = parseFloat(dataID.valores.descuentoPorcentaje) / 100;
     
     // 4) Aplicar descuento original
-    const subtotalConDescOriginal = subtotal * (1 - descuentoCotPct);
+    const subtotalConDescOriginal = ((subtotal).toFixed(2) * (1 - descuentoCotPct)).toFixed(2);
   
     // 5) Aplicar % de la factura
-    const subtotalConPctFactura = subtotalConDescOriginal * (1 - (porcentajeFactura / 100));
+    const subtotalConPctFactura = (subtotalConDescOriginal * (1 - (porcentajeFactura / 100))).toFixed(2);
   
     // 6) Aplicar IVA
     const totalConIva = subtotalConPctFactura * (1 + tasaIVA);

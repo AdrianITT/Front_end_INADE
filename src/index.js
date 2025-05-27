@@ -40,6 +40,7 @@ import EditarOrdenTrabajo from "./components/ServicioCliente/OrdenTabajojs/Edita
 import EditarPreCotizacion from "./components/ServicioCliente/preCotizacion/EditarPreCotizacion";
 import VerificarExpiracionLocalStorage from "./components/DataLocalStorage/LocalStorage";
 import NoAutorizado from "./components/FetchProtected/NoAutorizado";
+import RegistroCotizacion from "./components/ServicioCliente/Cotizacionesjs/CrearCotizacion";
 
 // Hook para cambiar el título de la pestaña
 const usePageTitle = () => {
@@ -103,6 +104,7 @@ const AppRouter = () => {
           }
         >
           <Route path="/Homeadmin" element={<ProtectedRoute allowedRoles={['Administrador']}><HomeAdmin /></ProtectedRoute>} />
+          <Route path="/RegistroCotizacion/:clienteId" element={<ProtectedRoute allowedRoles={['Administrador']}><RegistroCotizacion /></ProtectedRoute>} />
           <Route path="/home" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><Home /></ProtectedRoute>} />
           <Route path="/editarOrdenTrabajo/:id" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><EditarOrdenTrabajo/></ProtectedRoute>} />
           <Route path="/empresa" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><Empresa /></ProtectedRoute>} />

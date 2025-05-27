@@ -42,7 +42,7 @@ const ClienteTable = ({ clientes, showAlertModal }) => {
       key: "action",
       render: (_, record) => (
         <div className="action-buttons">
-          <Link to={`/crear_cotizacion/${record.key}`}>
+          <Link to={`/RegistroCotizacion/${record.key}`}>
             <Button className="action-button-cotizar">Cotizar</Button>
           </Link>
           <Link to={`/EditarCliente/${record.key}`}>

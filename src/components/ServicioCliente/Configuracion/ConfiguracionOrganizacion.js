@@ -541,7 +541,8 @@ const CotizacionPureva= async ()=>{
       onFinish={onFinish}
       initialValues={organizaciones|| {}}>
        <div>
-         <Form.Item label="Nombre:" name="nombre" required>
+         <Form.Item label="Nombre:" name="nombre" 
+         rules={[{ required: true, message: 'Por favor ingresa el nombre de la organización.' }]}>
            <Input placeholder="Ingrese el nombre de la organización." />
          </Form.Item>
          <div className="note">
@@ -557,7 +558,8 @@ const CotizacionPureva= async ()=>{
             </p><p>
             Clave del Registro Federal de Contribuyentes del Emisor (recuerda que debes tener los CSD del RFC cargados) </p>
          </div>
-         <Form.Item label="Slogan:" name="slogan">
+         <Form.Item label="Slogan:" name="slogan"
+         rules={[{ required: true, message: 'Por favor ingresa el slogan de la organización.' }]}>
            <Input placeholder="Ingrese el slogan de la organización." />
          </Form.Item>
          <Form.Item label="Régimen Fiscal:" name="regimenFiscal" required rules={[{ required: true, message: "Ingrese su Regimen Fiscal." }]}>
@@ -570,10 +572,12 @@ const CotizacionPureva= async ()=>{
               ))}
            </Select>
          </Form.Item>
-         <Form.Item label="Teléfono:" name="telefono">
+         <Form.Item label="Teléfono:" name="telefono"
+         rules={[{ required: true, message: 'Por favor ingresa el teléfono.' }]}>
            <Input placeholder="Ingrese el teléfono de contacto de la organización." />
          </Form.Item>
-         <Form.Item label="Página web:" name="pagina">
+         <Form.Item label="Página web:" name="pagina"
+         rules={[{ required: true, message: 'Por favor ingresa la página web.' }]}>
            <Input placeholder="Ingrese la URL de la página web de la organización." />
          </Form.Item>
        </div>
@@ -584,22 +588,28 @@ const CotizacionPureva= async ()=>{
          <Button type="primary">Cargar Certificado de Sellos Dijitales</Button>
        </Link>
        </div>
-         <Form.Item label="Calle:" name="calle" required>
+         <Form.Item label="Calle:" name="calle" 
+         rules={[{ required: true, message: 'Ingrese la calle.' }]}>
            <Input placeholder="Ingrese la calle de la dirección de la organización." />
          </Form.Item>
-         <Form.Item label="Número:" name="numero" required>
+         <Form.Item label="Número:" name="numero" 
+         rules={[{ required: true, message: 'Ingrese le número.' }]}>
            <Input placeholder="Ingrese el número de la dirección de la organización." />
          </Form.Item>
-         <Form.Item label="Colonia:" name="colonia" required>
+         <Form.Item label="Colonia:" name="colonia" 
+         rules={[{ required: true, message: 'Ingrese la colonia.' }]}>
            <Input placeholder="Ingrese la colonia de la dirección de la organización." />
          </Form.Item>
-         <Form.Item label="Ciudad:" name="ciudad" required>
+         <Form.Item label="Ciudad:" name="ciudad" 
+         rules={[{ required: true, message: 'Ingrese la ciudad.' }]}>
            <Input placeholder="Ingrese la ciudad de la dirección de la organización." />
          </Form.Item>
-         <Form.Item label="Código Postal:" name="codigoPostal" required>
+         <Form.Item label="Código Postal:" name="codigoPostal" 
+         rules={[{ required: true, message: 'Ingrese el código postal.' }]}>
            <Input placeholder="Ingrese el código postal de la organización." />
          </Form.Item>
-         <Form.Item label="Estado:" name="estado" required>
+         <Form.Item label="Estado:" name="estado" 
+         rules={[{ required: true, message: 'Ingrese el estado.' }]}>
          <Input placeholder="Ingrese el estado." />
          </Form.Item>
        <div className="button-container">
@@ -699,30 +709,37 @@ const CotizacionPureva= async ()=>{
          onFinish={handleGuardarCotizacion}
          initialValues={infConfiguracion || {}}>
           <Row gutter={24}><Col xs={24} md ={12}>
-            <Form.Item label="Nombre formato:" name="nombreFormato" required>
+            <Form.Item label="Nombre formato:" name="nombreFormato" 
+            rules={[{ required: true, message: 'Ingrese el nombredel formato.' }]}>
               <Input placeholder="Ingrese el nombre del formato." />
             </Form.Item>
-            <Form.Item label="Versión:" name="version">
+            <Form.Item label="Versión de formato:" name="version" 
+            rules={[{ required: true, message: 'Ingrese la versión del formato.' }]}>
               <Input placeholder="Ingrese la versión del formato." />
             </Form.Item>
-            <Form.Item label="Emisión:" name="fechaEmision">
+            <Form.Item label="Fecha de Emisión:" name="fechaEmision" 
+            rules={[{ required: true, message: 'Ingrese la fecha de emisión.' }]}>
               <Input placeholder="Ingrese la fecha de emisión." />
             </Form.Item>
-            <Form.Item label="Título documento:" name="tituloDocumento">
+            <Form.Item label="Título del documento:" name="tituloDocumento"
+            rules={[{ required: true, message: 'Ingrese el título del documento.' }]}>
               <Input placeholder="Ingrese el título del documento." />
             </Form.Item>
           </Col>
            <Col xs={24} md={12}>
-           <Form.Item label="Mensaje propuesta:" name="mensajePropuesta">
+           <Form.Item label="Mensaje propuesta:" name="mensajePropuesta"
+           rules={[{ required: true, message: 'Ingrese el mensaje propuesto para la cotización.' }]}>
              <TextArea
                rows={4}
                placeholder="Ingrese el mensaje propuesto para la cotización."
              />
            </Form.Item>
-           <Form.Item label="Términos:" name="termino">
+           <Form.Item label="Términos:" name="termino"
+           rules={[{ required: true, message: 'Ingrese los términos del documento.' }]}>
              <TextArea rows={4} placeholder="Ingrese los términos del documento." />
            </Form.Item>
-           <Form.Item label="Avisos:" name="avisos">
+           <Form.Item label="Avisos:" name="avisos" 
+           rules={[{ required: true, message: 'Ingrese los avisos necesarios.' }]}>
              <TextArea rows={4} placeholder="Ingrese los avisos necesarios." />
            </Form.Item>
            </Col>
@@ -779,16 +796,20 @@ const CotizacionPureva= async ()=>{
         layout="vertical"
         onFinish={handleGuardarOrdenTrabajo}
       >
-        <Form.Item label="Nombre del formato:" name="nombreFormato" required>
+        <Form.Item label="Nombre del formato:" name="nombreFormato" 
+        rules={[{ required: true, message: 'Ingrese el nombre del formato de orden de trabajo.' }]}>
           <Input placeholder="Ingrese el nombre del formato de orden de trabajo." />
         </Form.Item>
-        <Form.Item label="Versión:" name="version">
+        <Form.Item label="Versión del formato:" name="version" 
+        rules={[{ required: true, message: 'Ingrese la versión del formato.' }]}>
           <Input placeholder="Ingrese la versión del formato." />
         </Form.Item>
-        <Form.Item label="Emisión:" name="fechaEmision">
+        <Form.Item label="Fecha de Emisión:" name="fechaEmision"
+        rules={[{ required: true, message: 'Ingrese la fecha de emisión.' }]}>
           <Input placeholder="Ingrese la fecha de emisión." />
         </Form.Item>
-        <Form.Item label="Título del documento:" name="tituloDocumento">
+        <Form.Item label="Título del documento:" name="tituloDocumento"
+        rules={[{ required: true, message: 'Ingrese el título del documento.' }]}>
           <Input placeholder="Ingrese el título del documento." />
         </Form.Item>
         <Form.Item
