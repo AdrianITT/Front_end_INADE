@@ -39,6 +39,7 @@ const RegistroCotizacion = () => {
   const [descuento, setDescuento] = useState(0);
   const [tipoCambioDolar, setTipoCambioDolar] = useState(1);
   const [metodoSeleccionado, setMetodoSeleccionado] = useState(null);
+  const [idCotizacionCreada, setIdCotizacionCreada] = useState(null);
   const [form] = Form.useForm();
   // Nueva variable de estado para el modal de "Nuevo Servicio"
   const [isNuevoServicioModalVisible, setIsNuevoServicioModalVisible] = useState(false);
@@ -298,6 +299,7 @@ const RegistroCotizacion = () => {
     try {
       const cotizacionResponse = await createCotizacion(cotizacionDataPreview);
       const cotizacionId = cotizacionResponse.data.id;
+      setIdCotizacionCreada(cotizacionId);
 
     // Aquí, en vez de Promise.all, recorremos secuencialmente:
     for (const concepto of conceptos) {
@@ -656,9 +658,9 @@ const RegistroCotizacion = () => {
         open={isModalVisible}
         onOk={() => {
           setIsModalVisible(false);
-          navigate("/cotizar");
+          navigate(`/detalles_cotizaciones/${idCotizacionCreada}`);
         }}
-        onCancel={() => { setIsModalVisible(false); navigate("/cotizar"); }}
+        onCancel={() => { setIsModalVisible(false); navigate(`/detalles_cotizaciones/${idCotizacionCreada}`); }}
         okText="Cerrar"
       >
         <Result status="success"
