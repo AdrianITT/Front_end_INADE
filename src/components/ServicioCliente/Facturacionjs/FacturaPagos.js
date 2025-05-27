@@ -64,7 +64,7 @@ const PaymentCards = ({ idFactura, correoCliente,refreshPagos }) => {
           pago.id === pagoId ? { ...pago, isPDFVisible: true } : pago
         )
       );
-      await fetchPagos();
+      //await fetchPagos();
     }
   };
 
