@@ -14,7 +14,7 @@ import Usuario from "./components/ServicioCliente/Userjs/Usuario";
 import ConfiguracionOrganizacion from "./components/ServicioCliente/Configuracion/ConfiguracionOrganizacion";
 import Factura from "./components/ServicioCliente/Facturacionjs/Factura";
 import Layout from "./components/Layoutsjs/Layout";
-import CrearCotizacion from "./components/ServicioCliente/Cotizacionesjs/CrearCotizacion";
+//import CrearCotizacion from "./components/ServicioCliente/Cotizacionesjs/CrearCotizacion";
 import DetallesCotizacion from "./components/ServicioCliente/Cotizacionesjs/DetallesCotiza";
 import DetallesOrden from "./components/ServicioCliente/OrdenTabajojs/DetallesOrdenTrabajo";
 import Proyectos from "./components/ServicioCliente/OrdenTabajojs/ProyectosOrdenTrabajando";
@@ -40,7 +40,7 @@ import EditarOrdenTrabajo from "./components/ServicioCliente/OrdenTabajojs/Edita
 import EditarPreCotizacion from "./components/ServicioCliente/preCotizacion/EditarPreCotizacion";
 import VerificarExpiracionLocalStorage from "./components/DataLocalStorage/LocalStorage";
 import NoAutorizado from "./components/FetchProtected/NoAutorizado";
-import RegistroCotizacion from "./components/ServicioCliente/Cotizacionesjs/CrearCotizacion";
+import RegistroCotizacion from "./components/ServicioCliente/Cotizacionesjs/RegistroCotizaciones/RegistroCotizacion";
 
 // Hook para cambiar el título de la pestaña
 const usePageTitle = () => {
@@ -115,7 +115,6 @@ const AppRouter = () => {
           <Route path="/usuario" element={<ProtectedRoute allowedRoles={['Administradororganizacion']}><Usuario /></ProtectedRoute>} />
           <Route path="/configuracionorganizacion" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><ConfiguracionOrganizacion /></ProtectedRoute>} />
           <Route path="/factura" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><Factura /></ProtectedRoute>} />
-          <Route path="/crear_cotizacion/:clienteId" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><CrearCotizacion /></ProtectedRoute>} />
           <Route path="/detalles_cotizaciones/:id" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><DetallesCotizacion /></ProtectedRoute>} />
           <Route path="/detalles_orden" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><DetallesOrden /></ProtectedRoute>} />
           <Route path="/proyectos" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><Proyectos /></ProtectedRoute>} />
