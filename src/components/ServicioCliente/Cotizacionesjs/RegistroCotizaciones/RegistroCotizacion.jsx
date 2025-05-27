@@ -247,7 +247,25 @@ const RegistroCotizacion = () => {
         ))}
 
         <Button onClick={handleAddConcepto}>Añadir Concepto</Button>
-        <CotizacionTotales {...{ subtotal, descuentoValor, subtotalConDescuento, iva, total, tipoMonedaSeleccionada, descuento, ivaSeleccionado, ivasData: ivas }} />
+        <Row justify="center" style={{ marginTop: "20px" }}>
+          <Col>
+          <CotizacionTotales
+               {...{
+               subtotal,
+               descuentoValor,
+               subtotalConDescuento,
+               iva,
+               total,
+               tipoMonedaSeleccionada,
+               descuento,
+               ivaSeleccionado,
+               ivasData: ivas,
+               }}
+          />
+          </Col>
+          </Row>
+
+
 
         <div style={{ marginTop: 24 }}>
           <Button type="default" danger onClick={() => navigate("/cliente")}>Cancelar</Button>
