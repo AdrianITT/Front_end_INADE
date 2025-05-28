@@ -48,33 +48,33 @@ const usePageTitle = () => {
 
   useEffect(() => {
     const { pathname } = location;
-    let pageTitle = "simplaxi"; // Título por defecto
+    let pageTitle = "Simplaxi"; // Título por defecto
 
     switch (pathname) {
       case "/home":
-        pageTitle = "Inicio | simplaxi";
+        pageTitle = "Inicio | Simplaxi";
         break;
       case "/empresa":
-        pageTitle = "Empresas | simplaxi";
+        pageTitle = "Empresas | Simplaxi";
         break;
       case "/cliente":
-        pageTitle = "Clientes | simplaxi";
+        pageTitle = "Clientes | Simplaxi";
         break;
       case "/servicio":
-        pageTitle = "Servicios | simplaxi";
+        pageTitle = "Servicios | Simplaxi";
         break;
       case "/cotizar":
-        pageTitle = "Cotizar | simplaxi";
+        pageTitle = "Cotizar | Simplaxi";
         break;
       case "/usuario":
-        pageTitle = "Usuarios | simplaxi";
+        pageTitle = "Usuarios | Simplaxi";
         break;
       case "/configuracionorganizacion":
-        pageTitle = "Configuración | simplaxi";
+        pageTitle = "Configuración | Simplaxi";
         break;
       // Agrega más rutas según sea necesario
       default:
-        pageTitle = "simplaxi";
+        pageTitle = "Simplaxi";
     }
 
     document.title = pageTitle; // Cambia el título
