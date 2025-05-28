@@ -48,7 +48,7 @@ const usePageTitle = () => {
 
   useEffect(() => {
     const { pathname } = location;
-    let pageTitle = "INADE"; // Título por defecto
+    let pageTitle = "simplaxi"; // Título por defecto
 
     switch (pathname) {
       case "/home":
@@ -70,7 +70,7 @@ const usePageTitle = () => {
         pageTitle = "Usuarios | simplaxi";
         break;
       case "/configuracionorganizacion":
-        pageTitle = "Configuración | simplixi";
+        pageTitle = "Configuración | simplaxi";
         break;
       // Agrega más rutas según sea necesario
       default:
