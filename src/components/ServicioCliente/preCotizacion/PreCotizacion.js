@@ -102,6 +102,8 @@ const PreCotizacionData = () => {
       filters: [
         { text: "Validado", value: "Validado" },
         { text: "No validado", value: "No validado" },
+        { text: "Chat no validado", value: "Chat no validado" },
+        { text: "Chat validado", value: "Chat validado" },
       ], // 🔹 Filtro basado en los nombres de los estados
       onFilter: (value, record) => record.estado === value,
     },

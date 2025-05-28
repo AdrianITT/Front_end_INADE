@@ -33,7 +33,7 @@ const PreCotizacionDetalles = () => {
       try {
         const response = await getAllDataPrecotizacion(id);
         const data = response.data;
-        //console.log("Pre-Cotización Detalles:", data);   
+        console.log("Pre-Cotización Detalles:", data);   
         setaNumeros(data.numero);
         setCotizacionInfo(data); // contiene empresa, cliente, moneda, iva, etc.
         setServicios(data.precotizacionservicios); // contiene los servicios listos
@@ -67,6 +67,7 @@ const PreCotizacionDetalles = () => {
   const totalConvertido = total / factorConversion;
 
   const columnsServicios = [
+    { title: "Nombre del Servicio", dataIndex: "servicioNombre", key: "servicioNombre" },
     { title: "Descripción", dataIndex: "descripcion", key: "descripcion" },
     { title: "Cantidad", dataIndex: "cantidad", key: "cantidad" },
     { title: "Precio", dataIndex: "precio", key: "precio" },
@@ -115,17 +116,38 @@ const PreCotizacionDetalles = () => {
     const handleConfirmChange = async () => {
       try {
         //console.log("Actualizando solo el estado...");
-        getAllPrecotizacionCreate(id);
+        /*getAllPrecotizacionCreate(id);
+        const response = await updatePrecotizacion(id, {
+          estado: 7, // Solo se envía el campo necesario
+
+        });*/
+
+        if (cotizacionInfo.estado.id==10){
+          getAllPrecotizacionCreate(id);
+        const response = await updatePrecotizacion(id, {
+          estado: 9, // Solo se envía el campo necesario
+
+        });
+          setCotizacionInfo((prev) => ({
+            ...prev,
+            estado: 9,
+  
+          }));
+
+        }else{
+          getAllPrecotizacionCreate(id);
         const response = await updatePrecotizacion(id, {
           estado: 7, // Solo se envía el campo necesario
 
         });
-    
-        setCotizacionInfo((prev) => ({
-          ...prev,
-          estado: 7,
 
-        }));
+          setCotizacionInfo((prev) => ({
+            ...prev,
+            estado: 7,
+  
+          }));
+        }
+    
     
         setIsConfirmModalVisible(false);
         setIsSuccessModalVisible(true);
@@ -229,7 +251,7 @@ const PreCotizacionDetalles = () => {
         </Menu.Item>
     
         {/* ✅ Solo se muestra si el estado es 8 */}
-        {cotizacionInfo?.estado?.id === 8 ? (
+        {cotizacionInfo?.estado?.id === 8||10 ? (
           <>
           <Menu.Item key="4" icon={<CheckCircleTwoTone twoToneColor="#52c41a" />} onClick={actualizarEstado}>
             Actualizar estado

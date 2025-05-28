@@ -52,29 +52,29 @@ const usePageTitle = () => {
 
     switch (pathname) {
       case "/home":
-        pageTitle = "Inicio | INADE";
+        pageTitle = "Inicio | simplaxi";
         break;
       case "/empresa":
-        pageTitle = "Empresas | INADE";
+        pageTitle = "Empresas | simplaxi";
         break;
       case "/cliente":
-        pageTitle = "Clientes | INADE";
+        pageTitle = "Clientes | simplaxi";
         break;
       case "/servicio":
-        pageTitle = "Servicios | INADE";
+        pageTitle = "Servicios | simplaxi";
         break;
       case "/cotizar":
-        pageTitle = "Cotizar | INADE";
+        pageTitle = "Cotizar | simplaxi";
         break;
       case "/usuario":
-        pageTitle = "Usuarios | INADE";
+        pageTitle = "Usuarios | simplaxi";
         break;
       case "/configuracionorganizacion":
-        pageTitle = "Configuración | INADE";
+        pageTitle = "Configuración | simplixi";
         break;
       // Agrega más rutas según sea necesario
       default:
-        pageTitle = "INADE";
+        pageTitle = "simplaxi";
     }
 
     document.title = pageTitle; // Cambia el título
