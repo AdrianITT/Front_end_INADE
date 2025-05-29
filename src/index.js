@@ -95,7 +95,7 @@ const AppRouter = () => {
         {/* Ruta para el login sin el Layout */}
         <Route path="/" element={<Login />} />
         <Route path="/RegistroUsuarios" element={<RegistroUsuarios />} />
-        <Route path="/no-autorizado" element={<NoAutorizado />} />
+        <Route path="*" element={<NoAutorizado />} />
         {/* Rutas envueltas con Layout */}
         <Route path="/" element={
             <PageWrapper>

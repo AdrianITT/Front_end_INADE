@@ -16,7 +16,7 @@ export default function NoAutorizado() {
     <Result
       status="403"
       title="403"
-      subTitle="No tienes permiso para ver esta página."
+      subTitle="Esta página No existe."
       extra={
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16, alignItems: 'center' }}>
           <Button type="primary" onClick={() => navigate('/home')}>
