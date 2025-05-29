@@ -5,6 +5,7 @@ import { FileTwoTone, PlusOutlined, SearchOutlined} from "@ant-design/icons";
 import "./PrecotizacionData.css";
 import { getAllPrecotizacion, getAllPrecotizacionByOrganizacion} from "../../../apis/ApisServicioCliente/precotizacionApi";
 import {getAllEstado} from "../../../apis/ApisServicioCliente/EstadoApi";
+import ContadoPreCotizacion from "./ContadoPreCotizacion";
 
 const PreCotizacionData = () => { 
   const [preCotizaciones, setPreCotizaciones] = useState([]);
@@ -124,7 +125,6 @@ const PreCotizacionData = () => {
   return (
     <div className="container">
       <h1 className="title">Pre-Cotizaciones</h1>
-
       <div className="button-container">
         <Link to="/CrearPreCotizacion">
           <Button type="primary" icon={<PlusOutlined />}>
@@ -132,6 +132,7 @@ const PreCotizacionData = () => {
           </Button>
         </Link>
       </div>
+        <ContadoPreCotizacion/>
 
       <Table 
         className="custom-table"
