@@ -18,11 +18,11 @@ import {
 import dayjs from "dayjs";
 import { useParams, useNavigate } from "react-router-dom";
 import { getAllServicio, getServicioData } from "../../../apis/ApisServicioCliente/ServiciosApi";
-import { getAllDataPrecotizacion } from "../../../apis/ApisServicioCliente/precotizacionApi";
+import { getAllDataPrecotizacion } from "../../../apis/ApisServicioCliente/PrecotizacionApi";
 import {updateServicioPreCotizacionById, deleteServicioPreCotizacionById, createServicioPreCotizacion} from "../../../apis/ApisServicioCliente/ServiciosPrecotizacionApi";
 import { getAllTipoMoneda } from "../../../apis/ApisServicioCliente/Moneda";
 import { getAllIva } from "../../../apis/ApisServicioCliente/ivaApi";
-import { updatePrecotizacion  } from "../../../apis/ApisServicioCliente/precotizacionApi";
+import { updatePrecotizacion  } from "../../../apis/ApisServicioCliente/PrecotizacionApi";
 
 
 const EditarPreCotizacion = () => {

@@ -48,33 +48,33 @@ const usePageTitle = () => {
 
   useEffect(() => {
     const { pathname } = location;
-    let pageTitle = "INADE"; // Título por defecto
+    let pageTitle = "Simplaxi"; // Título por defecto
 
     switch (pathname) {
       case "/home":
-        pageTitle = "Inicio | INADE";
+        pageTitle = "Inicio | Simplaxi";
         break;
       case "/empresa":
-        pageTitle = "Empresas | INADE";
+        pageTitle = "Empresas | Simplaxi";
         break;
       case "/cliente":
-        pageTitle = "Clientes | INADE";
+        pageTitle = "Clientes | Simplaxi";
         break;
       case "/servicio":
-        pageTitle = "Servicios | INADE";
+        pageTitle = "Servicios | Simplaxi";
         break;
       case "/cotizar":
-        pageTitle = "Cotizar | INADE";
+        pageTitle = "Cotizar | Simplaxi";
         break;
       case "/usuario":
-        pageTitle = "Usuarios | INADE";
+        pageTitle = "Usuarios | Simplaxi";
         break;
       case "/configuracionorganizacion":
-        pageTitle = "Configuración | INADE";
+        pageTitle = "Configuración | Simplaxi";
         break;
       // Agrega más rutas según sea necesario
       default:
-        pageTitle = "INADE";
+        pageTitle = "Simplaxi";
     }
 
     document.title = pageTitle; // Cambia el título
@@ -95,7 +95,7 @@ const AppRouter = () => {
         {/* Ruta para el login sin el Layout */}
         <Route path="/" element={<Login />} />
         <Route path="/RegistroUsuarios" element={<RegistroUsuarios />} />
-        <Route path="/no-autorizado" element={<NoAutorizado />} />
+        <Route path="*" element={<NoAutorizado />} />
         {/* Rutas envueltas con Layout */}
         <Route path="/" element={
             <PageWrapper>

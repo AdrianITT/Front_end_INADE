@@ -1,6 +1,6 @@
 // RegistroCotizacion.jsx
 import React, { useState, useEffect, useMemo } from "react";
-import { Form, Input, Button, Row, Col, Select, DatePicker, Divider, message, Modal, Spin } from "antd";
+import { Form, Input, Button, Row, Col, Select, DatePicker, Divider, message, Modal, Spin, Space } from "antd";
 import { useParams, useNavigate } from "react-router-dom";
 import ClienteInfoCard from "./ClienteInfoCard";
 import ConceptoCard from "./ConceptoCard";
@@ -47,7 +47,8 @@ const RegistroCotizacion = () => {
   const [idCotizacionCreada, setIdCotizacionCreada] = useState(null);
   const [loadings, setLoadings] = useState(false);
   const organizationId = useMemo(() => parseInt(localStorage.getItem("organizacion_id"), 10), []);
-
+  
+  
   useEffect(() => {
     const fetchDatos = async () => {
       try {
@@ -70,6 +71,20 @@ const RegistroCotizacion = () => {
       }
     };
     fetchDatos();
+  }, [organizationId]);
+  const fetchServicios = async () => {
+    try {
+      const resp = await getServicioData(organizationId);
+      setServicios(resp.data);
+    } catch {
+      message.error("Error al recargar servicios");
+    }
+  };
+  
+
+  useEffect(() => {
+
+   fetchServicios();
   }, [organizationId]);
 
   useEffect(() => {
@@ -126,6 +141,7 @@ const RegistroCotizacion = () => {
       message.warning("Debe haber al menos un concepto");
     }
   };
+
 
   const handleSubmit = async () => {
     try {
@@ -203,7 +219,7 @@ const RegistroCotizacion = () => {
           </Col>
           <Col span={12}>
             <Form.Item label="Fecha Caducidad" rules={[{ required: true }]}> 
-              <DatePicker value={fechaCaducidad} style={{ width: "100%" }} format="DD/MM/YYYY" disabled />
+              <DatePicker value={fechaCaducidad} style={{ width: "100%" }} format="DD/MM/YYYY" />
             </Form.Item>
           </Col>
         </Row>
@@ -232,6 +248,24 @@ const RegistroCotizacion = () => {
         <Form.Item label="Descuento (%)" rules={[{ required: true }]}> 
           <Input type="number" min={0} max={100} value={descuento} onChange={e => setDescuento(parseFloat(e.target.value))} />
         </Form.Item>
+
+        <Space style={{ marginBottom: 16 }}>
+        <Button
+          type="primary"
+          onClick={() =>
+            setModales((prev) => ({ ...prev, servicio: true }))
+          }
+        >
+          Nuevo Servicio
+        </Button>
+        <Button
+          onClick={() =>
+            setModales((prev) => ({ ...prev, metodo: true }))
+          }
+        >
+          Nuevo Método
+        </Button>
+      </Space>
 
         <Divider>Agregar Conceptos</Divider>
         {conceptos.map((c, i) => (
@@ -274,15 +308,29 @@ const RegistroCotizacion = () => {
       </Form>
 
       <ModalNuevoServicio
-        visible={modales.servicio}
-        onClose={() => setModales(prev => ({ ...prev, servicio: false }))}
-        onCreate={(nuevo) => setServicios(prev => [...prev, nuevo])}
-        unidad={unidad}
-        clavecdfi={clavecdfi}
-        metodos={metodos}
-        organizationId={organizationId}
-        createServicioFn={createServicio}
-      />
+      visible={modales.servicio}
+      onClose={() =>
+        setModales((prev) => ({ ...prev, servicio: false }))
+      }
+      onCreate={async (nuevo) => {
+        // primero crea
+
+        const creado = nuevo?.data ?? nuevo;
+
+        setModales((prev) => ({ ...prev, servicio: false }));
+        // luego refetch y cierra modal
+
+        await fetchServicios();
+
+        message.success("Lista de servicios actualizada");
+        //setModales((prev) => ({ ...prev, servicio: false }));
+      }}
+      unidad={unidad}
+      clavecdfi={clavecdfi}
+      metodos={metodos}
+      organizationId={organizationId}
+      createServicioFn={createServicio}
+    />
 
       <ModalMetodo
         visible={modales.metodo}

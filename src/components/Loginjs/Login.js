@@ -3,6 +3,7 @@ import { Form, Input, Button, Alert, Card, Spin } from "antd";
 import { LockOutlined, UserOutlined } from '@ant-design/icons';
 import { useNavigate } from "react-router-dom";
 import Login_Api from "../../apis/ApisServicioCliente/LoginApi";
+import logo from "../../Logo/SimplaxiLogoOrg.png";
 import "./Login.css";
 
 const Login = () => {
@@ -44,36 +45,49 @@ const Login = () => {
   };
 
   return (
+    <div>
     <div className="center-card">
       <Card className="login-card">
+        {/* Contenedor del logo */}
+        <div className="login-logo">
+          <img src={logo} alt="Simplaxi Logo" />
+        </div>
+
         <h1>Iniciar Sesión</h1>
+
         {error && <Alert message={error} type="error" showIcon />}
+
         {loading ? (
-          // Aquí se muestra el spinner mientras se procesa el login
           <Spin tip="Iniciando sesión...">
-            {/* Se agrega un contenedor con altura mínima para mantener el layout */}
-            <div style={{ minHeight: "150px" }} />
+            <div style={{ minHeight: 150 }} />
           </Spin>
         ) : (
           <Form
             name="login"
             onFinish={onFinish}
-            style={{ marginTop: "20px" }}
+            style={{ marginTop: 20 }}
             layout="vertical"
           >
             <Form.Item
               label="Usuario"
               name="user"
-              rules={[{ required: true, message: "Por favor, ingrese su correo" }]}
+              rules={[
+                { required: true, message: "Por favor, ingrese su correo" },
+              ]}
             >
               <Input prefix={<UserOutlined />} placeholder="Username" />
             </Form.Item>
             <Form.Item
               label="Contraseña"
               name="password"
-              rules={[{ required: true, message: "Por favor, ingrese su contraseña" }]}
+              rules={[
+                { required: true, message: "Por favor, ingrese su contraseña" },
+              ]}
             >
-              <Input.Password prefix={<LockOutlined />}placeholder="Password"/>
+              <Input.Password
+                prefix={<LockOutlined />}
+                placeholder="Password"
+              />
             </Form.Item>
             <Form.Item>
               <Button type="primary" htmlType="submit" block>
@@ -83,6 +97,7 @@ const Login = () => {
           </Form>
         )}
       </Card>
+    </div>
     </div>
   );
 };

@@ -3,8 +3,9 @@ import { Table, Button, Space, message, Input } from "antd";
 import { Link } from "react-router-dom";
 import { FileTwoTone, PlusOutlined, SearchOutlined} from "@ant-design/icons";
 import "./PrecotizacionData.css";
-import { getAllPrecotizacion, getAllPrecotizacionByOrganizacion} from "../../../apis/ApisServicioCliente/precotizacionApi";
+import { getAllPrecotizacion, getAllPrecotizacionByOrganizacion} from "../../../apis/ApisServicioCliente/PrecotizacionApi";
 import {getAllEstado} from "../../../apis/ApisServicioCliente/EstadoApi";
+import ContadoPreCotizacion from "./ContadoPreCotizacion";
 
 const PreCotizacionData = () => { 
   const [preCotizaciones, setPreCotizaciones] = useState([]);
@@ -102,6 +103,8 @@ const PreCotizacionData = () => {
       filters: [
         { text: "Validado", value: "Validado" },
         { text: "No validado", value: "No validado" },
+        { text: "Chat no validado", value: "Chat no validado" },
+        { text: "Chat validado", value: "Chat validado" },
       ], // 🔹 Filtro basado en los nombres de los estados
       onFilter: (value, record) => record.estado === value,
     },
@@ -122,7 +125,6 @@ const PreCotizacionData = () => {
   return (
     <div className="container">
       <h1 className="title">Pre-Cotizaciones</h1>
-
       <div className="button-container">
         <Link to="/CrearPreCotizacion">
           <Button type="primary" icon={<PlusOutlined />}>
@@ -130,6 +132,7 @@ const PreCotizacionData = () => {
           </Button>
         </Link>
       </div>
+        <ContadoPreCotizacion/>
 
       <Table 
         className="custom-table"
