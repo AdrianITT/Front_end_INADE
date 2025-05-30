@@ -2,9 +2,9 @@ import React, { useState, useEffect,useMemo} from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { MailTwoTone, CheckCircleTwoTone, FilePdfTwoTone, FormOutlined, DeleteOutlined,EditTwoTone  } from "@ant-design/icons";
 import { Card, Table, Row, Col, Typography, Spin, message, Menu,Dropdown,Button, Form, Checkbox, Input, Modal, Result, Popconfirm } from "antd";
-import { getAllPrecotizacionCreate,updatePrecotizacion, deletePrecotizar} from "../../../apis/ApisServicioCliente/precotizacionApi";
+import { getAllPrecotizacionCreate,updatePrecotizacion, deletePrecotizar} from "../../../apis/ApisServicioCliente/PrecotizacionApi";
 import { Api_Host } from "../../../apis/api";
-import {getAllDataPrecotizacion} from "../../../apis/ApisServicioCliente/precotizacionApi";
+import {getAllDataPrecotizacion} from "../../../apis/ApisServicioCliente/PrecotizacionApi";
 
 const { Title, Text } = Typography;
 

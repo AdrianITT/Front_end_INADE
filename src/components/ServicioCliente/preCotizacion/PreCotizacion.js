@@ -3,7 +3,7 @@ import { Table, Button, Space, message, Input } from "antd";
 import { Link } from "react-router-dom";
 import { FileTwoTone, PlusOutlined, SearchOutlined} from "@ant-design/icons";
 import "./PrecotizacionData.css";
-import { getAllPrecotizacion, getAllPrecotizacionByOrganizacion} from "../../../apis/ApisServicioCliente/precotizacionApi";
+import { getAllPrecotizacion, getAllPrecotizacionByOrganizacion} from "../../../apis/ApisServicioCliente/PrecotizacionApi";
 import {getAllEstado} from "../../../apis/ApisServicioCliente/EstadoApi";
 import ContadoPreCotizacion from "./ContadoPreCotizacion";
 

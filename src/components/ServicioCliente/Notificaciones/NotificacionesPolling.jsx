@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { notification } from 'antd';
-import { getAllPrecotizacionByOrganizacion } from "../../../apis/ApisServicioCliente/precotizacionApi";
+import { getAllPrecotizacionByOrganizacion } from "../../../apis/ApisServicioCliente/PrecotizacionApi";
 
 const NotificacionesPolling = () => {
   const organizationId = parseInt(localStorage.getItem("organizacion_id"), 10);
