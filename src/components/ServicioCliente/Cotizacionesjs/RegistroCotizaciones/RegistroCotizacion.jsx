@@ -9,7 +9,7 @@ import ModalNuevoServicio from "./ModalNuevoServicio";
 import ModalMetodo from "./ModalMetodo";
 import ModalConfirmacion from "./ModalConfirmacion";
 import { calcularTotales, formatDate } from "./helper";
-import { getClienteById } from "../../../../apis/ApisServicioCliente/ClienteApi";
+import { getClienteById, getAllClienteData } from "../../../../apis/ApisServicioCliente/ClienteApi";
 import { getEmpresaById } from '../../../../apis/ApisServicioCliente/EmpresaApi';
 import { getAllTipoMoneda } from "../../../../apis/ApisServicioCliente/Moneda";
 import { getAllIva } from "../../../../apis/ApisServicioCliente/ivaApi";
@@ -22,10 +22,13 @@ import { getAllUnidadCDFI } from "../../../../apis/ApisServicioCliente/unidadcdf
 import {createMetodo, getAllMetodoData} from "../../../../apis/ApisServicioCliente/MetodoApi";
 import {createServicio} from "../../../../apis/ApisServicioCliente/ServiciosApi";
 import {getUserById}from "../../../../apis/ApisServicioCliente/UserApi";
+import {descifrarId,cifrarId  }  from "../../secretKey/SecretKey";
+import { validarAccesoPorOrganizacion } from "../../validacionAccesoPorOrganizacion";
 
 const RegistroCotizacion = () => {
   const navigate = useNavigate();
-  const { clienteId } = useParams();
+  const { clienteIds } = useParams();
+  
   const [form] = Form.useForm();
   const [conceptos, setConceptos] = useState([{ id: 1, servicio: "", cantidad: 1, precio: 0, precioFinal: 0, descripcion: "", orden: 1 }]);
   const [clienteData, setClienteData] = useState(null);
@@ -48,10 +51,41 @@ const RegistroCotizacion = () => {
   const [loadings, setLoadings] = useState(false);
   const organizationId = useMemo(() => parseInt(localStorage.getItem("organizacion_id"), 10), []);
   
+  const clienteId = descifrarId(clienteIds);
   
+  useEffect(() => {
+    const verificar = async () => {
+          const id=clienteId;
+          console.log(clienteId);
+          const acceso = await validarAccesoPorOrganizacion({
+            fetchFunction: getAllClienteData,
+            organizationId,
+            id,
+            campoId: "id",
+            navigate,
+            mensajeError: "Acceso denegado a esta precotización.",
+          });
+          console.log(acceso);
+          if (!acceso) return;
+        };
+    
+        verificar();
+      }, [organizationId, clienteId]);
+
   useEffect(() => {
     const fetchDatos = async () => {
       try {
+        // const clienteId =descifrarId(clienteIds);
+        // console.log(clienteId);
+        // const clientesResp = await getAllClienteData(organizationId);  // 👈 trae todos los clientes
+        
+        // const idsPermitidos = clientesResp.data.map((c) => String(c.id));  // 👈 importante: convertir a string para comparación con URL
+  
+        // if (idsPermitidos.length > 0 && !idsPermitidos.includes(clienteId)) {
+        //   message.error("No tienes autorización para editar este cliente.");
+        //   navigate("/no-autorizado");
+        //   return;
+        // }
         const [monedas, ivasResp, serviciosResp, claves, unidades, metodosResp] = await Promise.all([
           getAllTipoMoneda(),
           getAllIva(),
@@ -145,6 +179,7 @@ const RegistroCotizacion = () => {
 
   const handleSubmit = async () => {
     try {
+      setLoadings(true);
       await form.validateFields();
       const userId = localStorage.getItem("user_id");
       const userResp = await getUserById(userId);
@@ -163,6 +198,7 @@ const RegistroCotizacion = () => {
       };
       setCotizacionPreview(payload);
       setModales(prev => ({ ...prev, confirmacion: true }));
+      setLoadings(false);
     } catch {
       message.error("Completa todos los campos requeridos");
     }
@@ -186,7 +222,8 @@ const RegistroCotizacion = () => {
       }
 
       message.success("Cotización creada correctamente");
-      navigate(`/detalles_cotizaciones/${cotizacionId}`);
+      const cotizacionCfId=cifrarId (cotizacionId)
+      navigate(`/detalles_cotizaciones/${cotizacionCfId}`);
     } catch {
       message.error("Error al crear la cotización");
     } finally {
@@ -202,7 +239,7 @@ const RegistroCotizacion = () => {
     ivaPct: ivas.find(i => i.id === ivaSeleccionado)?.porcentaje,
   });
 
-  if (!clienteData || !empresaData) return <Spin spinning={true} tip="Cargando..." />;
+  if (!clienteData || !empresaData) return <div style={{ textAlign: "center", marginTop: "20%" }}><Spin size="large" spinning={true} tip="Cargando..." /></div>;
 
   return (
     <div className="cotizacion-container">
@@ -301,7 +338,7 @@ const RegistroCotizacion = () => {
 
 
 
-        <div style={{ marginTop: 24 }}>
+        <div style={{ marginTop: 24, textAlign: "center" }}>
           <Button type="default" danger onClick={() => navigate("/cliente")}>Cancelar</Button>
           <Button type="primary" onClick={handleSubmit} style={{ marginLeft: 12 }}>Crear</Button>
         </div>

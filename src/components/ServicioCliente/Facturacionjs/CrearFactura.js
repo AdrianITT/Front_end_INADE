@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from "react";
+import React, {useState, useEffect, useMemo} from "react";
 import moment from 'moment';
 import { Form, Input, Button, Select, Row, Col,DatePicker, message, Table } from "antd";
 import { useParams, useNavigate, data } from "react-router-dom";
@@ -10,15 +10,20 @@ import { getAllMetodopago } from "../../../apis/ApisServicioCliente/MetodoPagoAp
 import {getDataCotizacionBy} from "../../../apis/ApisServicioCliente/CotizacionApi";
 import {createServicioFactura } from "../../../apis/ApisServicioCliente/FacturaServicio";
 //import { getAllServicio } from "../../../apis/ApisServicioCliente/ServiciosApi";
-import { createFactura,getAllDataFacturaById } from "../../../apis/ApisServicioCliente/FacturaApi";
+import { createFactura,getAllDataFacturaById, getAllFacturaByOrganozacion } from "../../../apis/ApisServicioCliente/FacturaApi";
 import { getInfoSistema } from "../../../apis/ApisServicioCliente/InfoSistemaApi";
+import { cifrarId, descifrarId } from "../secretKey/SecretKey";
+import { validarAccesoPorOrganizacion } from "../validacionAccesoPorOrganizacion";
+import { getAllcotizacionesdata } from "../../../apis/ApisServicioCliente/CotizacionApi";
+
 
 const { TextArea } = Input;
 const { Option } = Select;
 
 const CrearFactura = () => {
     const [form] = Form.useForm();
-    const { id } = useParams();
+    const { ids } = useParams();
+    const id = descifrarId(ids);
     const [tipoCambioDolar, setTipoCambioDolar] = useState(0);
     const userOrganizationId = localStorage.getItem("organizacion_id"); // 
 
@@ -57,7 +62,26 @@ const CrearFactura = () => {
     const [descuentoGlobal, setDescuentoGlobal] = useState(0);
     const [totalServicios, setTotalServicios] = useState(0);
     //const factorConversion = esUSD ? tipoCambioDolar : 1;
+    // Obtener el ID de la organización una sola vez
+        const organizationId = useMemo(() => parseInt(localStorage.getItem("organizacion_id"), 10), []);
 
+        useEffect(() => {
+          const verificar = async () => {
+            console.log(id);
+            const acceso = await validarAccesoPorOrganizacion({
+              fetchFunction: getAllcotizacionesdata,
+              organizationId,
+              id,
+              campoId: "Cotización",
+              navigate,
+              mensajeError: "Acceso denegado a esta precotización.",
+            });
+            console.log(acceso);
+            if (!acceso) return;
+          };
+      
+          verificar();
+        }, [organizationId, id]);
     // Cargar datos al montar el componente
     useEffect(() => {
       obtenerUsoCfdi();
@@ -333,7 +357,7 @@ const CrearFactura = () => {
         )
       );
       message.success("Factura creada con éxito");
-      navigate(`/detallesfactura/${facturaId}`);
+      navigate(`/detallesfactura/${cifrarId(facturaId)}`);
     } catch (error) {
       console.error("Error al crear la factura:", error);
       message.error("Ocurrió un error al crear la factura.");

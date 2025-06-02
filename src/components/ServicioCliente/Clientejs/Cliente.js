@@ -385,7 +385,7 @@ const Cliente = () => {
                   <Input />
                 </Form.Item>
                 <Form.Item
-                  label="Numero externo:"
+                  label="Numero externo/interior:"
                   name="numeroCliente"
                   //rules={[{ required: true, message: 'Número requerido' }]}
                 >

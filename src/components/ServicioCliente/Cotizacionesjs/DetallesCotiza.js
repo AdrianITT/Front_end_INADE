@@ -1,5 +1,5 @@
 // src/pages/CotizacionDetalles.js
-import React, { useState} from "react";
+import React, { useState, useMemo, useEffect} from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Tabs, Typography, Spin, Menu, message, Modal } from "antd";
 import { MailTwoTone,
@@ -17,11 +17,15 @@ import { SendEmailModal, EditCotizacionModal, ResultModal,SuccessDuplicarModal,C
 import { updateCotizacion, getDuplicarCotizacion, deleteCotizacion} from "../../../apis/ApisServicioCliente/CotizacionApi";
 import {getUserById}from "../../../apis/ApisServicioCliente/UserApi";
 import "./cotizar.css";
+import { descifrarId, cifrarId } from "../secretKey/SecretKey";
+import { validarAccesoPorOrganizacion } from "../validacionAccesoPorOrganizacion";
+import { getAllcotizacionesdata } from "../../../apis/ApisServicioCliente/CotizacionApi";
 
 const { Title, Text } = Typography;
 
 const CotizacionDetalles = () => {
-  const { id } = useParams();
+  const { ids } = useParams();
+  const id=descifrarId(ids);
   const navigate = useNavigate();
   
   // Estados para modales y resultados
@@ -39,9 +43,8 @@ const CotizacionDetalles = () => {
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false)
-
-
-
+  const [loadings, setLoadings] = useState(false);
+  const organizationId = useMemo(() => parseInt(localStorage.getItem("organizacion_id"), 10), []);
   
   
   // Obtenemos datos de la cotización mediante nuestro custom hook
@@ -50,6 +53,24 @@ const CotizacionDetalles = () => {
   // Calcular si es USD y el factor de conversión
   const esUSD = tipoMoneda?.id === 2;
   const factorConversion = esUSD ? tipoCambioDolar : 1;
+
+  useEffect(() => {
+    const verificar = async () => {
+      console.log(id);
+      const acceso = await validarAccesoPorOrganizacion({
+        fetchFunction: getAllcotizacionesdata,
+        organizationId,
+        id,
+        campoId: "Cotización",
+        navigate,
+        mensajeError: "Acceso denegado a esta precotización.",
+      });
+      console.log(acceso);
+      if (!acceso) return;
+    };
+
+    verificar();
+  }, [organizationId, id]);
 
   const handleDownloadPDF = async () => {
     try {
@@ -62,10 +83,12 @@ const CotizacionDetalles = () => {
 
   const updateEstadoCotizacion = async (nuevoEstado) => {
     try {
+      setLoadings(true);
       const response = await updateCotizacion(id, { estado: nuevoEstado });
       setCotizacionInfo(response.data);
       refetch();
       message.success("Estado actualizado correctamente");
+      setLoadings(false);
     } catch (error) {
       console.error("Error al actualizar el estado de la cotización", error);
       message.error("Error al actualizar el estado de la cotización");
@@ -138,7 +161,7 @@ const CotizacionDetalles = () => {
       setIsDuplicarSuccessModalVisible(true);
       setTimeout(() => {
         setIsDuplicarSuccessModalVisible(false);
-        navigate(`/detalles_cotizaciones/${duplicatedId}`);
+        navigate(`/detalles_cotizaciones/${cifrarId(duplicatedId)}`);
       }, 3000);
     } catch (error) {
       console.error("Error al duplicar la cotización", error);
@@ -178,7 +201,7 @@ const CotizacionDetalles = () => {
       <Menu.Item key="1" icon={<MailTwoTone />} onClick={() => setIsModalVisible(true)}>
         Enviar por correo
       </Menu.Item>
-      <Menu.Item key="3" icon={<EditTwoTone />} onClick={() => navigate(`/EditarCotizacion/${id}`)}>
+      <Menu.Item key="3" icon={<EditTwoTone />} onClick={() => navigate(`/EditarCotizacion/${cifrarId(id)}`)}>
         Editar
       </Menu.Item>
       <Menu.Item key="4" icon={<CheckCircleTwoTone />} onClick={() => { updateEstadoCotizacion(2) }}>

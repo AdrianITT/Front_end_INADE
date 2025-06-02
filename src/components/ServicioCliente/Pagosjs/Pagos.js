@@ -3,6 +3,7 @@ import { Table, Button} from "antd";
 import { Link } from "react-router-dom";
 import { getAllComprobantepago, getComprobantepagoById } from "../../../apis/ApisServicioCliente/PagosApi";
 import { getAllComprobantepagoFactura } from "../../../apis/ApisServicioCliente/ComprobantePagoFacturaApi";
+import { cifrarId } from "../secretKey/SecretKey";
 
 // Diccionario de textos (plantillas) para facilitar cambios y traducciones
 const diccionario = {
@@ -93,7 +94,7 @@ const Pagos = () => {
       title: diccionario.columnas.acciones,
       key: "acciones",
       render: (text, record) => (
-        <Link to={`/detallesfactura/${record.factura}`}>
+        <Link to={`/detallesfactura/${cifrarId(record.factura)}`}>
           {diccionario.columnas.verDetalles}
         </Link>
       ),

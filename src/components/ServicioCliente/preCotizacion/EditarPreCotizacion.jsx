@@ -22,11 +22,14 @@ import { getAllDataPrecotizacion } from "../../../apis/ApisServicioCliente/Preco
 import {updateServicioPreCotizacionById, deleteServicioPreCotizacionById, createServicioPreCotizacion} from "../../../apis/ApisServicioCliente/ServiciosPrecotizacionApi";
 import { getAllTipoMoneda } from "../../../apis/ApisServicioCliente/Moneda";
 import { getAllIva } from "../../../apis/ApisServicioCliente/ivaApi";
-import { updatePrecotizacion  } from "../../../apis/ApisServicioCliente/PrecotizacionApi";
+import { updatePrecotizacion, getAllPrecotizacionByOrganizacion  } from "../../../apis/ApisServicioCliente/PrecotizacionApi";
+import { cifrarId, descifrarId } from "../secretKey/SecretKey";
+import { validarAccesoPorOrganizacion } from "../validacionAccesoPorOrganizacion";
 
 
 const EditarPreCotizacion = () => {
-  const { id } = useParams(); // ID de la precotización
+  const { ids } = useParams(); // ID de la precotización
+  const id=descifrarId(ids);
   const navigate = useNavigate();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
@@ -48,6 +51,23 @@ const EditarPreCotizacion = () => {
   const [serviciosEliminados, setServiciosEliminados] = useState([]);
   // Obtener el ID de la organización del usuario desde el local storage
   const organizationId = parseInt(localStorage.getItem("organizacion_id"), 10);
+  useEffect(() => {
+    const verificar = async () => {
+      console.log(id);
+      const acceso = await validarAccesoPorOrganizacion({
+        fetchFunction: getAllPrecotizacionByOrganizacion,
+        organizationId,
+        id,
+        campoId: "precotizacionId",
+        navigate,
+        mensajeError: "Acceso denegado a esta precotización.",
+      });
+      console.log(acceso);
+      if (!acceso) return;
+    };
+
+    verificar();
+  }, [organizationId, id]);
 
   useEffect(() => {
     const fetchPrecotizacionData = async () => {
@@ -212,7 +232,7 @@ const EditarPreCotizacion = () => {
       await Promise.allSettled([...updatePromises, ...createPromises, ...deletePromises]);
   
       message.success("Pre-cotización actualizada correctamente");
-      navigate(`/preCotizacionDetalles/${id}`);
+      navigate(`/preCotizacionDetalles/${cifrarId(id)}`);
     } catch (error) {
       console.error("Error al actualizar la precotización:", error);
       message.error("Ocurrió un error al actualizar la precotización");

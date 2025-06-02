@@ -10,12 +10,16 @@ import { getAllIva } from "../../../apis/ApisServicioCliente/ivaApi";
 import { getAllServicio, getServicioById,getServicioData } from "../../../apis/ApisServicioCliente/ServiciosApi";
 import { getInfoSistema } from "../../../apis/ApisServicioCliente/InfoSistemaApi";
 import {getAllMetodoData} from "../../../apis/ApisServicioCliente/MetodoApi";
+import { descifrarId, cifrarId } from "../secretKey/SecretKey";
+import { validarAccesoPorOrganizacion } from "../validacionAccesoPorOrganizacion";
+import { getAllcotizacionesdata } from "../../../apis/ApisServicioCliente/CotizacionApi";
 
 const { TextArea } = Input;
 
 const EditarCotizacion = () => {
      const navigate = useNavigate();
-     const { id } = useParams(); // Obtener el ID de la cotización desde la URL
+     const { ids } = useParams(); // Obtener el ID de la cotización desde la URL
+     const id=descifrarId(ids);
      const [contadorId, setContadorId] = useState(1);
      const [cotizacionData, setCotizacionData] = useState(null);
      const [fechaSolicitada, setFechaSolicitada] = useState(null);
@@ -32,6 +36,23 @@ const EditarCotizacion = () => {
      const [serviciosRelacionados, setServiciosRelacionados] = useState([]);
      const [metodosData, setMetodosData] = useState([]);
      const organizationId = useMemo(() => parseInt(localStorage.getItem("organizacion_id"), 10), []);
+     useEffect(() => {
+      const verificar = async () => {
+        console.log(id);
+        const acceso = await validarAccesoPorOrganizacion({
+          fetchFunction: getAllcotizacionesdata ,
+          organizationId,
+          id,
+          campoId: "Cotización",
+          navigate,
+          mensajeError: "Acceso denegado a esta precotización.",
+        });
+        console.log(acceso);
+        if (!acceso) return;
+      };
+  
+      verificar();
+    }, [organizationId, id]);
    
      // Obtener tipo de cambio del dólar
      useEffect(() => {
@@ -634,8 +655,8 @@ const EditarCotizacion = () => {
          <Modal
            title="Información"
            open={isModalVisible}
-           onOk={() => navigate(`/detalles_cotizaciones/${id}/`)}
-           onCancel={() => navigate(`/detalles_cotizaciones/${id}/`)}
+           onOk={() => navigate(`/detalles_cotizaciones/${cifrarId(id)}/`)}
+           onCancel={() => navigate(`/detalles_cotizaciones/${cifrarId(id)}/`)}
            okText="Cerrar"
          >
            <Result status="success" title="¡Se actualizó exitosamente!" />

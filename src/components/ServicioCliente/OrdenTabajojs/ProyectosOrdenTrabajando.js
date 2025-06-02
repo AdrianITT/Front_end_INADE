@@ -7,6 +7,7 @@ import { getAllCotizacion } from "../../../apis/ApisServicioCliente/CotizacionAp
 import {getAllCliente} from "../../../apis/ApisServicioCliente/ClienteApi";
 import {getAllEmpresas } from "../../../apis/ApisServicioCliente/EmpresaApi";
 import { getAllOrdenesTrabajo } from "../../../apis/ApisServicioCliente/OrdenTrabajoApi";
+import { cifrarId } from "../secretKey/SecretKey";
 
 const Proyectos = () => {
   //const [empresas, setEmpresas] = useState([]);
@@ -122,7 +123,7 @@ const Proyectos = () => {
         // Si hay al menos 1 orden
         return ordenesTrabajo.map((orden) => (
           <div key={orden.id}>
-            <Link to={`/DetalleOrdenTrabajo/${orden.id}`}>
+            <Link to={`/DetalleOrdenTrabajo/${cifrarId(orden.id)}`}>
               • <span style={{ color: "green" }}>
                 ID:{orden.numero} Estado:{orden.estado}
               </span>
@@ -135,7 +136,7 @@ const Proyectos = () => {
       title: "Opciones",
       key: "opciones",
       render: (_, record) =>
-       (<Link to={`/GenerarOrdenTrabajo/${record.key}`}>
+       (<Link to={`/GenerarOrdenTrabajo/${cifrarId(record.key)}`}>
         <Button type="primary" shape="circle" icon="+" style={{ backgroundColor: "#1890ff" }} /></Link>
       ),
     },

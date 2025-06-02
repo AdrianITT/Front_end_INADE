@@ -8,10 +8,13 @@ import { getAllCliente } from '../../../apis/ApisServicioCliente/ClienteApi';
 import { getAllCotizacion, getCotizacionById} from '../../../apis/ApisServicioCliente/CotizacionApi';
 import { getAllCotizacionServicio } from '../../../apis/ApisServicioCliente/CotizacionServicioApi';
 import { getAllOrdenesTrabajo } from '../../../apis/ApisServicioCliente/OrdenTrabajoApi';
-import { createComprobantepago, dataComprobantePago, dataComprobantePagoFactura } from '../../../apis/ApisServicioCliente/PagosApi';
+import { createComprobantepago, dataComprobantePago, dataComprobantePagoFactura, getComprobantepagoById } from '../../../apis/ApisServicioCliente/PagosApi';
 import { createComprobantepagoFactura, getAllComprobantepagoFactura } from '../../../apis/ApisServicioCliente/ComprobantePagoFacturaApi';
 import {getAllMetodopago} from '../../../apis/ApisServicioCliente/MetodoPagoApi';
 import { getIvaById } from '../../../apis/ApisServicioCliente/ivaApi';
+import { getAllFacturaByOrganozacion } from "../../../apis/ApisServicioCliente/FacturaApi";
+import { cifrarId, descifrarId } from '../secretKey/SecretKey';
+import { validarAccesoPorOrganizacion } from '../validacionAccesoPorOrganizacion';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -19,7 +22,8 @@ const { TextArea } = Input;
 const CrearPagos = () => {
   const navigate = useNavigate();
   const [cotizacionId, setcotizacionId]=useState();
-  const { id } = useParams();
+  const { ids } = useParams();
+  const id= descifrarId(ids);
   // Estado para clientes (API)w
   const [clientesData, setClientesData] = useState([]);
   const [loadingClientes, setLoadingClientes] = useState(false);
@@ -51,6 +55,43 @@ const [fechaSolicitada, setFechaSolicitada] = useState(null);
 const [formaPagoGlobal, setFormaPagoGlobal] = useState('');
 //const [metodoPagoGlobal, setMetodoPagoGlobal] = useState(null);
 const [comprobantesData, setComprobantesData] = useState([]);
+
+useEffect(() => {
+  if (!id) return;  // ⛔ Evita continuar si no hay ID válido
+
+  const verificar = async () => {
+    console.log(id);
+    const acceso = await validarAccesoPorOrganizacion({
+      fetchFunction: getAllFacturaByOrganozacion,
+      organizationId,
+      id,
+      campoId: "id",
+      navigate,
+      mensajeError: "Acceso denegado a esta precotización.",
+    });
+    console.log("acceso", acceso);
+    if (!acceso) return;
+  };
+
+  verificar();
+}, [organizationId, id]);
+
+
+// const fetchValue = async () => {
+//   console.log("organizationId", organizationId);
+
+//   const FacturasInicial = await getComprobantepagoById(organizationId);
+//   console.log("FacturasInicial", FacturasInicial);
+
+//   const idsPermitidos = FacturasInicial.data.map((c) => String(c.id));
+//   console.log("idsPermitidos", idsPermitidos);
+
+//   if (id && idsPermitidos.length > 0 && !idsPermitidos.includes(id)) {
+//     message.error("No tienes autorización para editar este cliente.");
+//     navigate("/no-autorizado");
+//     return;
+//   }
+// };
 
 
   // Estado local para el formulario de facturas
@@ -109,6 +150,7 @@ const [comprobantesData, setComprobantesData] = useState([]);
         setLoadingMetodos(false);
       }
     };
+    // fetchValue();
     fetchMetodosPago();
     fetchClientes();
   }, []);

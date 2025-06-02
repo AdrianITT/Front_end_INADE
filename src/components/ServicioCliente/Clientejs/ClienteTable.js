@@ -4,6 +4,8 @@ import { Table, Button } from "antd";
 import { Link } from "react-router-dom";
 import { EditOutlined, CloseOutlined } from "@ant-design/icons";
 
+import {cifrarId}  from "../secretKey/SecretKey";
+
 // Recibe 'clientes' y 'showAlertModal' como props
 const ClienteTable = ({ clientes, showAlertModal }) => {
 
@@ -42,10 +44,10 @@ const ClienteTable = ({ clientes, showAlertModal }) => {
       key: "action",
       render: (_, record) => (
         <div className="action-buttons">
-          <Link to={`/RegistroCotizacion/${record.key}`}>
+          <Link to={`/RegistroCotizacion/${cifrarId(record.key)}`}>
             <Button className="action-button-cotizar">Cotizar</Button>
           </Link>
-          <Link to={`/EditarCliente/${record.key}`}>
+          <Link to={`/EditarCliente/${cifrarId(record.key)}`}>
             <Button className="action-button-edit">
               <EditOutlined />
             </Button>

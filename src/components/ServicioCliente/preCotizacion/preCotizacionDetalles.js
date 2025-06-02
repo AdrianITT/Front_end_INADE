@@ -4,12 +4,16 @@ import { MailTwoTone, CheckCircleTwoTone, FilePdfTwoTone, FormOutlined, DeleteOu
 import { Card, Table, Row, Col, Typography, Spin, message, Menu,Dropdown,Button, Form, Checkbox, Input, Modal, Result, Popconfirm } from "antd";
 import { getAllPrecotizacionCreate,updatePrecotizacion, deletePrecotizar} from "../../../apis/ApisServicioCliente/PrecotizacionApi";
 import { Api_Host } from "../../../apis/api";
-import {getAllDataPrecotizacion} from "../../../apis/ApisServicioCliente/PrecotizacionApi";
+import {getAllDataPrecotizacion, getAllPrecotizacionByOrganizacion} from "../../../apis/ApisServicioCliente/PrecotizacionApi";
+import {validarAccesoPorOrganizacion} from "../validacionAccesoPorOrganizacion";
+import { getAllcotizacionesdata } from "../../../apis/ApisServicioCliente/CotizacionApi";
+import { cifrarId, descifrarId } from "../secretKey/SecretKey";
 
 const { Title, Text } = Typography;
 
 const PreCotizacionDetalles = () => {
-  const { id } = useParams(); // Obtener el ID desde la URL
+  const { ids } = useParams(); // Obtener el ID desde la URL
+  const id= descifrarId(ids);
   const [loading, setLoading] = useState(true);
   const [cotizacionInfo, setCotizacionInfo] = useState(null);
   const [servicios, setServicios] = useState([]);
@@ -27,6 +31,28 @@ const PreCotizacionDetalles = () => {
   const [isSuccessModalVisible, setIsSuccessModalVisible] = useState(false);
   const [numeros,setaNumeros]=useState([]);
   const navigate=useNavigate();
+  // Obtener el ID de la organización una sola vez
+  const organizationId = useMemo(() => parseInt(localStorage.getItem("organizacion_id"), 10), []);
+
+  useEffect(() => {
+    const verificar = async () => {
+    
+      const acceso = await validarAccesoPorOrganizacion({
+        fetchFunction: getAllPrecotizacionByOrganizacion ,
+        organizationId,
+        id,
+        campoId: "precotizacionId",
+        navigate,
+        mensajeError: "Acceso denegado a esta precotización.",
+      });
+      console.log(acceso);
+      if (!acceso) return;
+      // continuar...
+    };
+
+    verificar();
+  }, [organizationId, id]);
+  
 
   useEffect(() => {
     const fetchData = async () => {
@@ -46,7 +72,7 @@ const PreCotizacionDetalles = () => {
         setLoading(false);
       }
     };
-  
+
     fetchData();
   }, [id]);
   
@@ -78,8 +104,7 @@ const PreCotizacionDetalles = () => {
   ];
   
   
-  // Obtener el ID de la organización una sola vez
-     const organizationId = useMemo(() => parseInt(localStorage.getItem("organizacion_id"), 10), []);
+
 
   //DESCARGA DEL PDF
     const handleDownloadPDF = async () => {
@@ -257,7 +282,7 @@ const PreCotizacionDetalles = () => {
             Actualizar estado
           </Menu.Item>
           <Menu.Item key="8" icon={<EditTwoTone /> }>
-          <Link to={`/editarPreCotizacion/${id}`}>
+          <Link to={`/editarPreCotizacion/${cifrarId(id)}`}>
           Editar Pre-cotización</Link>
           </Menu.Item>
           </>

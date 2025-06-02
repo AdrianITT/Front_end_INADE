@@ -1,13 +1,17 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { Table, Button, Card, Dropdown, Menu, message, Modal } from "antd";
 import { RightCircleTwoTone, FileTextTwoTone, FilePdfTwoTone, MailTwoTone, DeleteOutlined, EditTwoTone } from "@ant-design/icons";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import "./cssOrdenTrabajo/DetallesOrdenTrabajo.css"; // Asegúrate de importar el archivo CSS
-import { getOrdenTrabajoById, deleteOrdenTrabajo, getDetalleOrdenTrabajoDataById } from "../../../apis/ApisServicioCliente/OrdenTrabajoApi";
+import { getOrdenTrabajoById, deleteOrdenTrabajo, getDetalleOrdenTrabajoDataById, getAllOrdenesTrabajoData } from "../../../apis/ApisServicioCliente/OrdenTrabajoApi";
 import { Api_Host } from "../../../apis/api";
+import { cifrarId, descifrarId } from "../secretKey/SecretKey";
+import { validarAccesoPorOrganizacion } from "../validacionAccesoPorOrganizacion";
+
 
 const DetalleOrdenTrabajo = () => {
-  const { orderId } = useParams();
+  const { orderIds } = useParams();
+  const orderId=descifrarId(orderIds);
   const navigate = useNavigate();
 
   // Estados para almacenar cada parte de la información
@@ -24,7 +28,26 @@ const DetalleOrdenTrabajo = () => {
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
   const [IdCotizacion, setIdCotizacion] = useState([]); // Datos de los servicios (tabla "servicio")
 
+  // Obtener el ID de la organización una sola vez
+      const organizationId = useMemo(() => parseInt(localStorage.getItem("organizacion_id"), 10), []);
 
+      useEffect(() => {
+        const verificar = async () => {
+          console.log(orderId);
+          const acceso = await validarAccesoPorOrganizacion({
+            fetchFunction: getAllOrdenesTrabajoData,
+            organizationId,
+            orderId,
+            campoId: "id",
+            navigate,
+            mensajeError: "Acceso denegado a esta precotización.",
+          });
+          console.log(acceso);
+          if (!acceso) return;
+        };
+    
+        verificar();
+      }, [organizationId, orderId]);
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -58,7 +81,6 @@ const DetalleOrdenTrabajo = () => {
         }
       }
     };
-  
     fetchData();
   }, [orderId]);
   
@@ -135,12 +157,12 @@ const DetalleOrdenTrabajo = () => {
   const menu = (
     <Menu>
       <Menu.Item key="1" icon={<RightCircleTwoTone />}>
-        <Link to={`/detalles_cotizaciones/${IdCotizacion.id}`}>Ir a cotización</Link>
+        <Link to={`/detalles_cotizaciones/${cifrarId(IdCotizacion.id)}`}>Ir a cotización</Link>
       </Menu.Item>
 
       
       <Menu.Item key="3" icon={<EditTwoTone />} >
-      <Link to={`/editarOrdenTrabajo/${orderId}`}>Editar OT</Link>
+      <Link to={`/editarOrdenTrabajo/${cifrarId(orderId)}`}>Editar OT</Link>
       </Menu.Item>
 
       <Menu.Item key="4" icon={<FilePdfTwoTone />} onClick={handleDownloadPDF}>
