@@ -179,7 +179,7 @@ const DetalleOrdenTrabajo = () => {
       </Menu.Item>
 
       <Menu.Item key="4" icon={<FilePdfTwoTone />} onClick={handleDownloadPDF}>
-        Ver PDF
+      Descargar PDF
       </Menu.Item>
 
       {/* Nueva opción para eliminar la orden de trabajo */}
