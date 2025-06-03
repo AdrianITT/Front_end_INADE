@@ -231,7 +231,7 @@ const CotizacionDetalles = () => {
         Actualizar estado
       </Menu.Item>
       <Menu.Item key="5" icon={<FilePdfTwoTone />} onClick={handleDownloadPDF}>
-        Ver PDF
+        Descargar PDF
       </Menu.Item>
       <Menu.Item key="6" icon={<CopyTwoTone />} onClick={() => setIsDuplicarModalVisible(true)}>
         Duplicar

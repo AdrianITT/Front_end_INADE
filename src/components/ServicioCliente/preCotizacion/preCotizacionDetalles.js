@@ -102,7 +102,19 @@ const PreCotizacionDetalles = () => {
       render: (_, record) => `${(record.precio * record.cantidad).toFixed(3)}`
     },
   ];
+
+  useEffect(() => {
+    if (loading) {
+      document.body.style.cursor = "wait";
+    } else {
+      document.body.style.cursor = "default";
+    }
   
+    // Limpieza al desmontar
+    return () => {
+      document.body.style.cursor = "default";
+    };
+  }, [loading]);
   
 
 
@@ -157,52 +169,50 @@ const PreCotizacionDetalles = () => {
     
     const handleConfirmChange = async () => {
       try {
-        //console.log("Actualizando solo el estado...");
-        /*getAllPrecotizacionCreate(id);
-        const response = await updatePrecotizacion(id, {
-          estado: 7, // Solo se envía el campo necesario
-
-        });*/
-
-        if (cotizacionInfo.estado.id==10){
-          getAllPrecotizacionCreate(id);
-        const response = await updatePrecotizacion(id, {
-          estado: 9, // Solo se envía el campo necesario
-
-        });
+        setLoading(true);
+        // Espera de 5 segundos
+        await new Promise((resolve) => setTimeout(resolve, 5000));
+    
+        if (cotizacionInfo.estado.id == 10) {
+          await getAllPrecotizacionCreate(id);
+          await updatePrecotizacion(id, {
+            estado: 9,
+          });
+    
           setCotizacionInfo((prev) => ({
             ...prev,
             estado: 9,
-  
           }));
-
-        }else{
-          getAllPrecotizacionCreate(id);
-        const response = await updatePrecotizacion(id, {
-          estado: 7, // Solo se envía el campo necesario
-
-        });
-
+        } else {
+          await getAllPrecotizacionCreate(id);
+          await updatePrecotizacion(id, {
+            estado: 7,
+          });
+    
           setCotizacionInfo((prev) => ({
             ...prev,
             estado: 7,
-  
           }));
         }
     
-    
         setIsConfirmModalVisible(false);
         setIsSuccessModalVisible(true);
+    
         setTimeout(() => {
           setIsSuccessModalVisible(false);
           navigate("/cotizar");
         }, 1000);
+    
         message.success("Estado actualizado correctamente.");
       } catch (error) {
         console.error("Error al actualizar el estado:", error);
         message.error("No se pudo actualizar el estado.");
+      }finally{
+        setLoading(false);
+        
       }
     };
+    
     
 
    const showEmailModal = () => {
@@ -308,7 +318,7 @@ const PreCotizacionDetalles = () => {
         </Menu.Item>)}
     
         <Menu.Item key="5" icon={<FilePdfTwoTone />} onClick={handleDownloadPDF} loading={loading} >
-          Ver PDF
+          Descargar PDF
         </Menu.Item>
         <Menu.Item key="6" icon={<DeleteOutlined style={{ color: 'red' }}/>}  >
           
@@ -414,21 +424,27 @@ const PreCotizacionDetalles = () => {
       </Modal>
 
       {/* Modal de confirmación para actualizar el estado */}
+      <div style={{ cursor: loading ? "wait" : "default" }}>
       <Modal
         title="Confirmar actualización"
         open={isConfirmModalVisible}
         onCancel={() => setIsConfirmModalVisible(false)}
         footer={[
-          <Button key="cancel" onClick={() => setIsConfirmModalVisible(false)}>
+          <Button key="cancel" onClick={() => setIsConfirmModalVisible(false)}
+          disabled={loading}
+          loading={loading}>
             Cancelar
           </Button>,
-          <Button key="confirm" type="primary" onClick={handleConfirmChange}>
+          <Button key="confirm" type="primary" onClick={handleConfirmChange}
+          disabled={loading}
+          loading={loading}>
             Sí, actualizar estado
           </Button>,
         ]}
       >
+        
         <p>¿Estás seguro de que deseas actualizar el estado de la cotización?</p>
-      </Modal>
+      </Modal></div>
 
       {/* Modal de Éxito */}
       <Modal
