@@ -2,6 +2,7 @@ import React from "react";
 import { Card, Row, Col, Typography, Button, Dropdown } from "antd";
 import { Link } from "react-router-dom";
 import { FileAddOutlined, FilePdfOutlined } from "@ant-design/icons";
+import { cifrarId } from "../../secretKey/SecretKey";
 
 const { Text } = Typography;
 
@@ -60,7 +61,7 @@ const CotizacionInfoCard = ({
       <Col span={8}>
         <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
           {cotizacionInfo?.estado?.id > 1 && (
-            <Link to={`/GenerarOrdenTrabajo/${cotizacionInfo.idCotizacion}`}>
+            <Link to={`/GenerarOrdenTrabajo/${cifrarId(cotizacionInfo.idCotizacion)}`}>
               <Button
                 type="primary"
                 
@@ -71,7 +72,7 @@ const CotizacionInfoCard = ({
           )}
           
           {cotizacionInfo?.estado?.id > 1 && (
-            <Link to={`/CrearFactura/${cotizacionInfo.idCotizacion}`}>
+            <Link to={`/CrearFactura/${cifrarId(cotizacionInfo.idCotizacion)}`}>
               <Button
                 type="primary"
                 

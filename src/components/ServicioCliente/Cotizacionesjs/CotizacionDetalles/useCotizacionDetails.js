@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { getDetallecotizaciondataById, getCotizacionById, getAllCotizacionByCliente } from "../../../../apis/ApisServicioCliente/CotizacionApi";
+import { getDetallecotizaciondataById, getCotizacionById, getAllCotizacionByCliente, getAllcotizacionesdata } from "../../../../apis/ApisServicioCliente/CotizacionApi";
 import { useNavigate } from "react-router-dom";
 
 export const useCotizacionDetails = (id) => {
@@ -14,6 +14,12 @@ export const useCotizacionDetails = (id) => {
   const fetchData = async () => {
     setLoading(true);
     try {
+      const clientesResp = await getAllcotizacionesdata(organizationId);  // 👈 trae todos los clientes
+      const idsPermitidos = clientesResp.data.map((c) => String(c.Cotización));  // 👈 importante: convertir a string para comparación con URL
+
+      if (idsPermitidos.length > 0 && !idsPermitidos.includes(id)) {
+        navigate("/no-autorizado");
+      }
       const response = await getDetallecotizaciondataById(id);
       const data = response.data;
         //console.log("data: ", data);

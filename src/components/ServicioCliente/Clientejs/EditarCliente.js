@@ -1,13 +1,15 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { Form, Input, Button, Row, Col, Select, message, Modal, Result, Divider,Alert } from "antd";
 import { useNavigate, useParams } from "react-router-dom"; // Importa useNavigate
 import "./Cliente.css";
-import { updateCliente, getClienteById, getClienteDataById } from "../../../apis/ApisServicioCliente/ClienteApi";
+import { updateCliente, getClienteById, getClienteDataById, getAllClienteData } from "../../../apis/ApisServicioCliente/ClienteApi";
 import { getAllTitulo } from '../../../apis/ApisServicioCliente/TituloApi';
 import { getAllUsoCDFI } from '../../../apis/ApisServicioCliente/UsocfdiApi'; // Asegúrate de que este API esté implementada correctamente
+import {descifrarId}  from "../secretKey/SecretKey";
+import { validarAccesoPorOrganizacion } from "../validacionAccesoPorOrganizacion";
 
 const EditarCliente = () => {
-  const { clienteId } = useParams();  // Obtén el id desde la URL
+  const { clienteIds } = useParams();  // Obtén el id desde la URL
   const navigate = useNavigate(); // Hook para manejar navegación
   const [clienteData, setClienteData] = useState(null);  // Guardar los datos del cliente
   const [loading, setLoading] = useState(true);  // Estado de carga
@@ -15,26 +17,58 @@ const EditarCliente = () => {
   const [titulos, setTitulos] = useState([]);
   const [usoCfdiOptions, setUsoCfdiOptions] = useState([]);  // Opciones de UsoCfdi
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false); // Estado del modal de éxito
+  const organizationId = useMemo(() => parseInt(localStorage.getItem("organizacion_id"), 10), []);
+  const clienteId =descifrarId(clienteIds);
+  const id=clienteId;
+
+  useEffect(() => {
+      const verificar = async () => {
+        console.log("hola");
+        console.log(id);
+        const acceso = await validarAccesoPorOrganizacion({
+          fetchFunction: getAllClienteData,
+          organizationId,
+          id,
+          campoId: "id",
+          navigate,
+          mensajeError: "Acceso denegado a esta precotización.",
+        });
+        console.log(acceso);
+        if (!acceso) return;
+        // continuar...
+      };
+  
+      verificar();
+    }, [organizationId, clienteId]);
 
   // Obtén los datos del cliente cuando el componente se monta
   useEffect(() => {
     const fetchCliente = async () => {
       try {
+        // const clientesResp = await getAllClienteData(organizationId);  // 👈 trae todos los clientes
+
+        // console.log("clientesResp",clientesResp);
+        
+        // const idsPermitidos = clientesResp.data.map((c) => String(c.id));  // 👈 importante: convertir a string para comparación con URL
+        // console.log("idsPermitidos",idsPermitidos);
+  
+        // if (idsPermitidos.length > 0 && !idsPermitidos.includes(clienteId)) {
+        //   message.error("No tienes autorización para editar este cliente.");
+        //   navigate("/no-autorizado");
+        //   return;
+        // }
+  
+        // ✅ Ya verificado, ahora sí obtenemos y mostramos los datos del cliente
         const response = await getClienteById(clienteId);
         const cliente = response.data;
         setClienteData(cliente);
-        form.setFieldsValue(cliente); // ← Establece datos básicos
+        form.setFieldsValue(cliente);
   
-        // Ahora intenta obtener dirección
         const direccionRes = await getClienteDataById(clienteId);
-        //console.log("Dirección del cliente:", direccionRes.data);
         const direccion = direccionRes.data;
-        //console.log("Dirección del cliente1:", direccion.cliente.empresa.calle);
-        // Solo si el cliente NO tiene dirección, usamos la de la empresa
+  
         const direccionActual = form.getFieldsValue(["calleCliente", "numeroCliente"]);
-        //console.log("Dirección actual:", direccionActual);
         const sinDireccion = !direccionActual.calleCliente || !direccionActual.numeroCliente;
-        //console.log("Sin dirección:", sinDireccion);
   
         if (sinDireccion && direccion?.cliente?.empresa) {
           form.setFieldsValue({
@@ -48,38 +82,38 @@ const EditarCliente = () => {
         }
   
       } catch (error) {
-        console.error("Error al obtener los datos del cliente o la dirección:", error);
-        message.error("Error al cargar los datos del cliente");
+        console.error("Error al validar o cargar cliente:", error);
+        message.error("Error al validar el cliente");
+        navigate("/no-autorizado");  // Redirige también si ocurre un error grave
       } finally {
         setLoading(false);
       }
     };
-    
-
+  
     const fetchTitulos = async () => {
       try {
         const response = await getAllTitulo();
-        setTitulos(response.data);  // Guardar los títulos en el estado
+        setTitulos(response.data);
       } catch (error) {
-        console.error('Error al cargar los títulos:', error);
+        console.error("Error al cargar los títulos:", error);
       }
     };
-
+  
     const fetchUsoCfdi = async () => {
       try {
-        const response = await getAllUsoCDFI(); // Obtén las opciones de UsoCfdi desde la API
-        setUsoCfdiOptions(response.data); // Almacena las opciones
+        const response = await getAllUsoCDFI();
+        setUsoCfdiOptions(response.data);
       } catch (error) {
-        console.error('Error al cargar los Usos de CFDI:', error);
+        console.error("Error al cargar los Usos de CFDI:", error);
         message.error("Error al cargar los Usos de CFDI");
       }
     };
-
-    fetchCliente();
-
+  
+    fetchCliente();      // 🔐 ahora con validación
     fetchTitulos();
     fetchUsoCfdi();
   }, [clienteId]);
+  
 
   useEffect(() => {
     if (clienteData) {
@@ -225,7 +259,7 @@ const EditarCliente = () => {
                   <Input />
                 </Form.Item>
                 <Form.Item
-                  label="Numero externo:"
+                  label="Numero externo/interior:"
                   name="numeroCliente"
                   rules={[{ required: true, message: 'Número requerido' }]}
                 >

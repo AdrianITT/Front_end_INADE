@@ -139,10 +139,9 @@ const EditEmpresaModal = ({ visible, onCancel, onEdit, regimenFiscal, empresa,us
               <Input />
             </Form.Item>
             <Form.Item
-              label="Numero:"
+              label="Numero Exterios/Interior:"
               name="numeroExterior"
               rules={[{ required: true, message: 'Número requerido' },
-                { pattern: /^\d+$/, message: 'Sólo dígitos permitidos' },
               ]}
             >
               <Input />

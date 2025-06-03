@@ -3,7 +3,7 @@ import { Card, Row, Col, Button, Table, Tabs, Dropdown, Menu, Modal, Select, Inp
 import { useParams, Link ,useNavigate } from "react-router-dom";
 import { Text} from '@react-pdf/renderer';
 import{FileTextTwoTone,MailTwoTone,FilePdfTwoTone,CloseCircleTwoTone, FileAddTwoTone} from "@ant-design/icons";
-import { createPDFfactura, deleteFactura, getAllDataFactura, getAllDataPreFactura } from "../../../apis/ApisServicioCliente/FacturaApi";
+import { createPDFfactura, deleteFactura, getAllDataFactura, getAllDataPreFactura, getAllFacturaByOrganozacion } from "../../../apis/ApisServicioCliente/FacturaApi";
 import { getEmpresaById } from "../../../apis/ApisServicioCliente/EmpresaApi";
 import { Api_Host } from "../../../apis/api";
 import PaymentCards from "../Facturacionjs/FacturaPagos"
@@ -18,13 +18,16 @@ import { PDFDownloadLink} from '@react-pdf/renderer';
 import ComprobantePago from "./ModalComprobantePago";
 import "./estiloDetalleFactura.css";
 import {NumerosALetras} from "numero-a-letras";
+import { cifrarId, descifrarId } from "../secretKey/SecretKey";
+import { validarAccesoPorOrganizacion } from "../validacionAccesoPorOrganizacion";
 //import MenuItem from "antd/es/menu/MenuItem";
 
 
 const { Option } = Select;
 
 const DetallesFactura = () => {
-  const { id } = useParams();
+  const { ids } = useParams();
+  const id=descifrarId(ids);
   const navigate = useNavigate();
   const [metodosPago, setMetodosPago] = useState([]);
   const [formasPago, setFormasPago] = useState([]);
@@ -68,6 +71,24 @@ const DetallesFactura = () => {
   const esUSD = moneda.codigo === "USD";
   const factorConversion = esUSD ? tipoCambioDolar : 1;
 
+  useEffect(() => {
+    const verificar = async () => {
+      console.log(id);
+      const acceso = await validarAccesoPorOrganizacion({
+        fetchFunction: getAllFacturaByOrganozacion,
+        organizationId,
+        id,
+        campoId: "id",
+        navigate,
+        mensajeError: "Acceso denegado a esta precotización.",
+      });
+      console.log(acceso);
+      if (!acceso) return;
+    };
+
+    verificar();
+  }, [organizationId, id]);
+  
   const columnsConceptos = [
     {
       title: "Servicio",
@@ -116,8 +137,26 @@ const DetallesFactura = () => {
       console.error("Error al refrescar los pagos:", error);
     }
   };
+
+  const fetchValue=async()=>{
+      console.log("organizationId",organizationId);
+      const FacturasInicial = await getAllFacturaByOrganozacion(organizationId);  // 👈 trae todos los clientes
+      
+      console.log("FacturasInicial",FacturasInicial);
+      
+      const idsPermitidos = FacturasInicial.data.map((c) => String(c.id));  // 👈 importante: convertir a string para comparación con URL
+      console.log("idsPermitidos",idsPermitidos);
+  
+      if (idsPermitidos.length > 0 && !idsPermitidos.includes(id)) {
+        message.error("No tienes autorización para editar este cliente.");
+        navigate("/no-autorizado");
+        return;
+      }
+        
+    }
   
   useEffect(() => {
+    fetchValue();
     refreshPagos();
   }, [id]);
   const hasPagos = facturaPagos !== null;
@@ -194,7 +233,7 @@ const DetallesFactura = () => {
         setLoading(true);
         const response = await getAllDataFactura(id);
         const data = response.data;
-        //console.log("Datos de la factura completa:", data);
+        console.log("Datos de la factura completa:", data);
         // Seteamos directamente los datos
         setFactura(data); // puedes eliminar este estado si solo usas los campos individuales
         setMoneda({ codigo: data.monedaCodigo.includes("USD") ? "USD" : "MXN", descripcion: data.monedaCodigo});
@@ -235,7 +274,7 @@ const DetallesFactura = () => {
       const organizacion = await getOrganizacionById(organizationId);
       //console.log("Datos de la organización:", NumerosALetras(51));
       //console.log("Datos de la organización:", organizacion.data);
-      //console.log("Datos de la factura:", factura.data);
+      console.log("Datos de la factura:", factura.data);
       setDataFactura(factura.data);
       setDataLogo(organizacion.data);
       const total = parseFloat(factura.data.valores.totalFinal);
@@ -519,7 +558,7 @@ const montoRestante =hasPagos
   return (
     <Spin spinning={loading}>
     <div style={{ padding: "20px" }}>
-      <h2><center>Factura {factura.numerofactura} - {factura.numerocotizacion} </center></h2>
+      <h2><center>Factura {factura.numerofactura} - Cotización {factura.numerocotizacion} </center></h2>
       <Tabs defaultActiveKey="1">
         <Tabs.TabPane tab="Información" key="1">
           <Row gutter={16}>
@@ -529,7 +568,7 @@ const montoRestante =hasPagos
                   <Col span={12}>
                     <>
                     <Descriptions column={1}>
-                      <Descriptions label="Folio">{id}</Descriptions>
+                      <Descriptions label="Folio">{factura.numerofactura}</Descriptions>
                       <Descriptions.Item label="Fecha">
                         {factura.fecha ? new Date(factura.fecha).toLocaleString("es-MX", {
                           day: "2-digit",
@@ -664,7 +703,7 @@ const montoRestante =hasPagos
           <p>Historial de la factura</p> 
           {(!hasPagos || (hasPagos && montoRestante > 0)) && (
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px'}}>
-              <Link to={`/CrearPagos/${id}`}>
+              <Link to={`/CrearPagos/${cifrarId(id)}`}>
                 <Button
                   type="primary"
                   style={{

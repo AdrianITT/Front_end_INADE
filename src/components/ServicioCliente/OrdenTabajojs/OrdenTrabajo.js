@@ -3,6 +3,7 @@ import { Table, Input, Button, Spin } from "antd";
 import { Link } from "react-router-dom";
 import "./cssOrdenTrabajo/Generarorden.css";
 import { getAllOrdenesTrabajoData } from "../../../apis/ApisServicioCliente/OrdenTrabajoApi";
+import { cifrarId } from "../secretKey/SecretKey";
 
 const LOCAL_STORAGE_KEY = "ordenes_trabajo_state";
 const TIEMPO_EXPIRACION_MS = 1 * 60 * 1000; // 1 minutos
@@ -173,7 +174,7 @@ const Generarorden = () => {
         title: "Opciones",
         key: "opciones",
         render: (_, record) => (
-          <Link to={`/DetalleOrdenTrabajo/${record.orden}`}>
+          <Link to={`/DetalleOrdenTrabajo/${cifrarId(record.orden)}`}>
             <Button className="detalles-button">Detalles</Button>
           </Link>
         ),

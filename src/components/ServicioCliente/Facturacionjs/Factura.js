@@ -4,6 +4,7 @@ import { getAllfacturafacturama } from "../../../apis/ApisServicioCliente/Factur
 import { Table, Input, Button, message, Tag, theme, Space } from "antd";
 import { Link } from "react-router-dom";
 import "./crearfactura.css"
+import { cifrarId } from "../secretKey/SecretKey";
 
 const Factura = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -165,7 +166,7 @@ const Factura = () => {
       title: "Opciones",
       key: "opciones",
       render: (_, record) => (
-        <Link to={`/detallesfactura/${record.IdFactura}`}>
+        <Link to={`/detallesfactura/${cifrarId(record.IdFactura)}`}>
           <Button type="primary" size="small">
             Detalles
           </Button>

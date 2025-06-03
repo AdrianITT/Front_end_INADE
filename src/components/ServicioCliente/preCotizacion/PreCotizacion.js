@@ -6,6 +6,7 @@ import "./PrecotizacionData.css";
 import { getAllPrecotizacion, getAllPrecotizacionByOrganizacion} from "../../../apis/ApisServicioCliente/PrecotizacionApi";
 import {getAllEstado} from "../../../apis/ApisServicioCliente/EstadoApi";
 import ContadoPreCotizacion from "./ContadoPreCotizacion";
+import { cifrarId } from "../secretKey/SecretKey";
 
 const PreCotizacionData = () => { 
   const [preCotizaciones, setPreCotizaciones] = useState([]);
@@ -113,7 +114,7 @@ const PreCotizacionData = () => {
       key: "acciones",
       render: (_, record) => (
         <Space>
-          <Link to={`/preCotizacionDetalles/${record.id}`}>
+          <Link to={`/preCotizacionDetalles/${cifrarId(record.id)}`}>
             <Button type="primary"> Detalles</Button>
           </Link>
         </Space>

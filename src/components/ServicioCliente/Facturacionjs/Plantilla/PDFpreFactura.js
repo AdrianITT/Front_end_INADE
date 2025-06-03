@@ -1,5 +1,6 @@
 import React, {useState,useEffect, useMemo} from 'react';
 import { Page, Document, StyleSheet, View, Text, Image } from '@react-pdf/renderer';
+import { data } from 'react-router-dom';
 //import { numeroALetras } from 'numero-a-letras';
 //import {getAllDataFactura} from '../../../../apis/ApisServicioCliente/FacturaApi';
 //import {getOrganizacionById} from '../../../../apis/ApisServicioCliente/organizacionapi';
@@ -260,13 +261,28 @@ const FacturaPDF = ({ dataFactura, dataLogo, centavo,centavotext }) => {
         </View> */}
         
       </View>
-        <View style={styles.row}>
-          <View style={[styles.pairContainer, styles.textoPequeno]}>
-            <Text style={styles.textLabel}>Exportación:</Text>
-            <Text >01 - No aplica</Text>
-          </View>
-        </View>
       </View>
+      
+      <View style={[styles.row, { width: '100%' }]}>
+  {/* Primer par: Orden de Compra */}
+  {dataFactura.ordenCompra && (
+    <View style={[styles.pairContainer, styles.textoPequeno]}>
+      <Text>
+        <Text style={styles.textLabel}>Orden de Compra: </Text>
+        {dataFactura.ordenCompra}
+      </Text>
+    </View>
+  )}
+
+  {/* Segundo par: Exportación */}
+  <View style={[styles.pairContainer, styles.textoPequeno]}>
+    <Text>
+      <Text style={styles.textLabel}>Exportación: </Text>
+      01 - No aplica
+    </Text>
+  </View>
+</View>
+
 
 
       {/* Tabla de productos */}
@@ -374,6 +390,17 @@ const FacturaPDF = ({ dataFactura, dataLogo, centavo,centavotext }) => {
             <Text>{dataFactura.metodoPago} - {dataFactura.metodoPagoDesc}</Text>
           </View>
         </View>
+      </View>
+      <View style={styles.separator} >
+      <View style={styles.section}>
+      <View style={styles.row}>
+      <View style={{ width: '25%' }}>{dataFactura.notas &&
+      <Text style={styles.textLabel}> Observaciones:</Text>}
+      {dataFactura.notas &&
+      <Text > {dataFactura.notas}</Text>}
+      </View>
+      </View>
+      </View>
       </View>
       <Text style={styles.pagefooder} fixed>Este documento NO es una representación impresa de un CFDI 4.0</Text>
       {/* Información adicional 

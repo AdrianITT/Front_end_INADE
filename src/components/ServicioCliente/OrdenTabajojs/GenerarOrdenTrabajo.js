@@ -7,7 +7,11 @@ import { getAllReceptor, createReceptor } from "../../../apis/ApisServicioClient
 import { createOrdenTrabajo } from "../../../apis/ApisServicioCliente/OrdenTrabajoApi";
 import { createOrdenTrabajoServico } from "../../../apis/ApisServicioCliente/OrdenTabajoServiciosApi";
 import {getAllOrdenTrabajoById} from "../../../apis/ApisServicioCliente/OrdenTrabajoApi";
+import { getAllOrdenesTrabajoData } from "../../../apis/ApisServicioCliente/OrdenTrabajoApi";
+import { getAllcotizacionesdata } from "../../../apis/ApisServicioCliente/CotizacionApi";
 import {getUserById}from "../../../apis/ApisServicioCliente/UserApi";
+import { validarAccesoPorOrganizacion } from "../validacionAccesoPorOrganizacion";
+import { cifrarId, descifrarId } from "../secretKey/SecretKey";
 const { TextArea } = Input;
 const { Option } = Select;
 
@@ -18,7 +22,8 @@ const GenerarOrdenTrabajo = () => {
   const [cliente, setCliente] = useState({});
   const [empresas, setEmpresa] = useState({});
   const [receptor, setReceptor] = useState([]);
-  const { id } = useParams();
+  const { ids } = useParams();
+  const id = descifrarId(ids)
   const [servicios, setServicios] = useState([]);
   const [cotizacionId] = useState(id);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
@@ -28,10 +33,45 @@ const GenerarOrdenTrabajo = () => {
   const [ordenFormValues, setOrdenFormValues] = useState(null);
   const [serviciosParaEliminar, setServiciosParaEliminar] = useState([]);
   const [dataCotizacion, setCotizacionData] = useState([]);
+  const [loadings, setLoadings] = useState(false);
   
     // Obtener el ID de la organización una sola vez
     const organizationId = useMemo(() => parseInt(localStorage.getItem("organizacion_id"), 10), []);
+    useEffect(() => {
+          const verificar = async () => {
+            console.log("id: ",id);
+            const acceso = await validarAccesoPorOrganizacion({
+              fetchFunction: getAllcotizacionesdata,
+              organizationId,
+              id,
+              campoId: "Cotización",
+              navigate,
+              mensajeError: "Acceso denegado.",
+            });
+            console.log(acceso);
+            if (!acceso) return;
+            // continuar...
+          };
+      
+          verificar();
+        }, [organizationId, id]);
   //const [selectedServicios, setSelectedServicios] = useState([]); // Servicios seleccionados por el usuario
+  // const fetchValue=async()=>{
+  //   console.log("organizationId",organizationId);
+  //   const OrdenT = await getAllOrdenesTrabajoData(organizationId);  // 👈 trae todos los clientes
+
+  //   console.log("OrdenT",OrdenT);
+    
+  //   const idsPermitidos = OrdenT.data.map((c) => String(c.orden));  // 👈 importante: convertir a string para comparación con URL
+  //   console.log("idsPermitidos",idsPermitidos);
+
+  //   if (idsPermitidos.length > 0 && !idsPermitidos.includes(id)) {
+  //     message.error("No tienes autorización para editar este cliente.");
+  //     navigate("/no-autorizado");
+  //     return;
+  //   }
+      
+  // }
 
 
   useEffect(() => {
@@ -56,7 +96,7 @@ const GenerarOrdenTrabajo = () => {
         console.error("Error al obtener la información de la orden de trabajo", error);
       }
     };
-  
+
     fetchOrdenData();
     fetchReceptor();
   }, [id, form,cotizacionId]);
@@ -73,6 +113,7 @@ const GenerarOrdenTrabajo = () => {
   };
 
   const handleConfirmCrearOrden = async () => {
+    setLoadings(true);
     const idLocalUser = localStorage.getItem("user_id")
     const userResponse = await getUserById(idLocalUser);
     let usrNameData=userResponse.data.first_name + " " + userResponse.data.last_name;
@@ -103,6 +144,7 @@ const GenerarOrdenTrabajo = () => {
       }
   
       setNewOrderId(ordenTrabajoId);
+      setLoadings(false);
       message.success("Orden de trabajo y servicios creados correctamente");
       setIsOrdenConfirmModalVisible(false);
       setIsSuccessModalOpen(true);
@@ -381,7 +423,7 @@ const receptorSeleccionado = receptor.find(r => r.id === ordenFormValues?.recept
           <Button type="primary" htmlType="submit" className="register-button">
             Registrar
           </Button>
-          <Button type="default" className="cancel-button" onClick={() => navigate(`/detalles_cotizaciones/${cotizacionId}`)}>
+          <Button type="default" className="cancel-button" onClick={() => navigate(`/detalles_cotizaciones/${cifrarId(cotizacionId)}`)}>
             Cancelar
           </Button>
         </div>
@@ -447,12 +489,12 @@ const receptorSeleccionado = receptor.find(r => r.id === ordenFormValues?.recept
         title="Orden Creada"
         open={isSuccessModalOpen}
         onOk={() => setIsSuccessModalOpen(false)}
-        onCancel={() => {setIsSuccessModalOpen(false); navigate(`/DetalleOrdenTrabajo/${newOrderId}`);}}
+        onCancel={() => {setIsSuccessModalOpen(false); navigate(`/DetalleOrdenTrabajo/${cifrarId(newOrderId)}`);}}
         footer={[
           <Button
             key="ok"
             type="primary"
-            onClick={() => {setIsSuccessModalOpen(false); navigate(`/DetalleOrdenTrabajo/${newOrderId}`);}}
+            onClick={() => {setIsSuccessModalOpen(false); navigate(`/DetalleOrdenTrabajo/${cifrarId(newOrderId)}`);}}
           >
             Cerrar
           </Button>,

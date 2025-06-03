@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
   Form,
   Input,
@@ -27,14 +27,16 @@ import {
   updateOrdenTrabajoServicio,
   deleteOrdenTrabajoServicio,
 } from "../../../apis/ApisServicioCliente/OrdenTabajoServiciosApi";
-// Función para obtener la data de cotización (incluye precio en cotizacionServicio)
-//import { getDetallecotizaciondataById } from "../../../apis/ApisServicioCliente/CotizacionApi";
-// Función para obtener la lista de servicios disponibles
+
 import { getAllServicio } from "../../../apis/ApisServicioCliente/ServiciosApi";
+import { validarAccesoPorOrganizacion } from "../validacionAccesoPorOrganizacion";
+import { cifrarId, descifrarId } from "../secretKey/SecretKey";
+import { getAllOrdenesTrabajoData } from "../../../apis/ApisServicioCliente/OrdenTrabajoApi";
 
 
 const EditarOrdenTrabajo = () => {
-  const { id } = useParams();
+  const { ids } = useParams();
+  const id= descifrarId(ids);
   const navigate = useNavigate();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
@@ -44,6 +46,26 @@ const EditarOrdenTrabajo = () => {
   const [receptor, setReceptor] = useState([]);
   const { Title } = Typography;
   const { Option } = Select;
+  const organizationId = useMemo(() => parseInt(localStorage.getItem("organizacion_id"), 10), []);
+
+
+  useEffect(() => {
+          const verificar = async () => {
+            console.log(id);
+            const acceso = await validarAccesoPorOrganizacion({
+              fetchFunction: getAllOrdenesTrabajoData,
+              organizationId,
+              id,
+              campoId: "orden",
+              navigate,
+              mensajeError: "Acceso denegado a esta precotización.",
+            });
+            console.log(acceso);
+            if (!acceso) return;
+          };
+      
+          verificar();
+        }, [organizationId, id]);
 
 
   useEffect(() => {
@@ -174,7 +196,7 @@ const EditarOrdenTrabajo = () => {
       await Promise.allSettled(eliminarPromises);
   
       message.success("Orden de trabajo actualizada correctamente");
-      navigate(`/DetalleOrdenTrabajo/${id}`);
+      navigate(`/DetalleOrdenTrabajo/${cifrarId(id)}`);
     } catch (error) {
       console.error("Error al actualizar los servicios:", error);
       message.error("Error al actualizar la orden de trabajo");
