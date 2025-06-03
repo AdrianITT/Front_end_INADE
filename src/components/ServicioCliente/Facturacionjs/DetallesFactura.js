@@ -364,7 +364,7 @@ const DetallesFactura = () => {
       // Crear enlace para la descarga
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", `Factura_${id}.pdf`);
+      link.setAttribute("download", "Factura.pdf");
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);

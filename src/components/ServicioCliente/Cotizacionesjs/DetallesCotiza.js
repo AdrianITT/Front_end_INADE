@@ -74,12 +74,35 @@ const CotizacionDetalles = () => {
 
   const handleDownloadPDF = async () => {
     try {
-      const user_id = localStorage.getItem("user_id");
-      window.open(`${Api_Host.defaults.baseURL}/cotizacion/${id}/pdf`);
+      const response = await fetch(`${Api_Host.defaults.baseURL}/cotizacion/${id}/pdf`, {
+        method: "GET",
+        headers: {
+          // Si tu API requiere token o autenticación, agrégalo aquí
+          // "Authorization": `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+  
+      if (!response.ok) {
+        throw new Error("Error al obtener el PDF");
+      }
+  
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+  
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `cotizacion_${id}.pdf`); // nombre del archivo
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+  
+      window.URL.revokeObjectURL(url); // liberar memoria
+  
     } catch (error) {
       console.error("Error al descargar el PDF:", error);
     }
   };
+  
 
   const updateEstadoCotizacion = async (nuevoEstado) => {
     try {
