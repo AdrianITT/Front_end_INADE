@@ -107,27 +107,44 @@ const PreCotizacionDetalles = () => {
 
 
   //DESCARGA DEL PDF
-    const handleDownloadPDF = async () => {
-      setLoading(true); // Activar el estado de carga
-    
-      try {
-        // Obtener el user_id desde el localStorage
-        const user_id = localStorage.getItem("user_id");
-
-        
-    
-        // Abrir el PDF en una nueva pestaña, incluyendo el user_id como parámetro
-        window.open(`${Api_Host.defaults.baseURL}/precotizacion/${id}/pdf`);
-    
-        // Si la respuesta es exitosa, puedes procesarla
-        message.success("PDF descargado correctamente");
-      } catch (error) {
-        console.error("Error al descargar el PDF:", error);
-        message.error("Hubo un error al descargar el PDF");
-      } finally {
-        setLoading(false); // Desactivar el estado de carga
+  const handleDownloadPDF = async () => {
+    setLoading(true); // Activar el estado de carga
+  
+    try {
+      const user_id = localStorage.getItem("user_id");
+  
+      const response = await fetch(`${Api_Host.defaults.baseURL}/precotizacion/${id}/pdf`, {
+        method: "GET",
+        headers: {
+          // "Authorization": `Bearer ${localStorage.getItem("token")}` si aplica
+        },
+      });
+  
+      if (!response.ok) {
+        throw new Error("No se pudo descargar el PDF");
       }
-    };
+  
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+  
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "precotizacion.pdf");
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+  
+      window.URL.revokeObjectURL(url);
+  
+      message.success("PDF descargado correctamente");
+    } catch (error) {
+      console.error("Error al descargar el PDF:", error);
+      message.error("Hubo un error al descargar el PDF");
+    } finally {
+      setLoading(false); // Desactivar el estado de carga
+    }
+  };
+  
 
     const actualizarEstado = async () => {
       if (!cotizacionInfo) {

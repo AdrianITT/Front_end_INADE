@@ -109,24 +109,37 @@ const DetalleOrdenTrabajo = () => {
 
   ];
   const handleDownloadPDF = async () => {
-    //setLoading(true); // Activar el estado de carga
-  
     try {
-      // Obtener el user_id desde el localStorage
-      const user_id = localStorage.getItem("user_id");
+      const response = await fetch(`${Api_Host.defaults.baseURL}/ordentrabajo/${orderId}/pdf`, {
+        method: "GET",
+        headers: {
+          // Si necesitas autenticación, agrégala aquí
+          // "Authorization": `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
   
-      // Abrir el PDF en una nueva pestaña, incluyendo el user_id como parámetro
-      window.open(`${Api_Host.defaults.baseURL}/ordentrabajo/${orderId}/pdf`);
+      if (!response.ok) {
+        throw new Error("No se pudo descargar el PDF");
+      }
   
-      // Si la respuesta es exitosa, puedes procesarla
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+  
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "orden_trabajo.pdf");
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+  
+      window.URL.revokeObjectURL(url);
       message.success("PDF descargado correctamente");
-      //setLoading(false); // Desactivar el estado de carga
     } catch (error) {
       console.error("Error al descargar el PDF:", error);
       message.error("Hubo un error al descargar el PDF");
-      //setLoading(false); // Desactivar el estado de carga
     }
   };
+  
 
     // Función para mostrar el modal de eliminación
     const showDeleteModal = () => {
