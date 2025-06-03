@@ -510,7 +510,7 @@ const CrearFactura = () => {
           <Form.Item label="Comentarios:" name="notas">
             <TextArea rows={5} placeholder="Agrega comentarios adicionales" />
           </Form.Item>
-          <Form.Item label="orden de Compra:" name="ordenCompra">
+          <Form.Item label="Orden de compra:" name="ordenCompra">
             <Input />
             </Form.Item>
             <Form.Item label="Porcentaje a pagar:" name="poresentajeFactura">

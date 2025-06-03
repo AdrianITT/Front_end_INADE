@@ -141,7 +141,7 @@ const DetallesFactura = () => {
   const fetchValue=async()=>{
       console.log("organizationId",organizationId);
       const FacturasInicial = await getAllFacturaByOrganozacion(organizationId);  // 👈 trae todos los clientes
-  
+      
       console.log("FacturasInicial",FacturasInicial);
       
       const idsPermitidos = FacturasInicial.data.map((c) => String(c.id));  // 👈 importante: convertir a string para comparación con URL
@@ -233,7 +233,7 @@ const DetallesFactura = () => {
         setLoading(true);
         const response = await getAllDataFactura(id);
         const data = response.data;
-        //console.log("Datos de la factura completa:", data);
+        console.log("Datos de la factura completa:", data);
         // Seteamos directamente los datos
         setFactura(data); // puedes eliminar este estado si solo usas los campos individuales
         setMoneda({ codigo: data.monedaCodigo.includes("USD") ? "USD" : "MXN", descripcion: data.monedaCodigo});
@@ -274,7 +274,7 @@ const DetallesFactura = () => {
       const organizacion = await getOrganizacionById(organizationId);
       //console.log("Datos de la organización:", NumerosALetras(51));
       //console.log("Datos de la organización:", organizacion.data);
-      //console.log("Datos de la factura:", factura.data);
+      console.log("Datos de la factura:", factura.data);
       setDataFactura(factura.data);
       setDataLogo(organizacion.data);
       const total = parseFloat(factura.data.valores.totalFinal);
@@ -558,7 +558,7 @@ const montoRestante =hasPagos
   return (
     <Spin spinning={loading}>
     <div style={{ padding: "20px" }}>
-      <h2><center>Factura {factura.numerofactura} - {factura.numerocotizacion} </center></h2>
+      <h2><center>Factura {factura.numerofactura} - Cotización {factura.numerocotizacion} </center></h2>
       <Tabs defaultActiveKey="1">
         <Tabs.TabPane tab="Información" key="1">
           <Row gutter={16}>
@@ -568,7 +568,7 @@ const montoRestante =hasPagos
                   <Col span={12}>
                     <>
                     <Descriptions column={1}>
-                      <Descriptions label="Folio">{id}</Descriptions>
+                      <Descriptions label="Folio">{factura.numerofactura}</Descriptions>
                       <Descriptions.Item label="Fecha">
                         {factura.fecha ? new Date(factura.fecha).toLocaleString("es-MX", {
                           day: "2-digit",
