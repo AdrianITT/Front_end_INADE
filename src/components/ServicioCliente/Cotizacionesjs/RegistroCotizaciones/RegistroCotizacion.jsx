@@ -1,6 +1,6 @@
 // RegistroCotizacion.jsx
 import React, { useState, useEffect, useMemo } from "react";
-import { Form, Input, Button, Row, Col, Select, DatePicker, Divider, message, Modal, Spin, Space } from "antd";
+import { Form, Input, Button, Row, Col, Select, DatePicker, Divider, message, Modal, Spin } from "antd";
 import { useParams, useNavigate } from "react-router-dom";
 import ClienteInfoCard from "./ClienteInfoCard";
 import ConceptoCard from "./ConceptoCard";
@@ -9,7 +9,7 @@ import ModalNuevoServicio from "./ModalNuevoServicio";
 import ModalMetodo from "./ModalMetodo";
 import ModalConfirmacion from "./ModalConfirmacion";
 import { calcularTotales, formatDate } from "./helper";
-import { getClienteById, getAllClienteData } from "../../../../apis/ApisServicioCliente/ClienteApi";
+import { getClienteById } from "../../../../apis/ApisServicioCliente/ClienteApi";
 import { getEmpresaById } from '../../../../apis/ApisServicioCliente/EmpresaApi';
 import { getAllTipoMoneda } from "../../../../apis/ApisServicioCliente/Moneda";
 import { getAllIva } from "../../../../apis/ApisServicioCliente/ivaApi";
@@ -22,13 +22,10 @@ import { getAllUnidadCDFI } from "../../../../apis/ApisServicioCliente/unidadcdf
 import {createMetodo, getAllMetodoData} from "../../../../apis/ApisServicioCliente/MetodoApi";
 import {createServicio} from "../../../../apis/ApisServicioCliente/ServiciosApi";
 import {getUserById}from "../../../../apis/ApisServicioCliente/UserApi";
-import {descifrarId,cifrarId  }  from "../../secretKey/SecretKey";
-import { validarAccesoPorOrganizacion } from "../../validacionAccesoPorOrganizacion";
 
 const RegistroCotizacion = () => {
   const navigate = useNavigate();
-  const { clienteIds } = useParams();
-  
+  const { clienteId } = useParams();
   const [form] = Form.useForm();
   const [conceptos, setConceptos] = useState([{ id: 1, servicio: "", cantidad: 1, precio: 0, precioFinal: 0, descripcion: "", orden: 1 }]);
   const [clienteData, setClienteData] = useState(null);
@@ -50,42 +47,10 @@ const RegistroCotizacion = () => {
   const [idCotizacionCreada, setIdCotizacionCreada] = useState(null);
   const [loadings, setLoadings] = useState(false);
   const organizationId = useMemo(() => parseInt(localStorage.getItem("organizacion_id"), 10), []);
-  
-  const clienteId = descifrarId(clienteIds);
-  
-  useEffect(() => {
-    const verificar = async () => {
-          const id=clienteId;
-          console.log(clienteId);
-          const acceso = await validarAccesoPorOrganizacion({
-            fetchFunction: getAllClienteData,
-            organizationId,
-            id,
-            campoId: "id",
-            navigate,
-            mensajeError: "Acceso denegado a esta precotización.",
-          });
-          console.log(acceso);
-          if (!acceso) return;
-        };
-    
-        verificar();
-      }, [organizationId, clienteId]);
 
   useEffect(() => {
     const fetchDatos = async () => {
       try {
-        // const clienteId =descifrarId(clienteIds);
-        // console.log(clienteId);
-        // const clientesResp = await getAllClienteData(organizationId);  // 👈 trae todos los clientes
-        
-        // const idsPermitidos = clientesResp.data.map((c) => String(c.id));  // 👈 importante: convertir a string para comparación con URL
-  
-        // if (idsPermitidos.length > 0 && !idsPermitidos.includes(clienteId)) {
-        //   message.error("No tienes autorización para editar este cliente.");
-        //   navigate("/no-autorizado");
-        //   return;
-        // }
         const [monedas, ivasResp, serviciosResp, claves, unidades, metodosResp] = await Promise.all([
           getAllTipoMoneda(),
           getAllIva(),
@@ -105,20 +70,6 @@ const RegistroCotizacion = () => {
       }
     };
     fetchDatos();
-  }, [organizationId]);
-  const fetchServicios = async () => {
-    try {
-      const resp = await getServicioData(organizationId);
-      setServicios(resp.data);
-    } catch {
-      message.error("Error al recargar servicios");
-    }
-  };
-  
-
-  useEffect(() => {
-
-   fetchServicios();
   }, [organizationId]);
 
   useEffect(() => {
@@ -176,10 +127,8 @@ const RegistroCotizacion = () => {
     }
   };
 
-
   const handleSubmit = async () => {
     try {
-      setLoadings(true);
       await form.validateFields();
       const userId = localStorage.getItem("user_id");
       const userResp = await getUserById(userId);
@@ -198,7 +147,6 @@ const RegistroCotizacion = () => {
       };
       setCotizacionPreview(payload);
       setModales(prev => ({ ...prev, confirmacion: true }));
-      setLoadings(false);
     } catch {
       message.error("Completa todos los campos requeridos");
     }
@@ -222,8 +170,7 @@ const RegistroCotizacion = () => {
       }
 
       message.success("Cotización creada correctamente");
-      const cotizacionCfId=cifrarId (cotizacionId)
-      navigate(`/detalles_cotizaciones/${cotizacionCfId}`);
+      navigate(`/detalles_cotizaciones/${cotizacionId}`);
     } catch {
       message.error("Error al crear la cotización");
     } finally {
@@ -239,7 +186,7 @@ const RegistroCotizacion = () => {
     ivaPct: ivas.find(i => i.id === ivaSeleccionado)?.porcentaje,
   });
 
-  if (!clienteData || !empresaData) return <div style={{ textAlign: "center", marginTop: "20%" }}><Spin size="large" spinning={true} tip="Cargando..." /></div>;
+  if (!clienteData || !empresaData) return <Spin spinning={true} tip="Cargando..." />;
 
   return (
     <div className="cotizacion-container">
@@ -256,7 +203,7 @@ const RegistroCotizacion = () => {
           </Col>
           <Col span={12}>
             <Form.Item label="Fecha Caducidad" rules={[{ required: true }]}> 
-              <DatePicker value={fechaCaducidad} style={{ width: "100%" }} format="DD/MM/YYYY" />
+              <DatePicker value={fechaCaducidad} style={{ width: "100%" }} format="DD/MM/YYYY" disabled />
             </Form.Item>
           </Col>
         </Row>
@@ -285,24 +232,6 @@ const RegistroCotizacion = () => {
         <Form.Item label="Descuento (%)" rules={[{ required: true }]}> 
           <Input type="number" min={0} max={100} value={descuento} onChange={e => setDescuento(parseFloat(e.target.value))} />
         </Form.Item>
-
-        <Space style={{ marginBottom: 16 }}>
-        <Button
-          type="primary"
-          onClick={() =>
-            setModales((prev) => ({ ...prev, servicio: true }))
-          }
-        >
-          Nuevo Servicio
-        </Button>
-        <Button
-          onClick={() =>
-            setModales((prev) => ({ ...prev, metodo: true }))
-          }
-        >
-          Nuevo Método
-        </Button>
-      </Space>
 
         <Divider>Agregar Conceptos</Divider>
         {conceptos.map((c, i) => (
@@ -338,36 +267,22 @@ const RegistroCotizacion = () => {
 
 
 
-        <div style={{ marginTop: 24, textAlign: "center" }}>
+        <div style={{ marginTop: 24 }}>
           <Button type="default" danger onClick={() => navigate("/cliente")}>Cancelar</Button>
           <Button type="primary" onClick={handleSubmit} style={{ marginLeft: 12 }}>Crear</Button>
         </div>
       </Form>
 
       <ModalNuevoServicio
-      visible={modales.servicio}
-      onClose={() =>
-        setModales((prev) => ({ ...prev, servicio: false }))
-      }
-      onCreate={async (nuevo) => {
-        // primero crea
-
-        const creado = nuevo?.data ?? nuevo;
-
-        setModales((prev) => ({ ...prev, servicio: false }));
-        // luego refetch y cierra modal
-
-        await fetchServicios();
-
-        message.success("Lista de servicios actualizada");
-        //setModales((prev) => ({ ...prev, servicio: false }));
-      }}
-      unidad={unidad}
-      clavecdfi={clavecdfi}
-      metodos={metodos}
-      organizationId={organizationId}
-      createServicioFn={createServicio}
-    />
+        visible={modales.servicio}
+        onClose={() => setModales(prev => ({ ...prev, servicio: false }))}
+        onCreate={(nuevo) => setServicios(prev => [...prev, nuevo])}
+        unidad={unidad}
+        clavecdfi={clavecdfi}
+        metodos={metodos}
+        organizationId={organizationId}
+        createServicioFn={createServicio}
+      />
 
       <ModalMetodo
         visible={modales.metodo}
