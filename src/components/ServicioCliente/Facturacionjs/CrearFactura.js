@@ -306,6 +306,11 @@ const CrearFactura = () => {
     const serviciosAFacturar = serviciosCot.filter(
       s => !selectedRowKeys.includes(s.id)
     );
+
+    if (serviciosAFacturar.length===0){
+      message.error("No puesdes crear una Factura sin servicios.");
+      return;
+    }
   
     // 2) Subtotal de esos servicios
     const subtotal = serviciosAFacturar.reduce((sum, s) =>

@@ -91,7 +91,7 @@ const CotizacionDetalles = () => {
   
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", `cotizacion_${id}.pdf`); // nombre del archivo
+      link.setAttribute("download", `cotizacion_${cotizacionInfo.numero}.pdf`); // nombre del archivo
       document.body.appendChild(link);
       link.click();
       link.remove();

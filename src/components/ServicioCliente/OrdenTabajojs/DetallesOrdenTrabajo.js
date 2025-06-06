@@ -127,7 +127,7 @@ const DetalleOrdenTrabajo = () => {
   
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", "orden_trabajo.pdf");
+      link.setAttribute("download", `orden_trabajo_${orderHeader?.codigo}.pdf`);
       document.body.appendChild(link);
       link.click();
       link.remove();

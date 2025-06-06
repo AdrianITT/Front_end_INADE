@@ -8,7 +8,7 @@ import { getEmpresaById } from "../../../apis/ApisServicioCliente/EmpresaApi";
 import { Api_Host } from "../../../apis/api";
 import PaymentCards from "../Facturacionjs/FacturaPagos"
 import { getAllFacturaPagos } from "../../../apis/ApisServicioCliente/FacturaPagosApi";
-
+import {updatepachFactura} from "../../../apis/ApisServicioCliente/FacturaApi";
 import {getOrganizacionById} from '../../../apis/ApisServicioCliente/organizacionapi';
 //import axios from "axios";
 import {  getAllfacturafacturama } from "../../../apis/ApisServicioCliente/FacturaFacturamaApi";
@@ -16,6 +16,7 @@ import { getInfoSistema } from "../../../apis/ApisServicioCliente/InfoSistemaApi
 import PDFpreFactura from "./Plantilla/PDFpreFactura";
 import { PDFDownloadLink} from '@react-pdf/renderer';
 import ComprobantePago from "./ModalComprobantePago";
+import PopInputEditar from "./PopInputEditarFactura";
 import "./estiloDetalleFactura.css";
 import {NumerosALetras} from "numero-a-letras";
 import { cifrarId, descifrarId } from "../secretKey/SecretKey";
@@ -294,7 +295,27 @@ const DetallesFactura = () => {
   }, []);
   
 
+  const handleActualizar = async (data) => {
+    setLoading(true);
+    //console.log("Enviando al backend:", data);
+    try {
+      await updatepachFactura(id, data);
+      //console.log("response: ",response);
 
+      const refreshed = await getAllDataFactura(id);
+      const det = refreshed.data;
+      setFactura(det);
+      setMoneda({ 
+        codigo: det.monedaCodigo.includes("USD") ? "USD" : "MXN",
+        descripcion: det.monedaCodigo 
+      });
+      message.success("Dato actualizado correctamente");
+    } catch (error) {
+      message.error("Error al actualizar");
+    }finally{
+      setLoading(false);
+    }
+  };
 
   const showModalCorreo = () => {
     setIsModalVisibleCorreo(true);
@@ -364,7 +385,7 @@ const DetallesFactura = () => {
       // Crear enlace para la descarga
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", "Factura.pdf");
+      link.setAttribute("download", `Factura_${factura.numerofactura}.pdf`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -400,7 +421,7 @@ const DetallesFactura = () => {
       // Crear enlace para la descarga
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", `Factura_${id}.xml`);
+      link.setAttribute("download", `Factura_${factura.numerofactura}.xml`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -585,6 +606,19 @@ const montoRestante =hasPagos
                     </Descriptions.Item>
                     <Descriptions.Item label="Orden de Compra">
                       {factura.ordenCompra ? factura.ordenCompra : "No registrada"}
+                      <PopInputEditar
+                      onActualizar={handleActualizar}
+                      label="ordenCompra"
+                      fieldName="ordenCompra"
+                      />
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Notas">
+                      {factura.notas ? factura.notas : "No registrada"}
+                      <PopInputEditar
+                      onActualizar={handleActualizar}
+                      label="notas"
+                      fieldName="notas"
+                      />
                     </Descriptions.Item>
                   </Descriptions>
                     </>

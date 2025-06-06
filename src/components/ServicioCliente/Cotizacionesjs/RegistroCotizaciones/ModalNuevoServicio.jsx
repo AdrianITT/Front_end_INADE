@@ -5,9 +5,9 @@ const ModalNuevoServicio = ({
   visible,
   onClose,
   onCreate,
-  unidad=[],
-  clavecdfi=[],
-  metodos=[],
+  unidad,
+  clavecdfi,
+  metodos,
   organizationId,
   createServicioFn,
 }) => {
@@ -28,7 +28,6 @@ const ModalNuevoServicio = ({
       }
 
       const response = await createServicioFn(dataToSend);
-      console.log("response servicios",response.data);
       message.success("Servicio creado con éxito");
       onCreate(response.data);
       form.resetFields();
@@ -77,13 +76,7 @@ const ModalNuevoServicio = ({
             </Form.Item>
 
             <Form.Item label="Unidad CFDI" name="unidadCfdi" rules={[{ required: true }]}>
-              <Select 
-              showSearch 
-              placeholder="Unidad CFDI"
-              filterOption={(input, option)=>
-                (option?.children?.toString() ?? "").toLowerCase().includes(input.toLowerCase())
-              }
-              >
+              <Select showSearch placeholder="Unidad CFDI">
                 {unidad.map((u) => (
                   <Select.Option key={u.id} value={u.id}>
                     {u.codigo} - {u.nombre}
@@ -99,13 +92,7 @@ const ModalNuevoServicio = ({
               name="claveCfdi"
               rules={[{ required: true, message: "Selecciona la clave CFDI" }]}
             >
-              <Select 
-              showSearch 
-              placeholder="Clave CFDI"
-              filterOption={(input, option)=>
-                (option?.children?.toString() ?? "").toLowerCase().includes(input.toLowerCase())
-              }
-              >
+              <Select showSearch placeholder="Clave CFDI">
                 {clavecdfi.map((c) => (
                   <Select.Option key={c.id} value={c.id}>
                     {c.codigo} - {c.nombre}
@@ -118,19 +105,8 @@ const ModalNuevoServicio = ({
               label="Método"
               name="metodos"
               rules={[{ required: true, message: "Selecciona el método" }]}
-              >
-              <Select 
-              showSearch 
-              placeholder="Método"
-              filterOption={(input, option)=>
-                (option?.children?.toString() ?? "").toLowerCase().includes(input.toLowerCase())
-              }
-              filterSort={(optionA, optionB) =>
-                (optionA?.label ?? "").toLowerCase().localeCompare(
-                  (optionB?.label ?? "").toLowerCase()
-                )
-              }
-              >
+            >
+              <Select showSearch placeholder="Método">
                 {metodos.map((m) => (
                   <Select.Option key={m.id} value={m.id}>
                     {m.codigo}
