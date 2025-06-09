@@ -22,10 +22,11 @@ import { getAllUnidadCDFI } from "../../../../apis/ApisServicioCliente/unidadcdf
 import {createMetodo, getAllMetodoData} from "../../../../apis/ApisServicioCliente/MetodoApi";
 import {createServicio} from "../../../../apis/ApisServicioCliente/ServiciosApi";
 import {getUserById}from "../../../../apis/ApisServicioCliente/UserApi";
+import { descifrarId, cifrarId } from "../../secretKey/SecretKey";
 
 const RegistroCotizacion = () => {
   const navigate = useNavigate();
-  const { clienteId } = useParams();
+  const { clienteIds } = useParams();
   const [form] = Form.useForm();
   const [conceptos, setConceptos] = useState([{ id: 1, servicio: "", cantidad: 1, precio: 0, precioFinal: 0, descripcion: "", orden: 1 }]);
   const [clienteData, setClienteData] = useState(null);
@@ -47,6 +48,7 @@ const RegistroCotizacion = () => {
   const [idCotizacionCreada, setIdCotizacionCreada] = useState(null);
   const [loadings, setLoadings] = useState(false);
   const organizationId = useMemo(() => parseInt(localStorage.getItem("organizacion_id"), 10), []);
+  const clienteId = descifrarId(clienteIds);
 
   useEffect(() => {
     const fetchDatos = async () => {
@@ -170,7 +172,7 @@ const RegistroCotizacion = () => {
       }
 
       message.success("Cotización creada correctamente");
-      navigate(`/detalles_cotizaciones/${cotizacionId}`);
+      navigate(`/detalles_cotizaciones/${cifrarId(cotizacionId)}`);
     } catch {
       message.error("Error al crear la cotización");
     } finally {

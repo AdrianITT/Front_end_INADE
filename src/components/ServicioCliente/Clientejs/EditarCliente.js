@@ -18,11 +18,19 @@ const EditarCliente = () => {
   const [usoCfdiOptions, setUsoCfdiOptions] = useState([]);  // Opciones de UsoCfdi
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false); // Estado del modal de éxito
   const organizationId = useMemo(() => parseInt(localStorage.getItem("organizacion_id"), 10), []);
-  const clienteId =descifrarId(clienteIds);
-  const id=clienteId;
+  const clienteId = useMemo(() => {
+    try {
+      console.log("clienteIds", clienteIds);
+      return descifrarId(clienteIds);
+  } catch (error) {
+    console.error("Error al descifrar cliente ID:", error);
+    return null;
+  }
+}, [clienteIds]);
+const id=clienteId;
 
-  useEffect(() => {
-      const verificar = async () => {
+useEffect(() => {
+  const verificar = async () => {
         console.log("hola");
         console.log(id);
         const acceso = await validarAccesoPorOrganizacion({
@@ -59,7 +67,9 @@ const EditarCliente = () => {
         // }
   
         // ✅ Ya verificado, ahora sí obtenemos y mostramos los datos del cliente
+        console.log("clienteId", clienteId);
         const response = await getClienteById(clienteId);
+        console.log("response", response);
         const cliente = response.data;
         setClienteData(cliente);
         form.setFieldsValue(cliente);
