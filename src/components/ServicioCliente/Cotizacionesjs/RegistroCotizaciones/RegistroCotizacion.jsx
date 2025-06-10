@@ -1,6 +1,6 @@
 // RegistroCotizacion.jsx
 import React, { useState, useEffect, useMemo } from "react";
-import { Form, Input, Button, Row, Col, Select, DatePicker, Divider, message, Modal, Spin } from "antd";
+import { Form, Input, Button, Row, Col, Select, DatePicker, Divider, message, Modal, Spin, Space } from "antd";
 import { useParams, useNavigate } from "react-router-dom";
 import ClienteInfoCard from "./ClienteInfoCard";
 import ConceptoCard from "./ConceptoCard";
@@ -47,10 +47,11 @@ const RegistroCotizacion = () => {
   const [cotizacionPreview, setCotizacionPreview] = useState(null);
   const [idCotizacionCreada, setIdCotizacionCreada] = useState(null);
   const [loadings, setLoadings] = useState(false);
+  const [contador, setContador] = useState(2);
   const organizationId = useMemo(() => parseInt(localStorage.getItem("organizacion_id"), 10), []);
   const clienteId = descifrarId(clienteIds);
-
-  useEffect(() => {
+  const [nextId, setNextId] = useState(2);
+ useEffect(() => {
     const fetchDatos = async () => {
       try {
         const [monedas, ivasResp, serviciosResp, claves, unidades, metodosResp] = await Promise.all([
@@ -72,6 +73,20 @@ const RegistroCotizacion = () => {
       }
     };
     fetchDatos();
+  }, [organizationId]);
+  const fetchServicios = async () => {
+    try {
+      const resp = await getServicioData(organizationId);
+      setServicios(resp.data);
+    } catch {
+      message.error("Error al recargar servicios");
+    }
+  };
+  
+
+  useEffect(() => {
+
+   fetchServicios();
   }, [organizationId]);
 
   useEffect(() => {
@@ -116,18 +131,43 @@ const RegistroCotizacion = () => {
     }
   };
 
-  const handleAddConcepto = () => {
-    const nuevo = [...conceptos, { id: conceptos.length + 1, servicio: "", cantidad: 1, precio: 0, descripcion: "" }];
-    setConceptos(nuevo.map((c, i) => ({ ...c, orden: i + 1 })));
+const handleAddConcepto = () => {
+  // 1) crea un concepto nuevo con id único
+  const nuevoConcepto = {
+    id: nextId,
+    servicio: "",
+    cantidad: 1,
+    precio: 0,
+    precioFinal: 0,
+    descripcion: "",
+    orden: conceptos.length + 1,  // solo para mostrar la posición
   };
 
-  const handleRemoveConcepto = (id) => {
-    if (conceptos.length > 1) {
-      setConceptos(conceptos.filter(c => c.id !== id));
-    } else {
-      message.warning("Debe haber al menos un concepto");
-    }
-  };
+  // 2) actualiza tu array y sube nextId
+  const nuevos = [...conceptos, nuevoConcepto];
+  setConceptos(nuevos);
+  setNextId(prev => prev + 1);
+
+  // 3) (si usas name en Form.Item) sincroniza el form de AntD
+  form.setFieldsValue({ conceptos: nuevos });
+};
+
+
+const handleRemoveConcepto = (id) => {
+  console.log("Eliminando concepto con id:", id);
+  console.log("Conceptos antes de eliminar:", conceptos);
+
+if (conceptos.length === 1) {
+    return message.warning("Debe haber al menos un concepto");
+  }
+
+  const nuevos = conceptos.filter(c => c.id !== id);
+  setConceptos(nuevos);
+
+  // actualizar también el Form si sigues usando name={['conceptos', index, ...]}
+  form.setFieldsValue({ conceptos: nuevos });
+};
+
 
   const handleSubmit = async () => {
     try {
@@ -205,7 +245,7 @@ const RegistroCotizacion = () => {
           </Col>
           <Col span={12}>
             <Form.Item label="Fecha Caducidad" rules={[{ required: true }]}> 
-              <DatePicker value={fechaCaducidad} style={{ width: "100%" }} format="DD/MM/YYYY" disabled />
+              <DatePicker value={fechaCaducidad} style={{ width: "100%" }} format="DD/MM/YYYY" />
             </Form.Item>
           </Col>
         </Row>
@@ -234,6 +274,24 @@ const RegistroCotizacion = () => {
         <Form.Item label="Descuento (%)" rules={[{ required: true }]}> 
           <Input type="number" min={0} max={100} value={descuento} onChange={e => setDescuento(parseFloat(e.target.value))} />
         </Form.Item>
+
+        <Space style={{ marginBottom: 16 }}>
+        <Button
+          type="primary"
+          onClick={() =>
+            setModales((prev) => ({ ...prev, servicio: true }))
+          }
+        >
+          Nuevo Servicio
+        </Button>
+        <Button
+          onClick={() =>
+            setModales((prev) => ({ ...prev, metodo: true }))
+          }
+        >
+          Nuevo Método
+        </Button>
+      </Space>
 
         <Divider>Agregar Conceptos</Divider>
         {conceptos.map((c, i) => (
@@ -276,15 +334,29 @@ const RegistroCotizacion = () => {
       </Form>
 
       <ModalNuevoServicio
-        visible={modales.servicio}
-        onClose={() => setModales(prev => ({ ...prev, servicio: false }))}
-        onCreate={(nuevo) => setServicios(prev => [...prev, nuevo])}
-        unidad={unidad}
-        clavecdfi={clavecdfi}
-        metodos={metodos}
-        organizationId={organizationId}
-        createServicioFn={createServicio}
-      />
+      visible={modales.servicio}
+      onClose={() =>
+        setModales((prev) => ({ ...prev, servicio: false }))
+      }
+      onCreate={async (nuevo) => {
+        // primero crea
+
+        const creado = nuevo?.data ?? nuevo;
+
+        setModales((prev) => ({ ...prev, servicio: false }));
+        // luego refetch y cierra modal
+
+        await fetchServicios();
+
+        message.success("Lista de servicios actualizada");
+        //setModales((prev) => ({ ...prev, servicio: false }));
+      }}
+      unidad={unidad}
+      clavecdfi={clavecdfi}
+      metodos={metodos}
+      organizationId={organizationId}
+      createServicioFn={createServicio}
+    />
 
       <ModalMetodo
         visible={modales.metodo}
