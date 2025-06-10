@@ -76,7 +76,9 @@ const ModalNuevoServicio = ({
             </Form.Item>
 
             <Form.Item label="Unidad CFDI" name="unidadCfdi" rules={[{ required: true }]}>
-              <Select showSearch placeholder="Unidad CFDI">
+              <Select showSearch placeholder="Unidad CFDI"
+              optionFilterProp="children"
+                >
                 {unidad.map((u) => (
                   <Select.Option key={u.id} value={u.id}>
                     {u.codigo} - {u.nombre}
@@ -92,7 +94,9 @@ const ModalNuevoServicio = ({
               name="claveCfdi"
               rules={[{ required: true, message: "Selecciona la clave CFDI" }]}
             >
-              <Select showSearch placeholder="Clave CFDI">
+              <Select showSearch placeholder="Clave CFDI"
+              optionFilterProp="children"
+              >
                 {clavecdfi.map((c) => (
                   <Select.Option key={c.id} value={c.id}>
                     {c.codigo} - {c.nombre}
@@ -105,8 +109,14 @@ const ModalNuevoServicio = ({
               label="Método"
               name="metodos"
               rules={[{ required: true, message: "Selecciona el método" }]}
+              
             >
-              <Select showSearch placeholder="Método">
+              <Select showSearch placeholder="Método"
+              optionFilterProp="children"
+                filterOption={(input, option) =>
+                  option.children.toLowerCase().includes(input.toLowerCase())
+                }
+  >
                 {metodos.map((m) => (
                   <Select.Option key={m.id} value={m.id}>
                     {m.codigo}
