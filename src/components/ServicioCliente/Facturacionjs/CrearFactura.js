@@ -152,11 +152,12 @@ const CrearFactura = () => {
       const subtotalConDescuento = subtotal - valorDescuento;
       const ivaValor = subtotalConDescuento * (tasaIva || 0.16);
       const importe = subtotalConDescuento + ivaValor;
+      const ivaRedondeado = parseFloat(ivaValor.toFixed(2));
   
       setResumenCot({
         subtotal,
         descuento: valorDescuento,
-        iva: ivaValor,
+        iva: ivaRedondeado,
         importe,
         importeRedondeado: resumenCot.importeRedondeado
       });
@@ -330,7 +331,7 @@ const CrearFactura = () => {
   
     // 6) Aplicar IVA
     const totalConIva = subtotalConPctFactura * (1 + tasaIVA);
-  
+    
     // 7) Armar payload
     const datosFactura = {
       notas:           values.notas || "",
@@ -341,10 +342,12 @@ const CrearFactura = () => {
       formaPago:       values.formaPago,
       metodoPago:      values.metodoPago,
       porcentaje:      porcentajeFactura,
-      importe:         resumenCot.importeRedondeado,
+      importe:         totalConIva.toFixed(2),
       tipoMoneda:      tipoMoneda.codigo,
       cotizacion:      id,
     };
+    console.log("totalConIva: ", totalConIva.toFixed(2));
+    console.log("totalRedondeado: ", resumenCot.importeRedondeado);
   
     // 8) Crear factura
     const response = await createFactura(datosFactura);
@@ -545,7 +548,7 @@ const CrearFactura = () => {
               <Input value={`$${resumenCot.iva.toFixed(2)} ${tipoMoneda.codigo}`} disabled />
             </Form.Item>
             <Form.Item label="Total:">
-              <Input value={`$${resumenCot.importeRedondeado} ${tipoMoneda.codigo}`} disabled />
+              <Input value={`$${resumenCot.importe.toFixed(2)} ${tipoMoneda.codigo}`} disabled />
             </Form.Item>
             {/* <Form.Item label="Total redondeado:">
               <Input value={`$${resumenCot.importeRedondeado.toFixed(2)} ${tipoMoneda.codigo}`} disabled />
