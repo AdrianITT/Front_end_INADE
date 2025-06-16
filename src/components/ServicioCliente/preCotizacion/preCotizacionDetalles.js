@@ -59,10 +59,10 @@ const PreCotizacionDetalles = () => {
       try {
         const response = await getAllDataPrecotizacion(id);
         const data = response.data;
+        console.log("Datos de la pre-cotización:", data);
         console.log("Pre-Cotización Detalles:", data);   
         setaNumeros(data.numero);
-        setCotizacionInfo(data); // contiene empresa, cliente, moneda, iva, etc.
-        setServicios(data.precotizacionservicios); // contiene los servicios listos
+        setCotizacionInfo(data); // contiene empresa, cliente,  los servicios listos
         setIvaPorcentaje(parseFloat(data.iva.porcentaje) || 0); // Ej. "0.00" -> 0
   
       } catch (error) {
@@ -214,7 +214,7 @@ const PreCotizacionDetalles = () => {
     };
     
     
-
+    //visible modal para enviar correo
    const showEmailModal = () => {
      setIsModalVisible(true);
    };
@@ -367,7 +367,7 @@ const PreCotizacionDetalles = () => {
                 >               
                
                <p><Text strong>Subtotal:</Text> {cotizacionInfo.valores.subtotal} {esUSD ? "USD" : "MXN"}</p>
-               <p><Text strong>Descuento ({cotizacionInfo.valores.descuento || 0}%):</Text> {descuentoConvertido.toFixed(3)} {esUSD ? "USD" : "MXN"}</p>
+               <p><Text strong>Descuento ({cotizacionInfo.valores.descuento || 0}%):</Text> {descuentoConvertido.toFixed(2)} {esUSD ? "USD" : "MXN"}</p>
                <p><Text strong>Subtotal con Descuento:</Text> {cotizacionInfo.valores.subtotalDescuento} {esUSD ? "USD" : "MXN"}</p>
                <p><Text strong>IVA ({cotizacionInfo.valores.iva}%):</Text> {cotizacionInfo.valores.ivaValor} {esUSD ? "USD" : "MXN"}</p>
                <p><Text strong>Total:</Text> {cotizacionInfo.valores.importe} {esUSD ? "USD" : "MXN"}</p>
@@ -391,12 +391,12 @@ const PreCotizacionDetalles = () => {
           onCancel={handleCancel}
           footer={[
             <Button key="cancel" onClick={handleCancel}>Cerrar</Button>,
-            <Button key="send" type="primary" onClick={handleSendEmail}>Enviar</Button>,
+            <Button key="send" type="primary" onClick={handleSendEmail} loading={loading}>Enviar</Button>,
           ]}
         >
           <h4>Selecciona los correos a los que deseas enviar la cotización:</h4>
           <Form layout="vertical">
-            <Checkbox defaultChecked>{cotizacionInfo?.correo || "N/A"}</Checkbox>
+            <Checkbox defaultChecked>{cotizacionInfo?.cliente?.correo || "N/A"}</Checkbox>
             <Form.Item label="Correos adicionales (separados por coma):">
               <Input 
                 placeholder="ejemplo@correo.com, otro@correo.com"

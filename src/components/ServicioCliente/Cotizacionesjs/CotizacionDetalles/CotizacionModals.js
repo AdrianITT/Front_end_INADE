@@ -60,16 +60,20 @@ export const SendEmailModal = ({
   extraEmails,
   setExtraEmails,
   handleSendEmail,
+  loading,
 }) => (
   <Modal
     title="Enviar Cotización"
     visible={visible}
     onCancel={handleCancel}
     footer={[
-      <Button key="cancel" onClick={handleCancel}>
+      <Button key="cancel" onClick={handleCancel}
+       
+       >
         Cerrar
       </Button>,
-      <Button key="send" type="primary" onClick={handleSendEmail}>
+      <Button key="send" type="primary" onClick={handleSendEmail}
+      loading={loading}>
         Enviar
       </Button>,
     ]}

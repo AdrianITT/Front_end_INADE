@@ -16,11 +16,11 @@ const CotizacionTotales = ({
 
   return (
     <div className="cotizacion-totals">
-      <p>Subtotal: {subtotal.toFixed(3)} {moneda}</p>
-      <p>Descuento ({descuento}%): {descuentoValor.toFixed(3)} {moneda}</p>
-      <p>Subtotal con descuento: {subtotalConDescuento.toFixed(3)} {moneda}</p>
-      <p>IVA ({ivaPct}%): {iva.toFixed(3)} {moneda}</p>
-      <p><strong>Total: {total.toFixed(3)} {moneda}</strong></p>
+      <p>Subtotal: {subtotal.toFixed(6)} {moneda}</p>
+      <p>Descuento ({descuento}%): {descuentoValor.toFixed(6)} {moneda}</p>
+      <p>Subtotal con descuento: {subtotalConDescuento.toFixed(6)} {moneda}</p>
+      <p>IVA ({ivaPct}%): {iva.toFixed(6)} {moneda}</p>
+      <p><strong>Total: {total.toFixed(6)} {moneda}</strong></p>
     </div>
   );
 };

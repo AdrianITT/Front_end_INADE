@@ -34,6 +34,7 @@ const Servicio = () => {
   const [isServiceDeleteModalVisible, setIsServiceDeleteModalVisible] = useState(false); 
   const [isSuccessModalVisible, setIsSuccessModalVisible] = useState(false);
   const [successMessage, setSuccessMessage] = useState(""); // Mensaje dinámico
+   const [loadings, setLoadings] = useState(false);
   //const [searchServicios, setSearchServicios] = useState("");
   // Al inicio del componente, declara el estado y la función
   const [metodoSeleccionado, setMetodoSeleccionado] = useState(null);
@@ -234,6 +235,7 @@ const handleMetodoChange = (value) => {
 
   const handleOkServicios = async () => {
     try {
+      setLoadings(true); // Iniciar el loading
       const values = await form.validateFields(); // Usar el formulario validado
       const dataToSend = {
         ...values,
@@ -259,6 +261,8 @@ const handleMetodoChange = (value) => {
       setIsModalOpenServicios(false);
     } catch (error) {
       message.error("Error al guardar el servicio.");
+    }finally {
+      setLoadings(false); // Finalizar el loading
     }
   };
 
@@ -385,6 +389,7 @@ const handleConfirmDeleteService = async () => {
 
   const handleOkMetodos = async () => {
     try {
+      setLoadings(true); // Iniciar el loading
       // Recoger los datos del formulario (lo que el usuario ha ingresado)
       const values = await formMetodo.validateFields(); // Usando Antd form.validateFields para obtener los valores
       const dataToSend = {
@@ -414,6 +419,8 @@ const handleConfirmDeleteService = async () => {
       message.success("Método creado con éxito.");
     } catch (error) {
       message.error("Error al crear el método.");
+    }finally {
+      setLoadings(false); // Finalizar el loading
     }
   };
   

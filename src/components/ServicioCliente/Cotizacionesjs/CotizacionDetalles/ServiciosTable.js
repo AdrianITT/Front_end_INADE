@@ -14,8 +14,8 @@ const ServiciosTable = ({ servicios = [], factorConversion = 1 }) => {
   const data = servicios.map((servicio) => ({
     key: servicio.id,
     ...servicio,
-    precio: (parseFloat(servicio.precio) / factorConversion).toFixed(3),
-    subtotal: (parseFloat(servicio.subtotal) / factorConversion).toFixed(3),
+    precio: (parseFloat(servicio.precio) / factorConversion).toFixed(2),
+    subtotal: (parseFloat(servicio.subtotal) / factorConversion).toFixed(2),
   }));
 
   return (

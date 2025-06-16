@@ -304,7 +304,7 @@ const facturasConMontorestanteCero = useMemo(() => {
           if (field === 'precioPagar') {
             const totalNum = Number(newFact.precioTotal) || 0;
             const pagarNum = Number(value) || 0;
-            newFact.precioRestante = (totalNum - pagarNum).toFixed(2);
+            newFact.precioRestante = (totalNum - pagarNum).toFixed(6);
           }
   
           return newFact;

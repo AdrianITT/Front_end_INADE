@@ -50,7 +50,7 @@ const CrearFactura = () => {
     const [loadingFormasPago, setLoadingFormasPago] = useState(false);
     const [serviciosCot, setServiciosCot] = useState([]);
     const [resumenCot, setResumenCot] = useState({
-      subtotal: 0, descuento: 0, iva: 0, importe: 0
+      subtotal: 0, descuento: 0, iva: 0, importe: 0, importeRedondeado: 0
     });
     
 
@@ -95,7 +95,7 @@ const CrearFactura = () => {
       try {
         const res = await getDataCotizacionBy(id);
         const d = res.data;
-        //console.log("1data: ", d);
+        console.log("1data: ", d);
         setDataID(d);
         // EMISOR / RECEPTOR
         setOrganizacion(d.emisor);   // antes ponías d.empresa, ahora es d.emisor
@@ -112,7 +112,8 @@ const CrearFactura = () => {
           subtotal:      parseFloat(d.valores.subtotal),
           descuento:     parseFloat(d.valores.valorDescuento),
           iva:           parseFloat(d.valores.ivaValor),
-          importe:       parseFloat(d.valores.importe)
+          importe:       parseFloat(d.valores.importe),
+          importeRedondeado: parseFloat(d.valores.importeRedondeado),
         });
   
         // IVA porcentual
@@ -156,7 +157,8 @@ const CrearFactura = () => {
         subtotal,
         descuento: valorDescuento,
         iva: ivaValor,
-        importe
+        importe,
+        importeRedondeado: resumenCot.importeRedondeado
       });
     };
   
@@ -283,14 +285,14 @@ const CrearFactura = () => {
       dataIndex: "precio",
       key: "precio",
       render: precio =>
-        `$${parseFloat(precio).toFixed(3)} ${tipoMoneda.codigo}`
+        `$${parseFloat(precio).toFixed(2)} ${tipoMoneda.codigo}`
     },
     {
       title: "Subtotal",
       dataIndex: "subtotal",
       key: "subtotal",
       render: sub =>
-        `$${parseFloat(sub).toFixed(3)} ${tipoMoneda.codigo}`
+        `$${parseFloat(sub).toFixed(2)} ${tipoMoneda.codigo}`
     },
     
   ];
@@ -321,10 +323,10 @@ const CrearFactura = () => {
     const descuentoCotPct = parseFloat(dataID.valores.descuentoPorcentaje) / 100;
     
     // 4) Aplicar descuento original
-    const subtotalConDescOriginal = ((subtotal).toFixed(2) * (1 - descuentoCotPct)).toFixed(2);
+    const subtotalConDescOriginal = ((subtotal) * (1 - descuentoCotPct));
   
     // 5) Aplicar % de la factura
-    const subtotalConPctFactura = (subtotalConDescOriginal * (1 - (porcentajeFactura / 100))).toFixed(2);
+    const subtotalConPctFactura = (subtotalConDescOriginal * (1 - (porcentajeFactura / 100)));
   
     // 6) Aplicar IVA
     const totalConIva = subtotalConPctFactura * (1 + tasaIVA);
@@ -537,13 +539,16 @@ const CrearFactura = () => {
               <Input value={`$${resumenCot.descuento.toFixed(3)} ${tipoMoneda.codigo}`} disabled />
             </Form.Item>
             <Form.Item label="Tasa IVA:">
-              <Input value={`${(tasaIva).toFixed(3)}%`} disabled />
+              <Input value={`${(tasaIva).toFixed(2)}%`} disabled />
             </Form.Item>
             <Form.Item label="IVA:">
               <Input value={`$${resumenCot.iva.toFixed(3)} ${tipoMoneda.codigo}`} disabled />
             </Form.Item>
             <Form.Item label="Total:">
               <Input value={`$${resumenCot.importe.toFixed(3)} ${tipoMoneda.codigo}`} disabled />
+            </Form.Item>
+            <Form.Item label="Total redondeado:">
+              <Input value={`$${resumenCot.importeRedondeado.toFixed(2)} ${tipoMoneda.codigo}`} disabled />
             </Form.Item>
           </div>
           </Col>
