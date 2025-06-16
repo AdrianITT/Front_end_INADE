@@ -143,7 +143,7 @@ const CrearFactura = () => {
       );
   
       const subtotal = serviciosNoSeleccionados.reduce(
-        (acc, item) => acc + (Number(item.cantidad) * Number(item.precio)),
+        (acc, item) => acc + (Number(item.cantidad) * Number(item.precioRedondeado)),
         0
       );
       console.log("subtotal: ", dataID);
@@ -282,17 +282,17 @@ const CrearFactura = () => {
     },    
     {
       title: "Precio",
-      dataIndex: "precio",
+      dataIndex: "precioRedondeado",
       key: "precio",
       render: precioRedondeado =>
-        `$${parseFloat(precioRedondeado).toFixed(2)} ${tipoMoneda.codigo}`
+        `$${parseFloat(precioRedondeado)} ${tipoMoneda.codigo}`
     },
     {
       title: "Subtotal",
-      dataIndex: "subtotal",
+      dataIndex: "subtotalRedondeado",
       key: "subtotal",
       render: subtotalRedondeado =>
-        `$${parseFloat(subtotalRedondeado).toFixed(2)} ${tipoMoneda.codigo}`
+        `$${parseFloat(subtotalRedondeado)} ${tipoMoneda.codigo}`
     },
     
   ];
@@ -341,7 +341,7 @@ const CrearFactura = () => {
       formaPago:       values.formaPago,
       metodoPago:      values.metodoPago,
       porcentaje:      porcentajeFactura,
-      importe:         totalConIva.toFixed(2),
+      importe:         resumenCot.importeRedondeado,
       tipoMoneda:      tipoMoneda.codigo,
       cotizacion:      id,
     };
@@ -356,7 +356,7 @@ const CrearFactura = () => {
         serviciosAFacturar.map(s =>
           createServicioFactura({
             descripcion: s.descripcion,
-            precio:      parseFloat(s.precio),
+            precio:      parseFloat(s.precioRedondeado),
             cantidad:    s.cantidad,
             factura:     facturaId,
             servicio:    s.servicio.id
@@ -533,19 +533,19 @@ const CrearFactura = () => {
           <Col span={10}>
             <div className="factura-summary">
             <Form.Item label="Subtotal:">
-              <Input value={`$${resumenCot.subtotal.toFixed(2)} ${tipoMoneda.codigo}`} disabled />
+              <Input value={`$${resumenCot.subtotal} ${tipoMoneda.codigo}`} disabled />
             </Form.Item>
             <Form.Item label="Descuento:">
-              <Input value={`$${resumenCot.descuento.toFixed(2)} ${tipoMoneda.codigo}`} disabled />
+              <Input value={`$${resumenCot.descuento} ${tipoMoneda.codigo}`} disabled />
             </Form.Item>
             <Form.Item label="Tasa IVA:">
-              <Input value={`${(tasaIva).toFixed(2)}%`} disabled />
+              <Input value={`${(tasaIva)}%`} disabled />
             </Form.Item>
             <Form.Item label="IVA:">
               <Input value={`$${resumenCot.iva.toFixed(2)} ${tipoMoneda.codigo}`} disabled />
             </Form.Item>
             <Form.Item label="Total:">
-              <Input value={`$${resumenCot.importe.toFixed(2)} ${tipoMoneda.codigo}`} disabled />
+              <Input value={`$${resumenCot.importeRedondeado} ${tipoMoneda.codigo}`} disabled />
             </Form.Item>
             {/* <Form.Item label="Total redondeado:">
               <Input value={`$${resumenCot.importeRedondeado.toFixed(2)} ${tipoMoneda.codigo}`} disabled />
