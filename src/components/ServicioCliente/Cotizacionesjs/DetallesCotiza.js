@@ -121,8 +121,8 @@ const CotizacionDetalles = () => {
 
   //ENVIAR CORREO
   const handleSendEmail = async () => {
-      setEmailLoading(true);
-      try {
+    try {
+        setEmailLoading(true);
           const user_id = localStorage.getItem("user_id");
           if (!user_id) {
               setResultStatus("error");
@@ -273,6 +273,7 @@ const CotizacionDetalles = () => {
           extraEmails={extraEmails} 
           setExtraEmails={setExtraEmails} 
           handleSendEmail={handleSendEmail}
+          loading={emailLoading}
         />
         
         <EditCotizacionModal 

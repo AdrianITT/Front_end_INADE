@@ -316,7 +316,7 @@ const CrearPreCotizaciones = () => {
         
           const servicioData = {
             descripcion: concepto.descripcion || "Sin descripción",
-            precio:      Number(concepto.precioFinal) || 0,
+            precio:      concepto.precioFinal || 0,
             cantidad:    Number(concepto.cantidad)   || 0,
             preCotizacion: preCotizacionId,
             servicio:    concepto.servicio,
@@ -658,11 +658,11 @@ const CrearPreCotizaciones = () => {
 
           <div className="cotizacion-totals-buttons">
             <div className="cotizacion-totals">
-              <p>Subtotal: {subtotal.toFixed(3)} {tipoMonedaSeleccionada === 2 ? "USD" : "MXN"}</p>
-              <p>Descuento ({descuento}%): {descuentoValor.toFixed(3)} {tipoMonedaSeleccionada === 2 ? "USD" : "MXN"}</p>
-              <p>Subtotal con descuento: {subtotalConDescuento.toFixed(3)} {tipoMonedaSeleccionada === 2 ? "USD" : "MXN"}</p>
-              <p>IVA ({ivasData.find(iva => iva.id === ivaSeleccionado)?.porcentaje || 16}%): {iva.toFixed(3)} {tipoMonedaSeleccionada === 2 ? "USD" : "MXN"}</p>
-              <p>Total: {total.toFixed(3)} {tipoMonedaSeleccionada === 2 ? "USD" : "MXN"}</p>
+              <p>Subtotal: {subtotal.toFixed(4)} {tipoMonedaSeleccionada === 2 ? "USD" : "MXN"}</p>
+              <p>Descuento ({descuento}%): {descuentoValor.toFixed(4)} {tipoMonedaSeleccionada === 2 ? "USD" : "MXN"}</p>
+              <p>Subtotal con descuento: {subtotalConDescuento.toFixed(4)} {tipoMonedaSeleccionada === 2 ? "USD" : "MXN"}</p>
+              <p>IVA ({ivasData.find(iva => iva.id === ivaSeleccionado)?.porcentaje || 16}%): {iva.toFixed(4)} {tipoMonedaSeleccionada === 2 ? "USD" : "MXN"}</p>
+              <p>Total: {total.toFixed(4)} {tipoMonedaSeleccionada === 2 ? "USD" : "MXN"}</p>
             </div>
             <Alert
               message="Pro favor de verificar que los datos sean correctos"

@@ -1,6 +1,6 @@
 // RegistroCotizacion.jsx
 import React, { useState, useEffect, useMemo } from "react";
-import { Form, Input, Button, Row, Col, Select, DatePicker, Divider, message, Modal, Spin, Space } from "antd";
+import { Form, Input, Button, Row, Col, Select, DatePicker, Divider, message, Modal, Spin, Space, Alert } from "antd";
 import { useParams, useNavigate } from "react-router-dom";
 import ClienteInfoCard from "./ClienteInfoCard";
 import ConceptoCard from "./ConceptoCard";
@@ -133,15 +133,11 @@ const RegistroCotizacion = () => {
 
 const handleAddConcepto = () => {
   // 1) crea un concepto nuevo con id único
-  const nuevoConcepto = {
-    id: nextId,
-    servicio: "",
-    cantidad: 1,
-    precio: 0,
-    precioFinal: 0,
-    descripcion: "",
-    orden: conceptos.length + 1,  // solo para mostrar la posición
-  };
+  const nuevoConcepto = 
+  { id: nextId,   servicio: "",
+    cantidad: 1,  precio: 0, 
+    precioFinal: 0,descripcion: "", 
+    orden: conceptos.length + 1, };
 
   // 2) actualiza tu array y sube nextId
   const nuevos = [...conceptos, nuevoConcepto];

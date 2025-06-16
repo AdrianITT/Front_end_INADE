@@ -302,7 +302,7 @@ useEffect(() => {
   const handleGuardarOrdenTrabajo = async (values) => {
     try {
       setLoading(true);
-  
+      console.log("Valores recibidos para la orden de trabajo:", values);
       let marcaDeAguaId = null;
   
       // Obtener la orden de trabajo actual si existe
@@ -376,6 +376,7 @@ useEffect(() => {
 
   const handleGuardarCotizacion = async (values) => {
     try {
+      console.log("Valores recibidos para la cotización:", values);
         setLoading(true);
         let marcaDeAguaId = null; 
 
@@ -812,18 +813,22 @@ const CotizacionPureva= async ()=>{
         rules={[{ required: true, message: 'Ingrese el título del documento.' }]}>
           <Input placeholder="Ingrese el título del documento." />
         </Form.Item>
-        <Form.Item
-          label="Imagen marca de agua:"
-          name="marcaDeAgua"
-          valuePropName="fileList"
-          getValueFromEvent={(e) => e?.fileList}
-        >
+          <Alert message="Etes sufijo se mostrara al inicio de la OT ejemplo: 'A'230301-01" type="warning" />
+            <Form.Item label="Sufijo de OT">
+             <Input />
+            </Form.Item>
         <Alert
           message="Advertencia"
           description="Solo Imagenes con la extencion PNG."
           type="warning"
           showIcon
         /><br/>
+        <Form.Item
+          label="Imagen marca de agua:"
+          name="marcaDeAgua"
+          valuePropName="fileList"
+          getValueFromEvent={(e) => e?.fileList}
+        >
           <Upload beforeUpload={() => false} maxCount={1}>
             <Button icon={<UploadOutlined />}>Seleccionar archivo</Button>
           </Upload>
