@@ -356,7 +356,7 @@ const CrearFactura = () => {
         serviciosAFacturar.map(s =>
           createServicioFactura({
             descripcion: s.descripcion,
-            precio:      parseFloat(s.precioRedondeado),
+            precio:      parseFloat(s.precio),
             cantidad:    s.cantidad,
             factura:     facturaId,
             servicio:    s.servicio.id
