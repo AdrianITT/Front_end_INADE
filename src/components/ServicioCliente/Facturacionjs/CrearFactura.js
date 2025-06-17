@@ -134,37 +134,37 @@ const CrearFactura = () => {
   }, [id]);
   
 
-  useEffect(() => {
-    const calcularTotalesExcluyendoSeleccionados = async () => {
-      if (!dataID || !dataID.valores) return;
+  // useEffect(() => {
+  //   const calcularTotalesExcluyendoSeleccionados = async () => {
+  //     if (!dataID || !dataID.valores) return;
       
-      const serviciosNoSeleccionados = serviciosCot.filter(
-        item => !selectedRowKeys.includes(item.id)
-      );
+  //     const serviciosNoSeleccionados = serviciosCot.filter(
+  //       item => !selectedRowKeys.includes(item.id)
+  //     );
   
-      const subtotal = serviciosNoSeleccionados.reduce(
-        (acc, item) => acc + (Number(item.cantidad) * Number(item.precioRedondeado)),
-        0
-      );
-      console.log("subtotal: ", dataID);
+  //     const subtotal = serviciosNoSeleccionados.reduce(
+  //       (acc, item) => acc + (Number(item.cantidad) * Number(item.precio)),
+  //       0
+  //     );
+  //     console.log("subtotal: ", dataID);
   
-      const valorDescuento = subtotal * (dataID.valores.descuentoPorcentaje|| 0) / 100;
-      const subtotalConDescuento = subtotal - valorDescuento;
-      const ivaValor = subtotalConDescuento * (tasaIva || 0.16);
-      const importe = subtotalConDescuento + ivaValor;
-      const ivaRedondeado = parseFloat(ivaValor.toFixed(2));
+  //     const valorDescuento = subtotal * (dataID.valores.descuentoPorcentaje|| 0) / 100;
+  //     const subtotalConDescuento = subtotal - valorDescuento;
+  //     const ivaValor = subtotalConDescuento * (tasaIva || 0.16);
+  //     const importe = subtotalConDescuento + ivaValor;
+  //     const ivaRedondeado = parseFloat(ivaValor.toFixed(2));
   
-      setResumenCot({
-        subtotal,
-        descuento: valorDescuento,
-        iva: ivaRedondeado,
-        importe,
-        importeRedondeado: resumenCot.importeRedondeado
-      });
-    };
+  //     setResumenCot({
+  //       subtotal,
+  //       descuento: valorDescuento,
+  //       iva: ivaRedondeado,
+  //       importe,
+  //       importeRedondeado: resumenCot.importeRedondeado
+  //     });
+  //   };
   
-    calcularTotalesExcluyendoSeleccionados();
-  }, [selectedRowKeys, serviciosCot, tasaIva]);
+  //   calcularTotalesExcluyendoSeleccionados();
+  // }, [selectedRowKeys, serviciosCot, tasaIva]);
   
   
   
@@ -298,9 +298,6 @@ const CrearFactura = () => {
     
   ];
   
-  
-
-
   const handlecrearFactura = async (values) => {
     const porcentajeFactura = values.poresentajeFactura ?? 0;    // e.g. 50
     const tasaIVA = tasaIva;                                    // e.g. 0.16
