@@ -337,6 +337,7 @@ useEffect(() => {
         fechaEmision: values.fechaEmision,
         tituloDocumento: values.tituloDocumento,
         imagenMarcaAgua: marcaDeAguaId,
+        prefijo: values.prefijo,
       };
   
       if (!organizaciones?.infoOrdenTrabajo) {
@@ -813,8 +814,8 @@ const CotizacionPureva= async ()=>{
         rules={[{ required: true, message: 'Ingrese el título del documento.' }]}>
           <Input placeholder="Ingrese el título del documento." />
         </Form.Item>
-          <Alert message="Etes sufijo se mostrara al inicio de la OT ejemplo: 'A'230301-01" type="warning" />
-            <Form.Item label="Sufijo de OT">
+          <Alert message="Etes prefijo se mostrara al inicio de la OT ejemplo: 'A'230301-01" type="warning" />
+            <Form.Item label="prefijo de OT" name="prefijo">
              <Input />
             </Form.Item>
         <Alert
