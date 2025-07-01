@@ -340,8 +340,8 @@ const DetallesFactura = () => {
     try {
       //console.log(id);
       const response = await createPDFfactura(id);
-      //console.log("📄 Respuesta de la API:", response);
-  
+      console.log("📄 Respuesta de la API:", response);
+      
       // Verificar si la respuesta tiene la propiedad `success`
       if (response && response.success) {
         setFacturaExiste(true);
@@ -353,7 +353,25 @@ const DetallesFactura = () => {
       }
     } catch (error) {
       console.error("❌ Error al crear la factura:", error);
-      setResultMessage("Hubo un error al crear la factura. Inténtalo nuevamente.");
+        // Si el error tiene respuesta del backend (por ejemplo con Axios)
+    const apiMessage =
+      error?.response?.data?.response?.Message;
+
+    const modelState = error?.response?.data?.response?.ModelState;
+    const detailedMessage = modelState
+      ? Object.values(modelState)[0][0]   // primer mensaje de ModelState
+      : null;
+
+    const errorMessage =
+      detailedMessage || apiMessage || error.message || "Error desconocido";
+
+     // const errorMessages =error?.response?.data?.response?.ModelState.cfdiToCreate?.items?.[0]?.Taxes?.[0];
+      //console.error("Error al crear la factura:", errorMessage);
+
+      const cleanMessage = errorMessage.split("Ver más")[0].trim();
+      setResultMessage(`Hubo un error: ${cleanMessage}`);
+
+      //setResultMessage("Hubo un error al crear la factura. Inténtalo nuevamente.");
       setResultStatus("error");
     } finally {
       setLoading(false);

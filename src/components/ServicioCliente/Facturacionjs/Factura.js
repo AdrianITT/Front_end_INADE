@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { getAllFacturaByOrganozacion } from "../../../apis/ApisServicioCliente/FacturaApi";
+import { getAllFacturaByOrganozacion, getAllDataFactura } from "../../../apis/ApisServicioCliente/FacturaApi";
 import { getAllfacturafacturama } from "../../../apis/ApisServicioCliente/FacturaFacturamaApi";
-import { Table, Input, Button, message, Tag, theme, Space } from "antd";
+import { Table, Input, Button, message, Tag, theme, Space, Card, Col, Row } from "antd";
 import { Link } from "react-router-dom";
 import "./crearfactura.css"
 import { cifrarId } from "../secretKey/SecretKey";
@@ -11,6 +11,8 @@ const Factura = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [filteredData, setFilteredData] = useState([]);
+  const [expandedData, setExpandedData]=useState({});
+  const [loadingExpanded,setLoadingExpanded]=useState({});
   //const { token } = theme.useToken();
 
   // ID de la organización actual
@@ -91,6 +93,23 @@ const Factura = () => {
     }
   }, [organizationId]);
   
+  const handleExpand = async (expanded, record) => {
+  const facturaId = record.IdFactura;
+
+  if (expanded && !expandedData[facturaId]) {
+    try {
+      setLoadingExpanded((prev) => ({ ...prev, [facturaId]: true }));
+      const response = await getAllDataFactura(facturaId);
+      setExpandedData((prev) => ({ ...prev, [facturaId]: response.data }));
+    } catch (error) {
+      console.error("❌ Error al cargar detalle de factura:", error);
+      message.error("No se pudo cargar el detalle de la factura.");
+    } finally {
+      setLoadingExpanded((prev) => ({ ...prev, [facturaId]: false }));
+    }
+  }
+};
+
 
   // Función para manejar la búsqueda en tiempo real
   const handleSearch = (value) => {
@@ -212,6 +231,106 @@ const Factura = () => {
         pagination={{ pageSize: 10 }}
         loading={loading}
         rowClassName={(record) => (record.missing && record.recent) ? "highlighted-row" : ""}
+        expandable={{
+          onExpand: handleExpand,
+          expandedRowRender: (record) => {
+            const facturaId = record.IdFactura;
+            const detalle = expandedData[facturaId];
+
+            if (loadingExpanded[facturaId]) {
+              return <p style={{ paddingLeft: 20 }}>Cargando detalle...</p>;
+            }
+
+            if (!detalle) {
+              return <p style={{ paddingLeft: 20 }}>Sin datos disponibles.</p>;
+            }
+
+            return (
+              <div style={{ padding: 20 }}>
+                          <Card 
+                          size="small"
+                          bordered={false}
+                          style={{ marginBottom: "1rem" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "14px" }}>
+                  <thead>
+                    <tr style={{ backgroundColor: "#fafafa" }}>
+                      <th style={{
+                        backgroundColor: "#fafafa",
+                        fontWeight: 600,
+                        textAlign: "left",
+                        border: "1px solid #d9d9d9",
+                        padding: "8px 12px"
+                      }}>Servicio</th>
+                      <th style={{
+                        backgroundColor: "#fafafa",
+                        fontWeight: 600,
+                        textAlign: "left",
+                        border: "1px solid #d9d9d9",
+                        padding: "8px 12px"
+                      }}>Descripción</th>
+                      <th style={{
+                        backgroundColor: "#fafafa",
+                        fontWeight: 600,
+                        textAlign: "center",
+                        border: "1px solid #d9d9d9",
+                        padding: "8px 12px"
+                      }}>Cantidad</th>
+                      <th style={{
+                        backgroundColor: "#fafafa",
+                        fontWeight: 600,
+                        textAlign: "right",
+                        border: "1px solid #d9d9d9",
+                        padding: "8px 12px"
+                      }}>Precio</th>
+                      <th style={{
+                        backgroundColor: "#fafafa",
+                        fontWeight: 600,
+                        textAlign: "right",
+                        border: "1px solid #d9d9d9",
+                        padding: "8px 12px"
+                      }}>Subtotal</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {detalle.servicios.map((servicio) => (
+                      <tr key={servicio.id}>
+                        <td style={{ border: "1px solid #d9d9d9", padding: "8px" }}>{servicio.servicio.nombre}</td>
+                        <td style={{ border: "1px solid #d9d9d9", padding: "8px" }}>{servicio.descripcion}</td>
+                        <td style={{ border: "1px solid #d9d9d9", padding: "8px", textAlign: "center" }}>{servicio.cantidad}</td>
+                        <td style={{ border: "1px solid #d9d9d9", padding: "8px", textAlign: "right" }}>${parseFloat(servicio.precioUnitario).toFixed(2)}</td>
+                        <td style={{ border: "1px solid #d9d9d9", padding: "8px", textAlign: "right" }}>${parseFloat(servicio.subtotal).toFixed(2)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                </Card>
+                
+                <Card
+                  size="small"
+                  bordered={false}>
+                  <Row>
+                    <Col xs={24} sm={12} md={8}>
+                      <strong>Moneda:</strong> {detalle.monedaCodigo}
+                    </Col>
+                    <Col xs={24} sm={12} md={8}>
+                      <strong>Subtotal:</strong> ${detalle.valores.subtotal}
+                    </Col>
+                    <Col xs={24} sm={12} md={8}>
+                      <strong>Descuento:</strong> {detalle.valores.descuentoCotizacion  || "0"}
+                    </Col>
+                    <Col xs={24} sm={12} md={8}>
+                      <strong>IVA:</strong> {detalle.valores.ivaPct} → ${detalle.valores.ivaValor}
+                    </Col>
+                    <Col xs={24} sm={12} md={8}>
+                      <strong>Importe total:</strong> ${detalle.valores.totalFinal}
+                    </Col>
+                  </Row>
+                  </Card>
+              </div>
+            );
+          },
+          rowExpandable: () => true,
+        }}
       />
     </div>
   );

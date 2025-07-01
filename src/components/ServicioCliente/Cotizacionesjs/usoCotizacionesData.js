@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getAllcotizacionesdata } from "../../../apis/ApisServicioCliente/CotizacionApi";
+import { getAllcotizacionesdata} from "../../../apis/ApisServicioCliente/CotizacionApi";
 
 export const useCotizacionesData = (organizationId) => {
   const [cotizaciones, setCotizaciones] = useState([]);
