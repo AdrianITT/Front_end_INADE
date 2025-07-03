@@ -1,0 +1,16 @@
+{
+  "files": {
+    "main.css": "/static/css/main.dd12574f.css",
+    "main.js": "/static/js/main.605598ca.js",
+    "static/js/488.cb934759.chunk.js": "/static/js/488.cb934759.chunk.js",
+    "static/media/SimplaxiLogoOrg.png": "/static/media/SimplaxiLogoOrg.7001eb307a9ddb3c8f2e.png",
+    "index.html": "/index.html",
+    "main.dd12574f.css.map": "/static/css/main.dd12574f.css.map",
+    "main.605598ca.js.map": "/static/js/main.605598ca.js.map",
+    "488.cb934759.chunk.js.map": "/static/js/488.cb934759.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.dd12574f.css",
+    "static/js/main.605598ca.js"
+  ]
+}

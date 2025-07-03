@@ -236,7 +236,7 @@ const Factura = () => {
           expandedRowRender: (record) => {
             const facturaId = record.IdFactura;
             const detalle = expandedData[facturaId];
-
+            // console.log("Detalle de factura:", detalle);
             if (loadingExpanded[facturaId]) {
               return <p style={{ paddingLeft: 20 }}>Cargando detalle...</p>;
             }
@@ -247,10 +247,20 @@ const Factura = () => {
 
             return (
               <div style={{ padding: 20 }}>
-                          <Card 
-                          size="small"
-                          bordered={false}
-                          style={{ marginBottom: "1rem" }}>
+                <Card 
+                size="small"
+                bordered={false}
+                style={{ marginBottom: "1rem" }}>
+                  <Row justify="center" align="middle" >
+                  <Col>
+                      <strong>Division:</strong> {detalle.division || "Pendiente"}
+                  </Col>
+                  </Row>
+                </Card>
+                <Card 
+                size="small"
+                bordered={false}
+                style={{ marginBottom: "1rem" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "14px" }}>
                   <thead>
                     <tr style={{ backgroundColor: "#fafafa" }}>

@@ -22,7 +22,7 @@ export const useCotizacionDetails = (id) => {
       }
       const response = await getDetallecotizaciondataById(id);
       const data = response.data;
-        //console.log("data: ", data);
+      console.log("data: ", data);
       // Puedes darle formato si lo necesitas
       setCotizacionInfo({
         ...data,
@@ -41,6 +41,7 @@ export const useCotizacionDetails = (id) => {
       // 🔥 AQUÍ extraes los servicios
       setServicios(data.cotizacionServicio || []);
       const cotizacionesResponse = await getAllCotizacionByCliente(organizationId);
+      console.log("cotizacionesResponse: ", cotizacionesResponse.data);
       setCotizacionesCliente(cotizacionesResponse.data || []);
       const respons2= await getCotizacionById(id);
       const datas = respons2.data;

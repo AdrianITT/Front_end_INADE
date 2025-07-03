@@ -81,8 +81,8 @@ const EditarOrdenTrabajo = () => {
         //console.log("Orden de trabajo data:", response.data);
         const data = response.data;
         setOrdenData(data.ordenTrabajo);
-    
-        //const resCot = await getDetallecotizaciondataById(data.ordenTrabajo.id);
+        console.log("Orden de trabajo:", data);
+        //const resCot = await getDetallecotizaciondataById(data);
         const cotServicios = data.ordenTrabajoServicios;
     
         const serviciosMapped = data.ordenTrabajoServicios.map((ots) => {
@@ -100,6 +100,7 @@ const EditarOrdenTrabajo = () => {
             eliminar: false,
           };
         });
+        // metodoCodigo: ots.servicio.metodo?.codigo || "",
     
         form.setFieldsValue({
           servicios: serviciosMapped,
@@ -171,6 +172,7 @@ const EditarOrdenTrabajo = () => {
   
       const actualizarOrdenPromises = serviciosExistentes.map((item) => {
         const payload = {
+          servicio: item.servicio,
           cantidad: item.cantidad,
           descripcion: item.descripcion,
         };
@@ -267,7 +269,7 @@ const EditarOrdenTrabajo = () => {
                           label="Servicio"
                           rules={[{ required: true, message: "Seleccione un servicio" }]}
                         >
-                          <Select placeholder="Seleccione un servicio" showSearch disabled={true}>
+                          <Select placeholder="Seleccione un servicio" showSearch >
                             {serviciosDisponibles.map((s) => (
                               <Select.Option key={s.id} value={s.id}>
                                    {s.nombreServicio || s.nombre}
@@ -276,6 +278,12 @@ const EditarOrdenTrabajo = () => {
                           </Select>
                         </Form.Item>
                       </Col>
+                      {/* <Col span={8}>
+                        <Form.Item label="Código del método" name="metodoCodigo">
+
+                          <Input disabled />
+                        </Form.Item>
+                      </Col> */}
                       <Col span={12}>
                         <Form.Item
                           {...field}
