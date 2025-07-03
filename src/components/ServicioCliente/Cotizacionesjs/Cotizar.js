@@ -127,10 +127,23 @@ const Cotizar = () => {
 
                 return (
                   <div style={{ padding: "20px" }}>
+                    
+                    <Card
+                    size="small"
+                    bordered={false}
+                    style={{ marginBottom: "1rem" }}>
+                    <Row justify="center" align="middle" >
+                      <Col>
+                        <strong>Division:</strong> {detalle.data.cliente?.direccion?.division}
+                      </Col>
+                    </Row>
+                    </Card>
+
                     <Card 
                     size="small"
                     bordered={false}
                     style={{ marginBottom: "1rem" }}>
+
 
                     <table style={{
                       width: "100%",

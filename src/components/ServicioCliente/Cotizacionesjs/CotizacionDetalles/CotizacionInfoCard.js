@@ -14,7 +14,6 @@ const CotizacionInfoCard = ({
 }) => {
   const valores = cotizacionInfo?.valores || {};
   const moneda = cotizacionInfo?.tipoMoneda?.codigo || (esUSD ? "USD" : "MXN");
-
   return (
     <Row gutter={16}>
       <Col span={16}>
@@ -31,6 +30,12 @@ const CotizacionInfoCard = ({
             <Text strong>Dirección Cliente:</Text>{" "}
             {cotizacionInfo?.cliente?.direccion
               ? `${cotizacionInfo.cliente.direccion.calle} ${cotizacionInfo.cliente.direccion.numero}, ${cotizacionInfo.cliente.direccion.colonia}, ${cotizacionInfo.cliente.direccion.ciudad}, ${cotizacionInfo.cliente.direccion.estado}`
+              : "N/A"}
+          </p>
+          <p>
+            <Text strong>Divicion:</Text>{" "}
+            {cotizacionInfo?.clienteDireccion?.division
+              ? `${cotizacionInfo.clienteDireccion.division} `
               : "N/A"}
           </p>
           <p>

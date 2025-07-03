@@ -34,7 +34,7 @@ export const ConfirmDuplicarModal = ({ visible, onCancel, onConfirm, cotizacione
         }
         options={cotizacionesCliente.map(cot => ({
           value: cot.id,
-          label: `#${cot.nombreCompleto} - ${cot.empresa.nombre|| "Sin código"}`
+          label: `#Cot. ${cot.numeroCotizaciones}-${cot.nombreCompleto} - ${cot.empresa.nombre|| "Sin código"}`
         }))}
       />
     </Modal>
