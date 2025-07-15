@@ -174,6 +174,7 @@ const CotizacionDetalles = () => {
     try {
       const idLocalUser = localStorage.getItem("user_id")
       const userResponse = await getUserById(idLocalUser);
+      console.log("User response:", userResponse.data);
       const nombreusuario=`${userResponse.data.first_name} ${userResponse.data.last_name}`;
       console.log("Nombre de usuario:", nombreusuario); 
       //console.log("Duplicando con opción:", clienteIdSeleccionado);
@@ -300,6 +301,7 @@ const CotizacionDetalles = () => {
           onCancel={() => setIsDuplicarModalVisible(false)}
           onConfirm={async (selectedOption) => {
             setIsDuplicarModalVisible(false);
+            console.log("Opción seleccionada para duplicar:", selectedOption);
             await handleDuplicarCotizacion(selectedOption);
           }}
         />

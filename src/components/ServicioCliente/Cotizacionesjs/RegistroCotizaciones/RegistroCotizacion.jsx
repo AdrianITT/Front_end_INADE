@@ -320,13 +320,14 @@ if (conceptos.length === 1) {
           />
           </Col>
           </Row>
-
-
-
-        <div style={{ marginTop: 24 }}>
+          <Row justify="center" gutter={12}>
+            <Button type="default" danger onClick={() => navigate("/cliente")}>Cancelar</Button>
+            <Button type="primary" onClick={handleSubmit} style={{ marginLeft: 12 }}>Crear</Button>
+          </Row>
+        {/* <div style={{ marginTop: 24, display:"flex", justifyContent: "center", gap: 12 }}>
           <Button type="default" danger onClick={() => navigate("/cliente")}>Cancelar</Button>
           <Button type="primary" onClick={handleSubmit} style={{ marginLeft: 12 }}>Crear</Button>
-        </div>
+        </div> */}
       </Form>
 
       <ModalNuevoServicio

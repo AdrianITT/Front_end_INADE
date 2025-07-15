@@ -9,6 +9,7 @@ import { createEmpresas,getEmpresaById } from "../../../apis/ApisServicioCliente
 import { useCatalogos } from "../Clientejs/useCatalogos";
 import { getAllCliente, createCliente, deleteCliente, getAllClienteData } from "../../../apis/ApisServicioCliente/ClienteApi";
 import { getAllTitulo } from "../../../apis/ApisServicioCliente/TituloApi";
+import { cifrarId } from "../secretKey/SecretKey";
 import "./Cliente.css";
 
 const Cliente = () => {
@@ -235,7 +236,8 @@ const Cliente = () => {
         setIsSuccessModalOpen(true);
         setTimeout(() => {
           setIsSuccessModalOpen(false);
-          navigate(`/crear_cotizacion/${newClientId}`);
+          
+          navigate(`/RegistroCotizacion/${cifrarId(newClientId)}`);
         }, 1500);
       }
     } catch (error) {
