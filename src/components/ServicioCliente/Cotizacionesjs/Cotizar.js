@@ -61,7 +61,7 @@ const Cotizar = () => {
       try {
         setLoadingRows((prev) => ({ ...prev, [id]: true }));
         const detalle = await getDetallecotizaciondataById(id);
-        console.log(`Detalle de cotización ${id}:`, detalle);
+        // console.log(`Detalle de cotización ${id}:`, detalle);
         setExpandedData((prev) => ({ ...prev, [id]: detalle }));
       } catch (error) {
         console.error(`Error al obtener detalle de cotización ${id}:`, error);

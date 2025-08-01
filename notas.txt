@@ -1,0 +1,120 @@
+def get_factura_respaldo(request, factura_idA, factura_idB):
+    factura = get_object_or_404(
+        Factura.objects.select_related(
+            'cotizacion__cliente__empresa__organizacion__RegimenFiscal',
+            'cotizacion__cliente__empresa__regimenFiscal',
+            'cotizacion__cliente__empresa__organizacion__infoSistema',
+            'tipoCfdi',
+            'formaPago',
+            'metodoPago',
+            'cotizacion__iva',
+            'cotizacion__tipoMoneda',
+        ),
+        pk=factura_idA
+    )
+
+    cotizacion   = factura.cotizacion
+    cliente      = cotizacion.cliente
+    empresa      = cliente.empresa
+    organizacion = empresa.organizacion
+
+    cert = CertificadoSelloDigital.objects.filter(Organizacion=organizacion).first()
+    organizacion_rfc = cert.rfc if cert else ''
+
+    if cotizacion.tipoMoneda.id == 2:
+        tipo_cambio = organizacion.infoSistema.tipoCambioDolar
+    else:
+        tipo_cambio = Decimal('1')
+        
+    tijuana_tz = pytz.timezone("America/Tijuana")
+    today = datetime.now(tijuana_tz).date()  # fecha de hoy
+    hora_fija = time(0, 0, 0)                # 00:00:00
+    fecha_iso = datetime.combine(today, hora_fija).isoformat()
+    regimen_fiscal = organizacion.RegimenFiscal
+    
+    facturamulti = {
+        "NameId": "1",
+        "LogoUrl": f"http://127.0.0.1:8000/{organizacion.logo.url if organizacion.logo else ''}",         
+        "Date": fecha_iso,
+        "Serie": "FAC",
+        "CurrencyExchangeRate": float(tipo_cambio) if tipo_cambio != 1 else None,
+        "Currency": cotizacion.tipoMoneda.codigo,
+        "ExpeditionPlace": organizacion.codigoPostal,
+        "Folio": factura.numero,
+        "CfdiType":      factura.tipoCfdi.codigo,
+        "PaymentForm":   factura.formaPago.codigo,
+        "PaymentMethod": factura.metodoPago.codigo,
+        "Issuer": {
+            "FiscalRegime": regimen_fiscal.codigo,
+            "Rfc":          organizacion_rfc,
+            "Name":         organizacion.nombre,
+        },
+        "Receiver": {
+            "Rfc":           empresa.rfc,
+            "CfdiUse":       getattr(empresa, 'UsoCfdi').codigo if hasattr(empresa, 'UsoCfdi') and empresa.UsoCfdi else '',
+            "Name":          empresa.nombre,
+            "FiscalRegime":  empresa.regimenFiscal.codigo if empresa.regimenFiscal else '',
+            "TaxZipCode":    empresa.codigoPostal,
+        },
+        "Items":        [],
+        "Observations": factura.notas,
+        "OrderNumber":  factura.ordenCompra,
+    }
+
+    pct_factura   = Decimal(factura.porcentaje or 0)
+    factor_factura = (Decimal(100) - pct_factura) / Decimal(100)
+
+    fs_qs = FacturaServicio.objects.select_related(
+        'servicio__claveCfdi',
+        'servicio__unidadCfdi',
+        'servicio__metodos'
+    ).filter(factura=factura)
+
+    rounding = Decimal('0.000001')
+
+    for fs in fs_qs:
+        servicio = fs.servicio
+        cantidad = Decimal(fs.cantidad)
+
+        precio_desc = (Decimal(fs.precio) * factor_factura).quantize(rounding, ROUND_HALF_UP)
+        subtotal_linea = (precio_desc * cantidad).quantize(rounding, ROUND_HALF_UP)
+        pct_cot = Decimal(cotizacion.descuento or 0) / Decimal(100)
+        valor_desc = (subtotal_linea * pct_cot).quantize(rounding, ROUND_HALF_UP)
+        subc_desc = (subtotal_linea - valor_desc).quantize(rounding, ROUND_HALF_UP)
+        pct_iva = (Decimal(cotizacion.iva.porcentaje or 0) / Decimal(1)).quantize(rounding, ROUND_HALF_UP)
+        iva_val = (subc_desc * pct_iva).quantize(rounding, ROUND_HALF_UP)
+        total_linea = (subc_desc + iva_val).quantize(rounding, ROUND_HALF_UP)
+
+        facturamulti["Items"].append({
+            "IdProduct":   None,
+            "ProductCode": servicio.claveCfdi.codigo,
+            "Description": fs.servicio.nombreServicio,
+            "Unit":        "Servicio",
+            "UnitCode":    servicio.unidadCfdi.codigo,
+            "UnitPrice":   float(precio_desc),
+            "Quantity":    float(cantidad),
+            "Subtotal":    float(subtotal_linea),
+            "Discount":    float(valor_desc),
+            "TaxObject":   "02",
+            "Taxes": [
+                {
+                    "Total":       float(iva_val),
+                    "Name":        "IVA",
+                    "Base":        float(subc_desc),
+                    "Rate":        float(pct_iva),
+                    "IsRetention": False
+                }
+            ],
+            "Total": float(total_linea),
+        })
+
+    response = crear_cfdi_api(facturamulti)
+    comp = response.get("Complement", {})
+
+    return JsonResponse({"error": "Error creando CFDI", "response": response}, status=400)
+
+def crear_cfdi_api(data):
+    #permission_classes = [IsAuthenticated]
+    url = f"{SANDBOX_URL}/api-lite/3/cfdis"
+    response = requests.post(url, json=data, auth=(USERNAME, PASSWORD))
+    return response.json()  # Puedes devolver la respuesta en formato JSON

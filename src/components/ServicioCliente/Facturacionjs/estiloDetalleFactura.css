@@ -1,5 +1,6 @@
 /* BotonesFactura.css */
 .container-botones {
+     flex-wrap: wrap; 
      display: flex;
      gap: 16px;
      margin-top: 20px;

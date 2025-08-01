@@ -33,7 +33,7 @@ const CotizacionInfoCard = ({
               : "N/A"}
           </p>
           <p>
-            <Text strong>Divicion:</Text>{" "}
+            <Text strong>Division:</Text>{" "}
             {cotizacionInfo?.clienteDireccion?.division
               ? `${cotizacionInfo.clienteDireccion.division} `
               : "N/A"}

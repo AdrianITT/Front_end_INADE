@@ -9,6 +9,7 @@
     "axios": "^1.7.9",
     "cra-template": "1.2.0",
     "dayjs": "^1.11.13",
+    "jspdf": "^3.0.1",
     "moment": "^2.30.1",
     "numero-a-letras": "^1.0.6",
     "react": "^18.2.0",

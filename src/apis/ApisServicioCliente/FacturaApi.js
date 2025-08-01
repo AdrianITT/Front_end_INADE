@@ -36,3 +36,8 @@ export const updatepachFactura=async(id,data)=>Api_Host.patch(`/factura/${id}/`,
 // Para descarga del PDF - FacturaPDFdescarga_Api
 export const getFacturPDFaById = async (id) => Api_Host.get(`/factura-pdf/${id}/`);
 
+//get_factura_respaldo/<int:factura_idR>/<int:factura_idA>/
+//Respaldo factura
+export const getFacturRespaldo = async (idR,idA) => Api_Host.get(`/get_factura_relacion/${idR}/${idA}/`);
+export const deleteFacturRenplasar = async (idR,idA) => Api_Host.get(`/delete_relaciona_api/${idR}/${idA}/`);
+

@@ -56,7 +56,7 @@ const CotizacionDetalles = () => {
 
   useEffect(() => {
     const verificar = async () => {
-      console.log(id);
+      // console.log(id);
       const acceso = await validarAccesoPorOrganizacion({
         fetchFunction: getAllcotizacionesdata,
         organizationId,
@@ -65,7 +65,7 @@ const CotizacionDetalles = () => {
         navigate,
         mensajeError: "Acceso denegado a esta precotización.",
       });
-      console.log(acceso);
+      // console.log(acceso);
       if (!acceso) return;
     };
 
@@ -174,9 +174,9 @@ const CotizacionDetalles = () => {
     try {
       const idLocalUser = localStorage.getItem("user_id")
       const userResponse = await getUserById(idLocalUser);
-      console.log("User response:", userResponse.data);
+      // console.log("User response:", userResponse.data);
       const nombreusuario=`${userResponse.data.first_name} ${userResponse.data.last_name}`;
-      console.log("Nombre de usuario:", nombreusuario); 
+      // console.log("Nombre de usuario:", nombreusuario); 
       //console.log("Duplicando con opción:", clienteIdSeleccionado);
       const idCliente=clienteIdSeleccionado; // úsala aquí si lo necesitas
       const response = await getDuplicarCotizacion(id,idCliente,nombreusuario );
@@ -301,7 +301,7 @@ const CotizacionDetalles = () => {
           onCancel={() => setIsDuplicarModalVisible(false)}
           onConfirm={async (selectedOption) => {
             setIsDuplicarModalVisible(false);
-            console.log("Opción seleccionada para duplicar:", selectedOption);
+            // console.log("Opción seleccionada para duplicar:", selectedOption);
             await handleDuplicarCotizacion(selectedOption);
           }}
         />

@@ -31,9 +31,9 @@ export const ConfirmDuplicarModal = ({ visible, onCancel, onConfirm, cotizacione
         placeholder="Selecciona una cotización del cliente"
         style={{ width: "100%", marginTop: "1rem" }}
         onChange={setSelectedOption}
-        optionFilterProp="label"
+        optionFilterProp="children"
         filterOption={(input, option) =>
-          (option?.label + '').toLowerCase().includes(input.toLowerCase())
+          (option?.children + '').toLowerCase().includes(input.toLowerCase())
         }
         
       >

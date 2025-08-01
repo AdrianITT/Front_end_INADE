@@ -1,17 +1,18 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Card, Row, Col, Button, Table, Tabs, Dropdown, Menu, Modal, Select, Input, Form, DatePicker, Flex, Alert, Checkbox,message,Descriptions, Result, Spin  } from "antd";
+import { Card, Row, Col, Button, Table, Tabs, Dropdown, Menu, Modal, Select, Input, Form, 
+  DatePicker, Flex, Alert, Checkbox,message,Descriptions, Result, Spin, Space  } from "antd";
 import { useParams, Link ,useNavigate } from "react-router-dom";
 import { Text} from '@react-pdf/renderer';
-import{FileTextTwoTone,MailTwoTone,FilePdfTwoTone,CloseCircleTwoTone, FileAddTwoTone} from "@ant-design/icons";
-import { createPDFfactura, deleteFactura, getAllDataFactura, getAllDataPreFactura, getAllFacturaByOrganozacion } from "../../../apis/ApisServicioCliente/FacturaApi";
+import{FileTextTwoTone,MailTwoTone,FilePdfTwoTone,CloseCircleTwoTone, FileAddTwoTone, FileTwoTone} from "@ant-design/icons";
+import { createPDFfactura, deleteFactura, getAllDataFactura, getAllDataPreFactura, getAllFacturaByOrganozacion, deleteFacturRenplasar  } from "../../../apis/ApisServicioCliente/FacturaApi";
 import { getEmpresaById } from "../../../apis/ApisServicioCliente/EmpresaApi";
 import { Api_Host } from "../../../apis/api";
 import PaymentCards from "../Facturacionjs/FacturaPagos"
 import { getAllFacturaPagos } from "../../../apis/ApisServicioCliente/FacturaPagosApi";
-import {updatepachFactura} from "../../../apis/ApisServicioCliente/FacturaApi";
+import {updatepachFactura, getFacturRespaldo} from "../../../apis/ApisServicioCliente/FacturaApi";
 import {getOrganizacionById} from '../../../apis/ApisServicioCliente/organizacionapi';
 //import axios from "axios";
-import {  getAllfacturafacturama } from "../../../apis/ApisServicioCliente/FacturaFacturamaApi";
+import {  getAllfacturafacturama} from "../../../apis/ApisServicioCliente/FacturaFacturamaApi";
 import { getInfoSistema } from "../../../apis/ApisServicioCliente/InfoSistemaApi";
 import PDFpreFactura from "./Plantilla/PDFpreFactura";
 import { PDFDownloadLink} from '@react-pdf/renderer';
@@ -21,6 +22,8 @@ import "./estiloDetalleFactura.css";
 import {NumerosALetras} from "numero-a-letras";
 import { cifrarId, descifrarId } from "../secretKey/SecretKey";
 import { validarAccesoPorOrganizacion } from "../validacionAccesoPorOrganizacion";
+import AddendaModal from "./AddendaModal";
+// import { modalGlobalConfig } from "antd/es/modal/confirm";
 //import MenuItem from "antd/es/menu/MenuItem";
 
 
@@ -29,6 +32,7 @@ const { Option } = Select;
 const DetallesFactura = () => {
   const { ids } = useParams();
   const id=descifrarId(ids);
+  const facturaId=id;
   const navigate = useNavigate();
   const [metodosPago, setMetodosPago] = useState([]);
   const [formasPago, setFormasPago] = useState([]);
@@ -38,6 +42,7 @@ const DetallesFactura = () => {
   const [isModalVisibleCorreo, setIsModalVisibleCorreo] = useState(false);
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
   const [isConfirmModalVisible, setIsConfirmModalVisible] = useState(false);
+  const [modalAddenda, setModalAddenda] = useState(false);
   const [moneda, setMoneda] = useState({ codigo: "", descripcion: "" });
   const [form] = Form.useForm();
   const [cliente, setCliente] = useState({});
@@ -63,6 +68,10 @@ const DetallesFactura = () => {
   const [dataLogo, setDataLogo] = useState(null);
   const [centavos, setCentavos] = useState("");
   const [centavostext, setCentavosText] = useState("");
+  const [facturas, setFacturas] = useState([]);
+  const [facturaReemplazoId, setFacturaReemplazoId] = useState(null);
+  const [isRespaldoModalVisible, setIsRespaldoModalVisible] = useState(false);
+  const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
   // Texto dinámico que aparece dentro del Modal de éxito
   const [modalText, setModalText] = useState(
     "La factura ha sido cancelada. Serás redirigido al listado de facturas."
@@ -74,7 +83,7 @@ const DetallesFactura = () => {
 
   useEffect(() => {
     const verificar = async () => {
-      console.log(id);
+      // console.log(id);
       const acceso = await validarAccesoPorOrganizacion({
         fetchFunction: getAllFacturaByOrganozacion,
         organizationId,
@@ -83,12 +92,27 @@ const DetallesFactura = () => {
         navigate,
         mensajeError: "Acceso denegado a esta precotización.",
       });
-      console.log(acceso);
+      // console.log(acceso);
       if (!acceso) return;
     };
 
     verificar();
   }, [organizationId, id]);
+
+  useEffect(() => {
+  if (isRespaldoModalVisible) {
+    const orgId = parseInt(localStorage.getItem("organizacion_id"), 10);
+    if (orgId) {
+      getAllFacturaByOrganozacion(orgId)
+        .then(response => {
+          setFacturas(response.data);  // ajusta según cómo devuelva los datos
+          console.log("response factura:",response.data);
+        })
+        .catch(err => console.error("Error cargando facturas:", err));
+    }
+  }
+}, [isRespaldoModalVisible]);
+
   
   const columnsConceptos = [
     {
@@ -140,13 +164,13 @@ const DetallesFactura = () => {
   };
 
   const fetchValue=async()=>{
-      console.log("organizationId",organizationId);
+      // console.log("organizationId",organizationId);
       const FacturasInicial = await getAllFacturaByOrganozacion(organizationId);  // 👈 trae todos los clientes
       
-      console.log("FacturasInicial",FacturasInicial);
+      // console.log("FacturasInicial",FacturasInicial);
       
       const idsPermitidos = FacturasInicial.data.map((c) => String(c.id));  // 👈 importante: convertir a string para comparación con URL
-      console.log("idsPermitidos",idsPermitidos);
+      // console.log("idsPermitidos",idsPermitidos);
   
       if (idsPermitidos.length > 0 && !idsPermitidos.includes(id)) {
         message.error("No tienes autorización para editar este cliente.");
@@ -234,7 +258,7 @@ const DetallesFactura = () => {
         setLoading(true);
         const response = await getAllDataFactura(id);
         const data = response.data;
-        console.log("Datos de la factura completa:", data);
+        // console.log("Datos de la factura completa:", data);
         // Seteamos directamente los datos
         setFactura(data); // puedes eliminar este estado si solo usas los campos individuales
         setMoneda({ codigo: data.monedaCodigo.includes("USD") ? "USD" : "MXN", descripcion: data.monedaCodigo});
@@ -275,7 +299,7 @@ const DetallesFactura = () => {
       const organizacion = await getOrganizacionById(organizationId);
       //console.log("Datos de la organización:", NumerosALetras(51));
       //console.log("Datos de la organización:", organizacion.data);
-      console.log("Datos de la factura:", factura.data);
+      // console.log("Datos de la factura:", factura.data);
       setDataFactura(factura.data);
       setDataLogo(organizacion.data);
       const total = parseFloat(factura.data.valores.totalFinal);
@@ -333,6 +357,19 @@ const DetallesFactura = () => {
       });
   };
 
+  const base64ToPdf = (base64, filename = "acuse_cancelacion.pdf") => {
+  const byteCharacters = atob(base64);
+  const byteNumbers = Array.from(byteCharacters).map(char => char.charCodeAt(0));
+  const byteArray = new Uint8Array(byteNumbers);
+  const blob = new Blob([byteArray], { type: "application/pdf" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
 
 
   const handleCrearFactura = async () => {
@@ -340,7 +377,7 @@ const DetallesFactura = () => {
     try {
       //console.log(id);
       const response = await createPDFfactura(id);
-      console.log("📄 Respuesta de la API:", response);
+      // console.log("📄 Respuesta de la API:", response);
       
       // Verificar si la respuesta tiene la propiedad `success`
       if (response && response.success) {
@@ -380,7 +417,9 @@ const DetallesFactura = () => {
   };
 
   const handleDownloadPDF = async (id) => {
+    setLoading(true);
     try {
+      await delay(1500)
       const pdfUrl = `${Api_Host.defaults.baseURL}/factura-pdf/${id}/`;
       //console.log("📌 URL generada:", pdfUrl);
       //window.open(pdfUrl);
@@ -413,11 +452,15 @@ const DetallesFactura = () => {
     } catch (error) {
       console.error("Error al descargar el PDF:", error);
       message.error("No se pudo descargar el PDF.");
+    }finally{
+      setLoading(false);
     }
   };
   
   const handleDownloadXML = async (id) => {
+    setLoading(true);
     try {
+      await delay(1500)
       const xmlUrl = `${Api_Host.defaults.baseURL}/factura-xml/${id}/`;
       //console.log("📌 URL generada para XML:", xmlUrl);
   
@@ -449,6 +492,8 @@ const DetallesFactura = () => {
     } catch (error) {
       console.error("Error al descargar el XML:", error);
       message.error("No se pudo descargar el XML.");
+    }finally{
+      setLoading(false);
     }
   };
 
@@ -502,17 +547,66 @@ const DetallesFactura = () => {
       setLoading(false);
   }
 };
+
+  const handleDownloadAcuse = async (id) => {
+    setLoading(true);
+    try {
+      await delay(1500);
+      const pdfUrl = `${Api_Host.defaults.baseURL}/DescargarAcusePDF/${id}/`;
+      //console.log("📌 URL generada:", pdfUrl);
+      //window.open(pdfUrl);
+  
+      // Realizar la solicitud para obtener el archivo PDF
+      const response = await fetch(pdfUrl, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/pdf",
+        },
+      });
+  
+      if (!response.ok) {
+        throw new Error("No se pudo descargar el PDF.");
+      }
+  
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+  
+      // Crear enlace para la descarga
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `Acuse_Factura_${factura.numerofactura}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+  
+      // Liberar memoria
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error al descargar el PDF:", error);
+      message.error("No se pudo descargar el PDF.");
+    }finally{
+      setLoading(false);
+    }
+  };
   
 
 const handleCancelFactura = async () => {
   setLoading(true);
   try {
+    await delay(1500);
       const response = await fetch(`${Api_Host.defaults.baseURL}/factura-delete/${id}/`, {
           method: "GET",
           headers: { "Content-Type": "application/json" },
       });
-
+      
       if (response.ok) {
+        const result = await response.json(); // 👈 Agrega esta línea SIEMPRE
+  
+        const pdfBase64 = result.acuse_pdf_base64;
+        if (pdfBase64) {
+          base64ToPdf(pdfBase64, `acuse_cancelacion.pdf`);
+        }
+        // console.log("Respuesta completa:", result);
           message.success("Factura cancelada exitosamente.");
           setVisibleCancelModal(false); // Cierra el modal tras la cancelación
           // Muestra el modal de éxito
@@ -539,7 +633,8 @@ const handleDeleteFactura = () => {
 };
 const confirmDeleteFactura = async () => {
   try {
-    await deleteFactura(id);
+    const data =await deleteFactura(id);
+    // console.log("hola dat :",data);
     message.success("Factura eliminada correctamente.");
     setIsDeleteModalVisible(false);
     navigate("/factura");
@@ -548,6 +643,48 @@ const confirmDeleteFactura = async () => {
     message.error("No se pudo eliminar la factura.");
   }
 };
+
+const confirmRelacionFactura = async (idA,idB) => {
+  // console.log(idA);
+  // console.log(idB);
+  try {
+    
+    const data =await getFacturRespaldo(idB,idA);
+    console.log("hola dat :",data);
+    const data2= await deleteFacturRenplasar(idB,idA);
+    downloadXML(data2.data.acuse_xml_base64, "acuse_cancelacion.xml");
+    console.log("data2: ",data2);
+    message.success("Factura eliminada correctamente.");
+    setIsDeleteModalVisible(false);
+    // navigate("/factura");
+  } catch (error) {
+    console.error("Error al eliminar la factura:", error);
+    message.error("No se pudo eliminar la factura.");
+  }finally {
+      setLoading(false);
+      message.success("Proceso Finalizado");
+      setIsRespaldoModalVisible(false);
+  }
+};
+const downloadXML = (base64String, filename = "acuse.xml") => {
+  const byteCharacters = atob(base64String);
+  const byteArrays = [];
+
+  for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+    const slice = byteCharacters.slice(offset, offset + 512);
+    const byteNumbers = new Array(slice.length).fill(0).map((_, i) => slice.charCodeAt(i));
+    byteArrays.push(new Uint8Array(byteNumbers));
+  }
+
+  const blob = new Blob(byteArrays, { type: "application/xml" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.setAttribute("download", filename);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+
 
 const handleOpenConfirmModal = () => {
   setIsConfirmModalVisible(true);
@@ -562,6 +699,9 @@ const handleConfirmCrearFactura = () => {
   handleCrearFactura();
 };
 
+  const abrirModal = () => setModalAddenda(true);
+  const cerrarModal = () => setModalAddenda(false);
+
 
   const menu = (
     <Menu>
@@ -572,6 +712,9 @@ const handleConfirmCrearFactura = () => {
       <Menu.Item key="6" onClick={() => setModalOpen(true)} icon={<FileAddTwoTone />}>
         Generar Comprobante de Pago
       </Menu.Item>
+      <Menu.Item key="7" onClick={() => handleDownloadAcuse(id)}icon={<FileTextTwoTone />}>Descargar Acuse</Menu.Item>
+      <Menu.Item key="8" onClick={abrirModal}icon={<FileTextTwoTone />}>Crear o editar Addenda</Menu.Item>
+      {/* getdescargaAcuse */}
     </Menu>
   );
 
@@ -655,7 +798,7 @@ const montoRestante =hasPagos
             </Col>
             <Col span={8}>
               {facturaExiste   === false   ? (
-                <Flex gap="small" wrap>
+                <Flex vertical gap="small">
                   <Alert
                     message="Informational Notes"
                     description="Tiene un plazo de 72 hora para crear la Factura."
@@ -663,6 +806,7 @@ const montoRestante =hasPagos
                     showIcon
                   />
                 <div className="container-botones">
+                  <Space wrap size="middle">
                   <Button
                     onClick={handleOpenConfirmModal}
                     className="btn-crear-factura"
@@ -671,6 +815,7 @@ const montoRestante =hasPagos
                   >
                     Crear Factura
                   </Button>
+                  </Space>
                       <PDFDownloadLink
                         document={
                           dataFactura && dataLogo ? (
@@ -708,6 +853,11 @@ const montoRestante =hasPagos
                         className="btn-eliminar-factura"
                       >
                         Eliminar Factura
+                      </Button>
+                      <Button
+                        onClick={()=> setIsRespaldoModalVisible(true)}
+                      >
+                        Cambiar Factura
                       </Button>
                 </div>
                   </Flex>
@@ -775,19 +925,34 @@ const montoRestante =hasPagos
       </Tabs>
 
       <Modal
-    title="Cancelando Factura"
-    visible={visibleCancelModal}
-    onCancel={() => setVisibleCancelModal(false)}
-    footer={[
-        <Button key="cerrar" onClick={() => setVisibleCancelModal(false)}>
-            Cerrar
-        </Button>,
-        <Button key="cancelar" type="primary" danger onClick={handleCancelFactura}>
-            Cancelar Factura
-        </Button>,
-          ]}
+        title="Cancelando Factura"
+        visible={visibleCancelModal}
+        onCancel={() => !loading && setVisibleCancelModal(false)} // ⛔ evitar cerrar mientras carga
+        footer={
+          loading
+            ? null // ❌ Oculta los botones mientras se carga
+            : [
+                <Button key="cerrar" onClick={() => setVisibleCancelModal(false)}>
+                  Cerrar
+                </Button>,
+                <Button
+                  key="cancelar"
+                  type="primary"
+                  danger
+                  onClick={handleCancelFactura}
+                >
+                  Cancelar Factura
+                </Button>,
+              ]
+        }
       >
+        {loading ? (
+          <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "100px" }}>
+            <Spin tip="Cancelando factura..." size="large" />
+          </div>
+        ) : (
           <p>¿Estás seguro de que deseas cancelar esta factura? Esta acción no se puede deshacer.</p>
+        )}
       </Modal>
 
       <Modal
@@ -913,6 +1078,37 @@ const montoRestante =hasPagos
         <p>Esta acción no se puede deshacer.</p>
       </Modal>
 
+        {/*rESPALDO */}
+            <Modal
+        title="¿Estás seguro de Remplasar esta factura?"
+        open={isRespaldoModalVisible}
+        onCancel={() => setIsRespaldoModalVisible(false)}
+        footer={[
+          <Button key="cancelar" onClick={() => setIsRespaldoModalVisible(false)}>
+            Cancelar
+          </Button>,
+          <Button key="eliminar" type="primary" danger onClick={()=>confirmRelacionFactura(id,facturaReemplazoId)}>
+             Crear Factura
+          </Button>,
+        ]}
+      >
+        <p>Esta acción no se puede deshacer.</p>
+        <p>Esta acción reemplazará la factura actual con otra seleccionada. No se puede deshacer.</p>
+
+        <Select
+          style={{ width: "100%" }}
+          placeholder="Selecciona una factura para reemplazar"
+          value={facturaReemplazoId}
+          onChange={setFacturaReemplazoId}
+          showSearch
+          optionFilterProp="children"
+          options={facturas.map(f => ({
+            label: `Factura #${f.folio} - ${f.empresa || 'Empresa desconocida'}`,
+            value: f.id,
+          }))}
+        />
+      </Modal>
+
 
       {/* Modal de confirmación */}
       <Modal
@@ -945,6 +1141,13 @@ const montoRestante =hasPagos
             title={resultMessage}
           />
         </Modal>*/}
+
+        {/* Addenda */}
+              <AddendaModal
+        visible={modalAddenda}
+        onCancel={cerrarModal}
+        facturaId={facturaId}
+      />
     </div>
     </Spin>
   );
