@@ -270,7 +270,7 @@ const EditarCotizacion = () => {
                     nombreServicio: servicioSeleccionado.nombreServicio, // ✅ Mantenemos el nombre
                     metodoCodigo: servicioSeleccionado.metodos,
                   }
-                : concepto
+                : concepto 
             );
             //console.log("Conceptos actualizados:", updatedConceptos);
             setConceptos(updatedConceptos);
@@ -375,7 +375,7 @@ const EditarCotizacion = () => {
             cantidad: parseInt(concepto.cantidad, 10),
             precio: parseFloat(concepto.precioFinal),
             servicio: parseInt(concepto.servicio, 10),
-            descripcion: concepto.descripcion,
+            descripcion: concepto.descripcion || "Sin Descripción..",
             cotizacion: parseInt(id, 10),
           };
     
@@ -402,7 +402,7 @@ const EditarCotizacion = () => {
               cantidad: parseInt(concepto.cantidad, 10),
               precio: parseFloat(concepto.precioFinal),
               servicio: parseInt(concepto.servicio, 10),
-              descripcion: concepto.descripcion,
+              descripcion: concepto.descripcion || "Sin Descripción...",
               cotizacion: parseInt(id, 10),
             };
             //console.log("📤 Enviando nuevo servicio:", data);

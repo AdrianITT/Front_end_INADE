@@ -1,16 +1,16 @@
 {
   "files": {
-    "main.css": "/static/css/main.dd12574f.css",
-    "main.js": "/static/js/main.e7b549f6.js",
+    "main.css": "/static/css/main.688769d3.css",
+    "main.js": "/static/js/main.c83b9628.js",
     "static/js/488.cb934759.chunk.js": "/static/js/488.cb934759.chunk.js",
     "static/media/SimplaxiLogoOrg.png": "/static/media/SimplaxiLogoOrg.7001eb307a9ddb3c8f2e.png",
     "index.html": "/index.html",
-    "main.dd12574f.css.map": "/static/css/main.dd12574f.css.map",
-    "main.e7b549f6.js.map": "/static/js/main.e7b549f6.js.map",
+    "main.688769d3.css.map": "/static/css/main.688769d3.css.map",
+    "main.c83b9628.js.map": "/static/js/main.c83b9628.js.map",
     "488.cb934759.chunk.js.map": "/static/js/488.cb934759.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.dd12574f.css",
-    "static/js/main.e7b549f6.js"
+    "static/css/main.688769d3.css",
+    "static/js/main.c83b9628.js"
   ]
 }

@@ -71,6 +71,9 @@ const DetallesFactura = () => {
   const [facturas, setFacturas] = useState([]);
   const [facturaReemplazoId, setFacturaReemplazoId] = useState(null);
   const [isRespaldoModalVisible, setIsRespaldoModalVisible] = useState(false);
+  const [notaCredito, setNotaCredito] = useState(false);
+  const [deleteFacturaReemplazo, setDeleteFacturaReemplazo] = useState(false);
+  const [reemplazoActivo, setReemplazoActivo] = useState(false);
   const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
   // Texto dinámico que aparece dentro del Modal de éxito
   const [modalText, setModalText] = useState(
@@ -100,18 +103,20 @@ const DetallesFactura = () => {
   }, [organizationId, id]);
 
   useEffect(() => {
-  if (isRespaldoModalVisible) {
+  if (isRespaldoModalVisible|| deleteFacturaReemplazo || setReemplazoActivo) {
     const orgId = parseInt(localStorage.getItem("organizacion_id"), 10);
     if (orgId) {
       getAllFacturaByOrganozacion(orgId)
         .then(response => {
-          setFacturas(response.data);  // ajusta según cómo devuelva los datos
-          console.log("response factura:",response.data);
+          const facturasFiltradas = response.data.filter(factura => factura.id !== parseInt(id,10));
+          setFacturas(facturasFiltradas);  // ajusta según cómo devuelva los datos
+          console.log("id: ",id)
+          console.log("response factura:",facturasFiltradas);
         })
         .catch(err => console.error("Error cargando facturas:", err));
     }
   }
-}, [isRespaldoModalVisible]);
+}, [isRespaldoModalVisible, id, deleteFacturaReemplazo, setReemplazoActivo]);
 
   
   const columnsConceptos = [
@@ -188,21 +193,6 @@ const DetallesFactura = () => {
   
 
   
-
-  useEffect(() => {
-    const fetchTipoCambio = async () => {
-      try {
-        const response = await getInfoSistema();
-        const tipoCambio = parseFloat(response.data[0].tipoCambioDolar);
-        setTipoCambioDolar(tipoCambio);
-      } catch (error) {
-        console.error("Error al obtener el tipo de cambio del dólar", error);
-      }
-    };
-
-
-    
-
     const verificarFacturaFacturama = async () => {
       try {
         const response = await getAllfacturafacturama();
@@ -228,6 +218,16 @@ const DetallesFactura = () => {
       } catch (error) {
         setFacturaExiste(false); // Si hay error, asumir que no existe
         console.warn("⚠ La factura no existe en FacturaFacturama.");
+      }
+    };
+  useEffect(() => {
+    const fetchTipoCambio = async () => {
+      try {
+        const response = await getInfoSistema();
+        const tipoCambio = parseFloat(response.data[0].tipoCambioDolar);
+        setTipoCambioDolar(tipoCambio);
+      } catch (error) {
+        console.error("Error al obtener el tipo de cambio del dólar", error);
       }
     };
 
@@ -358,16 +358,27 @@ const DetallesFactura = () => {
   };
 
   const base64ToPdf = (base64, filename = "acuse_cancelacion.pdf") => {
-  const byteCharacters = atob(base64);
-  const byteNumbers = Array.from(byteCharacters).map(char => char.charCodeAt(0));
-  const byteArray = new Uint8Array(byteNumbers);
-  const blob = new Blob([byteArray], { type: "application/pdf" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
+    if(!base64){
+      message.error("No se recibió el PDF para descargar.");
+      return false;
+    }
+    try{
+      const byteCharacters = atob(base64);
+      const byteNumbers = Array.from(byteCharacters).map(char => char.charCodeAt(0));
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+      return true; // ✅ Indica que la descarga fue lanzada
+    }catch(error){
+      console.error("Error al decodificar PDF:", error);
+      message.error("Error al preparar el archivo PDF.");
+      return false;
+    }
 };
 
 
@@ -598,10 +609,10 @@ const handleCancelFactura = async () => {
           method: "GET",
           headers: { "Content-Type": "application/json" },
       });
-      
+      console.log("response:",response);
       if (response.ok) {
         const result = await response.json(); // 👈 Agrega esta línea SIEMPRE
-  
+        console.log("asda: ",result);
         const pdfBase64 = result.acuse_pdf_base64;
         if (pdfBase64) {
           base64ToPdf(pdfBase64, `acuse_cancelacion.pdf`);
@@ -651,9 +662,9 @@ const confirmRelacionFactura = async (idA,idB) => {
     
     const data =await getFacturRespaldo(idB,idA);
     console.log("hola dat :",data);
-    const data2= await deleteFacturRenplasar(idB,idA);
-    downloadXML(data2.data.acuse_xml_base64, "acuse_cancelacion.xml");
-    console.log("data2: ",data2);
+    // const data2= await deleteFacturRenplasar(idB,idA);
+    // downloadXML(data2.data.acuse_xml_base64, "acuse_cancelacion.xml");
+    // console.log("data2: ",data2);
     message.success("Factura eliminada correctamente.");
     setIsDeleteModalVisible(false);
     // navigate("/factura");
@@ -661,11 +672,66 @@ const confirmRelacionFactura = async (idA,idB) => {
     console.error("Error al eliminar la factura:", error);
     message.error("No se pudo eliminar la factura.");
   }finally {
+      verificarFacturaFacturama();
       setLoading(false);
       message.success("Proceso Finalizado");
       setIsRespaldoModalVisible(false);
+      //cifrarId
+      navigate(`/detallesfactura/${cifrarId(idB)}`);
   }
 };
+
+const confirmNotaCredito = async (idA,idB) => {
+  // console.log(idA);
+  // console.log(idB);
+  try {
+    
+    const data =await getFacturRespaldo(idB,idA);
+    console.log("hola dat :",data);
+    // const data2= await deleteFacturRenplasar(idB,idA);
+    // downloadXML(data2.data.acuse_xml_base64, "acuse_cancelacion.xml");
+    // console.log("data2: ",data2);
+    message.success("Factura eliminada correctamente.");
+    setIsDeleteModalVisible(false);
+    // navigate("/factura");
+  } catch (error) {
+    console.error("Error al eliminar la factura:", error);
+    message.error("No se pudo eliminar la factura.");
+  }finally {
+      verificarFacturaFacturama();
+      setLoading(false);
+      message.success("Proceso Finalizado");
+      setIsRespaldoModalVisible(false);
+      //cifrarId
+      navigate(`/detallesfactura/${cifrarId(idB)}`);
+  }
+};
+
+const EliminarFacturaRemplazo = async (idA,idB) => {
+  setLoading(true);
+  try {
+    const data2= await deleteFacturRenplasar(idA,idB);
+    console.log("PDF base64:", data2?.data.acuse_pdf_base64?.slice(0, 30));
+    console.log("data2: ",data2);
+
+    base64ToPdf(data2?.data.acuse_pdf_base64, "acuse_cancelacion.pdf");
+
+    await delay(2000);
+    message.success("Factura eliminada correctamente.");
+    // setIsDeleteModalVisible(false);
+    // navigate("/factura");
+  } catch (error) {
+    console.error("Error al eliminar la factura:", error);
+    message.error("No se pudo eliminar la factura.");
+  }finally {
+      verificarFacturaFacturama();
+      setLoading(false);
+      message.success("Proceso Finalizado");
+      setVisibleCancelModal(false);
+      navigate(`/detallesfactura/${cifrarId(idB)}`);
+  }
+};
+
 const downloadXML = (base64String, filename = "acuse.xml") => {
   const byteCharacters = atob(base64String);
   const byteArrays = [];
@@ -706,14 +772,14 @@ const handleConfirmCrearFactura = () => {
   const menu = (
     <Menu>
       <Menu.Item key="1" onClick={() => showModalCorreo(true)} icon={<MailTwoTone />}>Enviar por correo</Menu.Item>
-      <Menu.Item key="2" onClick={() => setVisibleCancelModal(true)} icon={<CloseCircleTwoTone />}>Cancelar factura</Menu.Item>
-      <Menu.Item key="4" onClick={() => handleDownloadPDF(id)} icon={<FilePdfTwoTone />}>Descargar PDF</Menu.Item>
-      <Menu.Item key="5" onClick={() => handleDownloadXML(id)}icon={<FileTextTwoTone />}>Descargar XML</Menu.Item>
-      <Menu.Item key="6" onClick={() => setModalOpen(true)} icon={<FileAddTwoTone />}>
+      <Menu.Item key="3" onClick={() => handleDownloadPDF(id)} icon={<FilePdfTwoTone />}>Descargar PDF</Menu.Item>
+      <Menu.Item key="4" onClick={() => handleDownloadXML(id)}icon={<FileTextTwoTone />}>Descargar XML</Menu.Item>
+      <Menu.Item key="5" onClick={() => setModalOpen(true)} icon={<FileAddTwoTone />}>
         Generar Comprobante de Pago
       </Menu.Item>
+      <Menu.Item key="6" onClick={() => setVisibleCancelModal(true)} icon={<CloseCircleTwoTone />}>Cancelar factura</Menu.Item>
       <Menu.Item key="7" onClick={() => handleDownloadAcuse(id)}icon={<FileTextTwoTone />}>Descargar Acuse</Menu.Item>
-      <Menu.Item key="8" onClick={abrirModal}icon={<FileTextTwoTone />}>Crear o editar Addenda</Menu.Item>
+      {/* <Menu.Item key="8" onClick={abrirModal}icon={<FileTextTwoTone />}>Crear o editar Addenda</Menu.Item> */}
       {/* getdescargaAcuse */}
     </Menu>
   );
@@ -751,6 +817,7 @@ const montoRestante =hasPagos
                     <>
                     <Descriptions column={1}>
                       <Descriptions label="Folio">{factura.numerofactura}</Descriptions>
+                      <Descriptions label="Tipo de cfdi">{factura.tipocfdi}</Descriptions>
                       <Descriptions.Item label="Fecha">
                         {factura.fecha ? new Date(factura.fecha).toLocaleString("es-MX", {
                           day: "2-digit",
@@ -857,7 +924,12 @@ const montoRestante =hasPagos
                       <Button
                         onClick={()=> setIsRespaldoModalVisible(true)}
                       >
-                        Cambiar Factura
+                        Reemplazó de una Factura
+                      </Button>
+                      <Button
+                      loading={loading}
+                      onClick={()=>setNotaCredito(true)}>
+                        Crear Factura por Nota de Credito
                       </Button>
                 </div>
                   </Flex>
@@ -903,7 +975,7 @@ const montoRestante =hasPagos
         </Tabs.TabPane>
         <Tabs.TabPane tab="Pago" key="2">
           <p>Historial de la factura</p> 
-          {(!hasPagos || (hasPagos && montoRestante > 0)) && (
+          {(!hasPagos || (hasPagos && montoRestante > 0))&& factura.tipocfdi!=="Egreso" && (
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px'}}>
               <Link to={`/CrearPagos/${cifrarId(id)}`}>
                 <Button
@@ -919,7 +991,7 @@ const montoRestante =hasPagos
               </Link>
             </div>
           )}
-          <PaymentCards idFactura={id} correoCliente={cliente?.correo} refreshPagos={refreshPagos}/>
+          <PaymentCards idFactura={id} correoCliente={cliente?.correo} refreshPagos={refreshPagos} />
         </Tabs.TabPane>
 
       </Tabs>
@@ -931,19 +1003,34 @@ const montoRestante =hasPagos
         footer={
           loading
             ? null // ❌ Oculta los botones mientras se carga
-            : [
+            : (
+              <>
                 <Button key="cerrar" onClick={() => setVisibleCancelModal(false)}>
                   Cerrar
-                </Button>,
+                </Button>          
+                {reemplazoActivo ? (
                 <Button
-                  key="cancelar"
+                  key="reemplazar"
+                  type="primary"
+                  danger
+                  disabled={!facturaReemplazoId}
+                  loading={loading}
+                  onClick={() => EliminarFacturaRemplazo(id, facturaReemplazoId)}
+                >
+                  Eliminar y Reemplazar Factura
+                </Button>
+              ) : (
+                <Button
+                  key="cancelarFactura"
                   type="primary"
                   danger
                   onClick={handleCancelFactura}
                 >
                   Cancelar Factura
-                </Button>,
-              ]
+                </Button>
+              )}
+              </>
+            )
         }
       >
         {loading ? (
@@ -951,7 +1038,34 @@ const montoRestante =hasPagos
             <Spin tip="Cancelando factura..." size="large" />
           </div>
         ) : (
+          <>
           <p>¿Estás seguro de que deseas cancelar esta factura? Esta acción no se puede deshacer.</p>
+          <Checkbox checked={reemplazoActivo} onChange={e => setReemplazoActivo(e.target.checked)}>
+        Quiero reemplazar esta factura por otra
+      </Checkbox>
+
+      {reemplazoActivo && (
+        <>
+          <p style={{ marginTop: 16 }}>Selecciona la factura con la que deseas reemplazar:</p>
+          <Select
+            style={{ width: "100%" }}
+            placeholder="Selecciona una factura para reemplazar"
+            value={facturaReemplazoId}
+            onChange={setFacturaReemplazoId}
+            disabled={loading}
+            showSearch
+            optionFilterProp="children"
+            filterOption={(input, option) =>
+              (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
+            }
+            options={facturas.map(f => ({
+              label: `Factura #${f.folio} - ${f.empresa || 'Empresa desconocida'}`,
+              value: f.id,
+            }))}
+          />
+        </>
+      )}
+          </>
         )}
       </Modal>
 
@@ -1078,8 +1192,8 @@ const montoRestante =hasPagos
         <p>Esta acción no se puede deshacer.</p>
       </Modal>
 
-        {/*rESPALDO */}
-            <Modal
+        {/*RESPALDO */}
+        <Modal
         title="¿Estás seguro de Remplasar esta factura?"
         open={isRespaldoModalVisible}
         onCancel={() => setIsRespaldoModalVisible(false)}
@@ -1087,9 +1201,85 @@ const montoRestante =hasPagos
           <Button key="cancelar" onClick={() => setIsRespaldoModalVisible(false)}>
             Cancelar
           </Button>,
-          <Button key="eliminar" type="primary" danger onClick={()=>confirmRelacionFactura(id,facturaReemplazoId)}>
+          <Button key="eliminar" type="primary" 
+          disabled={!facturaReemplazoId} 
+          loading={loading}
+          onClick={()=>confirmRelacionFactura(id,facturaReemplazoId)}>
              Crear Factura
           </Button>,
+        ]}
+      >
+        <p>Esta acción no se puede deshacer.</p>
+        <p>Esta acción reemplazará la factura actual con otra seleccionada. No se puede desacer.</p>
+
+        <Select
+          style={{ width: "100%" }}
+          placeholder="Selecciona una factura para reemplazar"
+          value={facturaReemplazoId}
+          onChange={setFacturaReemplazoId}
+          showSearch
+          optionFilterProp="children"
+          filterOption={(input, option)=>
+          (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
+          }
+          options={facturas.map(f => ({
+            label: `Factura #${f.folio} - ${f.empresa || 'Empresa desconocida'}`,
+            value: f.id,
+          }))}
+        />
+      </Modal>
+
+          {/*Nota de Credito */}
+        <Modal
+        title="¿Estás seguro de Crear Nota de Credito?"
+        open={notaCredito}
+        onCancel={() => setNotaCredito(false)}
+        footer={[
+          <Button key="cancelar" onClick={() => setNotaCredito(false)}>
+            Cancelar
+          </Button>,
+          <Button key="eliminar" type="primary" 
+          disabled={!facturaReemplazoId} 
+          loading={loading}
+          onClick={()=>confirmNotaCredito(id,facturaReemplazoId)}>
+             Crear Factura
+          </Button>,
+        ]}
+      >
+        <p>Esta acción no se puede deshacer.</p>
+        <p> Selecciona la factura de I - Ingreso. No se puede desacer.</p>
+
+        <Select
+          style={{ width: "100%" }}
+          placeholder="Selecciona una factura para reemplazar"
+          value={facturaReemplazoId}
+          onChange={setFacturaReemplazoId}
+          showSearch
+          optionFilterProp="children"
+          filterOption={(input, option)=>
+          (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
+          }
+          options={facturas.map(f => ({
+            label: `Factura #${f.folio} - ${f.empresa || 'Empresa desconocida'}`,
+            value: f.id,
+          }))}
+        />
+      </Modal>
+            {/* elimnar factura para el reemplazarlo */}
+        {/* <Modal
+        title="¿Estás seguro de Eliminar esta factura?"
+        open={deleteFacturaReemplazo}
+        onCancel={() => setDeleteFacturaReemplazo(false)}
+        footer={[
+          <Button key="cancelar" onClick={() => setDeleteFacturaReemplazo(false)}>
+            Cancelar
+          </Button>,
+          <Button key="eliminar" denger type="primary" 
+          disabled={!facturaReemplazoId}
+          loading={loading}
+          onClick={()=>EliminarFacturaRemplazo(id,facturaReemplazoId)}>
+             Elimnar Factura
+          </Button>
         ]}
       >
         <p>Esta acción no se puede deshacer.</p>
@@ -1102,12 +1292,15 @@ const montoRestante =hasPagos
           onChange={setFacturaReemplazoId}
           showSearch
           optionFilterProp="children"
+          filterOption={(input, option)=>
+          (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
+          }
           options={facturas.map(f => ({
             label: `Factura #${f.folio} - ${f.empresa || 'Empresa desconocida'}`,
             value: f.id,
           }))}
         />
-      </Modal>
+      </Modal> */}
 
 
       {/* Modal de confirmación */}

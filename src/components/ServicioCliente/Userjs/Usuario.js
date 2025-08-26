@@ -53,7 +53,7 @@ const Usuario = () => {
     const loadRoles = async () => {
       try {
         const response = await getAllRol();
-        const filteredRoles = response.data.filter((role) => role.id === 2 || role.id === 3);
+        const filteredRoles = response.data.filter((role) => role.id !==1);
         setRoles(filteredRoles);
       } catch (error) {
         console.error("Error al cargar los roles", error);

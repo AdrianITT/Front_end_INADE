@@ -130,7 +130,7 @@ useEffect(() => {
       setLoadingClientes(true);
       try {
         const response = await getFormaPagoByOrganizacionId(organizationId);
-        //console.log('response.data',response.data);
+        console.log('response.data',response.data);
         setClientesData(response.data);
       } catch (error) {
         console.error("Error al obtener clientes:", error);
@@ -143,7 +143,7 @@ useEffect(() => {
       try {
         const response = await getAllMetodopago();
         setMetodosPago(response.data);
-        //console.log('response.data',response.data);
+        console.log('response.data',response.data);
       } catch (error) {
         console.error("Error al obtener métodos de pago:", error);
       } finally {
@@ -206,9 +206,9 @@ const facturasConMontorestanteCero = useMemo(() => {
   
       setLoadingFacturas(true);
       try {
-        //console.log("Cargando facturas para el cliente:", selectedClient);
+        console.log("Cargando facturas para el cliente:", selectedClient);
         const res = await dataComprobantePagoFactura(selectedClient);
-        //console.log("Facturas del cliente:", res);
+        console.log("Facturas del cliente:", res);
         const facturas = res.data.map(f => ({
           id: f.factura_id,
           numero: f.facturanumero,
@@ -221,7 +221,7 @@ const facturasConMontorestanteCero = useMemo(() => {
         setSubtotal(facturas.importe);
         setTotal(facturas.importe);
         setFacturasPorCliente(facturas); // este lo usas en `obtenerFacturasDisponibles`
-        //console.log("Facturas filtradas:", facturas);
+        console.log("Facturas filtradas:", facturas);
       } catch (error) {
         console.error("Error al obtener facturas por cliente:", error);
       } finally {

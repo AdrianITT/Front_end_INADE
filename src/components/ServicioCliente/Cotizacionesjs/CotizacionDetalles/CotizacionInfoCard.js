@@ -1,6 +1,7 @@
 import React from "react";
-import { Card, Row, Col, Typography, Button, Dropdown } from "antd";
+import { Card, Row, Col, Typography, Button, Dropdown, Tag, Space } from "antd";
 import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { FileAddOutlined, FilePdfOutlined } from "@ant-design/icons";
 import { cifrarId } from "../../secretKey/SecretKey";
 
@@ -14,6 +15,7 @@ const CotizacionInfoCard = ({
 }) => {
   const valores = cotizacionInfo?.valores || {};
   const moneda = cotizacionInfo?.tipoMoneda?.codigo || (esUSD ? "USD" : "MXN");
+  const navigate = useNavigate();
   return (
     <Row gutter={16}>
       <Col span={16}>
@@ -59,6 +61,18 @@ const CotizacionInfoCard = ({
           <p>
             <Text strong>IVA:</Text>{" "}
             {(parseFloat(cotizacionInfo?.iva?.porcentaje) * 100).toFixed(0)}%
+          </p>
+            <p>
+            <Text strong>Estado de aceptación:</Text>{" "}
+            {cotizacionInfo?.ordenTrabajo?.mensaje} {" -OT: "}
+            <Space size={[4, 4]} wrap>
+              {cotizacionInfo?.ordenTrabajo?.items.map(({id,codigo})=>(
+                <Tag key={id} onClick={() => navigate(`/DetalleOrdenTrabajo/${cifrarId(id)}`)} style={{ cursor: "pointer" }}>
+                  {codigo || "Pendiente"}
+                </Tag>
+              ))}
+            </Space>
+            {/* {cotizacionInfo?.ordenTrabajo?.ids?.join(", ")  || "Pendiente"} */}
           </p>
         </Card>
       </Col>

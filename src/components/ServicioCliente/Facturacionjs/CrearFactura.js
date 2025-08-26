@@ -299,6 +299,7 @@ const CrearFactura = () => {
   ];
   
   const handlecrearFactura = async (values) => {
+    setLoading(true);
     const porcentajeFactura = values.poresentajeFactura ?? 0;    // e.g. 50
     const tasaIVA = tasaIva;                                    // e.g. 0.16
   
@@ -368,6 +369,8 @@ const CrearFactura = () => {
     } catch (error) {
       console.error("Error al crear la factura:", error);
       message.error("Ocurrió un error al crear la factura.");
+    }finally {
+      setLoading(false);
     }
   };
   
@@ -554,7 +557,7 @@ const CrearFactura = () => {
           </Col>
         </Row>
         <div className="factura-buttons">
-          <Button type="primary" htmlType="submit" style={{ backgroundColor: "#52c41a", borderColor: "#52c41a" }}>
+          <Button type="primary" htmlType="submit" style={{ backgroundColor: "#52c41a", borderColor: "#52c41a" }} loading={loading}>
             Confirmar datos
           </Button>
           <Button

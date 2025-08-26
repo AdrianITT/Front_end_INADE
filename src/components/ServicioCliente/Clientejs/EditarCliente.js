@@ -2,11 +2,12 @@ import React, { useEffect, useState, useMemo } from "react";
 import { Form, Input, Button, Row, Col, Select, message, Modal, Result, Divider,Alert } from "antd";
 import { useNavigate, useParams } from "react-router-dom"; // Importa useNavigate
 import "./Cliente.css";
-import { updateCliente, getClienteById, getClienteDataById, getAllClienteData } from "../../../apis/ApisServicioCliente/ClienteApi";
+import { updateCliente, getClienteById, getClienteDataById, getAllClienteData, getOtherEmailById, updateOtherEmail,createOtherEmail, deleteOtherEmail } from "../../../apis/ApisServicioCliente/ClienteApi";
 import { getAllTitulo } from '../../../apis/ApisServicioCliente/TituloApi';
 import { getAllUsoCDFI } from '../../../apis/ApisServicioCliente/UsocfdiApi'; // Asegúrate de que este API esté implementada correctamente
 import {descifrarId}  from "../secretKey/SecretKey";
 import { validarAccesoPorOrganizacion } from "../validacionAccesoPorOrganizacion";
+import { ControlOutlined } from "@ant-design/icons";
 
 const EditarCliente = () => {
   const { clienteIds } = useParams();  // Obtén el id desde la URL
@@ -20,7 +21,7 @@ const EditarCliente = () => {
   const organizationId = useMemo(() => parseInt(localStorage.getItem("organizacion_id"), 10), []);
   const clienteId = useMemo(() => {
     try {
-      console.log("clienteIds", clienteIds);
+      // console.log("clienteIds", clienteIds);
       return descifrarId(clienteIds);
   } catch (error) {
     console.error("Error al descifrar cliente ID:", error);
@@ -31,8 +32,8 @@ const id=clienteId;
 
 useEffect(() => {
   const verificar = async () => {
-        console.log("hola");
-        console.log(id);
+        // console.log("hola");
+        // console.log(id);
         const acceso = await validarAccesoPorOrganizacion({
           fetchFunction: getAllClienteData,
           organizationId,
@@ -41,7 +42,7 @@ useEffect(() => {
           navigate,
           mensajeError: "Acceso denegado a esta precotización.",
         });
-        console.log(acceso);
+        // console.log(acceso);
         if (!acceso) return;
         // continuar...
       };
@@ -67,9 +68,9 @@ useEffect(() => {
         // }
   
         // ✅ Ya verificado, ahora sí obtenemos y mostramos los datos del cliente
-        console.log("clienteId", clienteId);
+        // console.log("clienteId", clienteId);
         const response = await getClienteById(clienteId);
-        console.log("response", response);
+        // console.log("response", response);
         const cliente = response.data;
         setClienteData(cliente);
         form.setFieldsValue(cliente);
@@ -90,6 +91,27 @@ useEffect(() => {
             codigoPostalCliente: direccion.cliente.empresa.codigoPostal || "",
           });
         }
+        const otherEmailResponse = await getOtherEmailById(clienteId);
+        const otherEmailData = otherEmailResponse.data;
+        // console.log("otherEmailData", otherEmailData);
+
+        if (otherEmailData && Array.isArray(otherEmailData.emails) && otherEmailData.emails.length > 0) {
+          // Transformamos [[id,email], [id,email]] -> [{id, email}, ...]
+          const otherEmails = otherEmailData.emails.map(([id, email]) => ({ id, email }));
+          // console.log("otherEmails", otherEmails);
+          // Si solo quieres un campo "correos" con los emails como array
+          // form.setFieldsValue({ correos: otherEmails.map(e => e.email) });
+
+          // Si quieres que cada email vaya a un campo individual (ej. correo1, correo2)
+          form.setFieldsValue({
+            correo1: otherEmails[0]?.email || "",
+            idCorreo1: otherEmails[0]?.id || "",
+            correo2: otherEmails[1]?.email || "",
+            idCorreo2: otherEmails[1]?.id || ""
+          });
+        }
+
+        // console.log("imprime: ", form.getFieldsValue());
   
       } catch (error) {
         console.error("Error al validar o cargar cliente:", error);
@@ -134,10 +156,31 @@ useEffect(() => {
   if (loading) {
     return <div>Loading...</div>;
   }
+  async function synOtherEmail({clienteId, id, email}) {
+    const trimmed = (email || "").trim();
+    if (id && trimmed) {
+      // Si tiene ID, actualiza el email
+      await updateOtherEmail(id, { email: trimmed });
+      // console.log("Correo actualizado:", trimmed);
+    }
+    if (!id && trimmed) {
+      // Si no tiene ID, crea un nuevo email
+      await createOtherEmail({ cliente: clienteId, email: trimmed });
+      // console.log("Correo creado:", trimmed);
+    }
+    if (id && !trimmed) {
+      // Si tiene ID pero el email está vacío, elimina el email
+      await deleteOtherEmail(id);
+      // console.log("Correo eliminado:", id);
+    }
+
+    return null;  // Retorna null para indicar que no hay error
+  }
 
   // Maneja la actualización del cliente
   const handleSave = async (values) => {
     try {
+      // console.log("Valores del formulario a guardar:", values);
       // Preservamos los valores originales y añadimos la empresa
       const updatedValues = { ...values };
 
@@ -146,6 +189,44 @@ useEffect(() => {
       updatedValues.UsoCfdi = values.UsoCfdi || clienteData.UsoCfdi || 3;  // Si no se proporciona, se usa el valor original o por defecto
 
       await updateCliente(clienteId, updatedValues);  // Llama a la API para actualizar los datos
+
+      const ops=[
+        synOtherEmail({clienteId, id: values.idCorreo1, email: values.correo1}),
+        synOtherEmail({clienteId, id: values.idCorreo2, email: values.correo2})
+      ]
+      const results = await Promise.allSettled(ops);
+      results.forEach((r, i) => {
+        if (r.status === "rejected") {
+          console.error(`Error al sincronizar correo ${i + 1}:`, r.reason);
+        }
+      });
+
+      // if (values.idCorreo1 && values.correo1 !== "") {
+      //   // Tiene ID -> actualizar
+      //   await updateOtherEmail(values.idCorreo1, { email: values.correo1 });
+      //   // console.log("Correo 1 actualizado:", values.correo1);
+      // } else if (values.correo1 && values.correo1.trim() !== "") {
+      //   // No tiene ID -> crear
+      //   await createOtherEmail({cliente:clienteId,  email: values.correo1 });
+      //   // console.log("Correo 1 creado:", values.correo1);
+      // }else if (values.idCorreo1 || values.correo1.trim() === "") {
+      //   await deleteOtherEmail(values.idCorreo1); // Si el correo2 está vacío, eliminamos el otro email
+      //   // console.log("Correo 2 eliminado:", values.idCorreo1);
+      // }
+
+      // // Correo 2
+      // if (values.idCorreo2 && values.correo2 !== "") {
+      //   // Tiene ID -> actualizar
+      //   // console.log("Correo 2 actualizado:", values.correo2);
+      //   await updateOtherEmail(values.idCorreo2, { email: values?.correo2|| "" });
+      // } else if (values.correo2 && values.correo2.trim() !== "") {
+      //   // No tiene ID -> crear
+      //   // console.log("Correo 2 creado:", values.correo2);
+      //   await createOtherEmail( {cliente:clienteId, email: values.correo2 });
+      // }else if (values.idCorreo2 || values.correo2.trim() === "") {
+      //   await deleteOtherEmail(values.idCorreo2); // Si el correo2 está vacío, eliminamos el otro email
+      //   // console.log("Correo 2 eliminado:", values.idCorreo2);
+      // }
       
       // Mostrar modal de éxito
       setIsSuccessModalOpen(true);
@@ -225,6 +306,33 @@ useEffect(() => {
                 { type: "email", message: "Por favor ingresa un correo válido" },
                 { required: true, message: "Por favor ingresa un correo" },
               ]}
+            >
+              <Input placeholder="Correo electrónico" />
+            </Form.Item>
+            <Form.Item
+              label="Correo electrónico1:"
+              name="correo1"
+            >
+              <Input placeholder="Correo electrónico2" />
+            </Form.Item>
+            <Form.Item
+              label="Correo electrónico2:"
+              name="correo2"
+
+            >
+              <Input placeholder="Correo electrónico" />
+            </Form.Item>
+            <Form.Item
+              label="Correo electrónico1:"
+              name="idCorreo1"
+              hidden
+            >
+              <Input placeholder="Correo electrónico2" />
+            </Form.Item>
+            <Form.Item
+              label="Correo electrónico2:"
+              name="idCorreo2"
+              hidden
             >
               <Input placeholder="Correo electrónico" />
             </Form.Item>

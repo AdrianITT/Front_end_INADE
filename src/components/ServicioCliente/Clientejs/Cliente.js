@@ -1,15 +1,16 @@
 // src/components/Cliente.js
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { Tabs, Input, Button, Modal, Form, Spin, Table, Checkbox, Result, Row, Col, Select, Divider} from "antd";
+import { Tabs, Input, Button, Modal, Form, Spin, Table, Checkbox, Result, Row, Col, Select, Divider, message} from "antd";
 import StickyBox from "react-sticky-box";
 import { useNavigate } from "react-router-dom";
 import {ExclamationCircleOutlined } from "@ant-design/icons";
 import ClienteTable from "./ClienteTable";
 import { createEmpresas,getEmpresaById } from "../../../apis/ApisServicioCliente/EmpresaApi";
 import { useCatalogos } from "../Clientejs/useCatalogos";
-import { getAllCliente, createCliente, deleteCliente, getAllClienteData } from "../../../apis/ApisServicioCliente/ClienteApi";
+import { getAllCliente, createCliente, deleteCliente, getAllClienteData, createOtherEmail  } from "../../../apis/ApisServicioCliente/ClienteApi";
 import { getAllTitulo } from "../../../apis/ApisServicioCliente/TituloApi";
 import { cifrarId } from "../secretKey/SecretKey";
+import { getAllEmpresasData } from '../../../apis/ApisServicioCliente/EmpresaApi';
 import "./Cliente.css";
 
 const Cliente = () => {
@@ -22,6 +23,10 @@ const Cliente = () => {
   const [clienteIdToDelete, setClienteIdToDelete] = useState(null);
   const [createCompany, setCreateCompany] = useState(false);
   const [titulos, setTitulos] = useState([]);
+  const [empresaExistentes, setEmpresaExistentes] = useState([]);
+  const norm = (v) => (v || "").trim().toLowerCase();
+  const isEmail = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+  
   
   const [form] = Form.useForm();
   const navigate = useNavigate();
@@ -59,6 +64,44 @@ const Cliente = () => {
       console.error("Error al cargar los clientes desde getAllClienteData", error);
     }
   }, [organizationId]);
+  const loadEmpresas = useCallback(async () => {
+    setLoading(true);
+    try {
+      const userOrganizationId = parseInt(localStorage.getItem("organizacion_id"), 10);
+      const res = await getAllEmpresasData(userOrganizationId); // NUEVO ENDPOINT
+  
+      const dataTabla = res.data.map((empresa) => {
+        const incompleta =
+          !empresa.calle || !empresa.numeroExterior || !empresa.colonia ||
+          !empresa.ciudad || !empresa.estado || !empresa.codigoPostal;
+  
+        return {
+          key: empresa.id,
+          numero:empresa.numero,
+          Empresa: empresa.nombre,
+          RFC: empresa.rfc,
+          Direccion: empresa.direccioncompleta || "Sin dirección",
+          Organizacion: empresa.organizacion || "No disponible",
+          incompleta,
+        };
+      });
+  
+      // Ordenar para mostrar primero las incompletas
+      // dataTabla.sort((a, b) => b.incompleta - a.incompleta);
+      setEmpresaExistentes(dataTabla);
+    } catch (error) {
+      console.error("Error al cargar empresas desde getAllEmpresasData:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // useEffect(()=>{
+  //   const fetchData=async ()=>{
+  //     await loadEmpresas();
+  //   };
+  //   fetchData();
+  // })
   
 
   useEffect(() => {
@@ -77,6 +120,7 @@ const Cliente = () => {
     const fetchData = async () => {
       setLoading(true);
       await loadClientes();
+      await loadEmpresas();
       setLoading(false);
     };
     fetchData();
@@ -127,7 +171,7 @@ const Cliente = () => {
   // Función para crear un cliente (y crear empresa si es necesario)
   const createClientAndReturnId = async (formValues, createCompanyFlag) => {
     let empresaId = formValues.empresa;
-    //console.log("formValues: ", formValues);
+    console.log("formValues: ", formValues);
     if (createCompanyFlag) {
       const empresaData = {
         nombre: formValues.nombre,
@@ -143,6 +187,29 @@ const Cliente = () => {
         organizacion: organizationId,
         UsoCfdi: formValues.UsoCfdi,
       };
+          // 🔍 Verificar si la empresa ya existe
+      const nombreDuplicado = empresaExistentes.some((e) =>
+        e.Empresa.toLowerCase().trim() === empresaData.nombre.toLowerCase().trim()
+      );
+      const rfcDuplicado = empresaExistentes.some((e) =>
+        e.RFC.toLowerCase().trim() === empresaData.rfc.toLowerCase().trim()
+      );
+
+      if (nombreDuplicado || rfcDuplicado) {
+        message.warning(
+          nombreDuplicado
+            ? "Ya existe una empresa con ese nombre."
+            : "Ya existe una empresa con ese RFC."
+      );
+      // Obtener ID de la empresa existente
+      const empresaExistente = empresaExistentes.find((e) =>
+        nombreDuplicado
+          ? e.Empresa.toLowerCase().trim() === empresaData.nombre.toLowerCase().trim()
+          : e.RFC.toLowerCase().trim() === empresaData.rfc.toLowerCase().trim()
+      );
+      empresaId = empresaExistente?.id;
+    } else{
+
       try {
         const createEmpresaResponse = await createEmpresas(empresaData);
         empresaId = createEmpresaResponse.data.id;
@@ -150,6 +217,8 @@ const Cliente = () => {
         console.error("Error al crear la empresa", error);
         return null;
       }
+    }
+
     }
     let direccionEmpresaNuevo = {
       calle: "",
@@ -194,10 +263,30 @@ const Cliente = () => {
   
     if (!clienteData.nombrePila || !clienteData.apPaterno || !clienteData.correo || !clienteData.empresa) {
       console.error("Faltan campos obligatorios para crear el cliente");
+      message.warning("Faltan campos obligatorios para crear el cliente o la empresa ya existe.");
       return null;
     }
     try {
       const createClienteResponse = await createCliente(clienteData);
+      if(formValues.usarOtrosCorreos){
+        const otros = (formValues.otherEmails || [])
+        .map(norm)
+        .filter(Boolean)
+        .filter(isEmail);
+
+      // evitar duplicados entre sí
+      const unicos = Array.from(new Set(otros));
+
+      for (const email of unicos) {
+        try {
+          await createOtherEmail({ cliente: createClienteResponse?.data?.id, email });
+        } catch (e) {
+          console.error("Fallo al crear otherEmail:", email, e);
+          // sigue con el resto; si prefieres, puedes cortar aquí con throw
+          }
+        }
+      }
+      //aqui
       return createClienteResponse.data.id;
     } catch (error) {
       console.error("Error al crear el cliente", error);
@@ -358,6 +447,41 @@ const Cliente = () => {
               >
                 <Input placeholder="Correo electrónico" />
               </Form.Item>
+                      {/* Checkbox que controla la visibilidad y guarda true/false en el form */}
+              <Form.Item name="usarOtrosCorreos" valuePropName="checked">
+                <Checkbox
+                  onChange={(e) => {
+                    if (!e.target.checked) {
+                      // limpia los campos cuando se desactiva
+                      form.setFieldsValue({ otherEmails: [undefined, undefined] });
+                    }
+                  }}
+                >
+                  Agregar otros correos
+                </Checkbox>
+              </Form.Item>
+              <Form.Item noStyle shouldUpdate={(prev, cur) => prev.usarOtrosCorreos !== cur.usarOtrosCorreos}>
+                {({ getFieldValue }) =>
+                  getFieldValue("usarOtrosCorreos") && (
+                    <>
+                      <Form.Item
+                        label="Otro correo 1:"
+                        name={["otherEmails", 0]}
+                        rules={[{ type: "email", message: "Correo no válido" }]}
+                      >
+                        <Input placeholder="correo@ejemplo.com" />
+                      </Form.Item>
+                      <Form.Item
+                        label="Otro correo 2:"
+                        name={["otherEmails", 1]}
+                        rules={[{ type: "email", message: "Correo no válido" }]}
+                      >
+                        <Input placeholder="correo@ejemplo.com" />
+                      </Form.Item>
+                    </>
+                  )
+                }
+              </Form.Item>
               <Form.Item label="Teléfono:" name="telefono">
                 <Input placeholder="Teléfono" />
               </Form.Item>
@@ -498,10 +622,6 @@ const Cliente = () => {
                   <Form.Item
                     label="RFC:"
                     name="rfc"
-                    rules={[{ required: true, message: "Por favor ingresa el RFC." },
-                      { len: 13, message: 'Debe tener 13 caracteres' },
-                      {pattern: /^[A-Z]+$/, message:'Solo letras mayúsculas permitidas'}
-                    ]}
                   >
                     <Input placeholder="Ingrese RFC" />
                   </Form.Item>
