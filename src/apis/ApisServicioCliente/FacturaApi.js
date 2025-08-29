@@ -40,4 +40,8 @@ export const getFacturPDFaById = async (id) => Api_Host.get(`/factura-pdf/${id}/
 //Respaldo factura
 export const getFacturRespaldo = async (idR,idA) => Api_Host.get(`/get_factura_relacion/${idR}/${idA}/`);
 export const deleteFacturRenplasar = async (idR,idA) => Api_Host.get(`/delete_relaciona_api/${idR}/${idA}/`);
-export const getFacturaNotaCredito = async (idR,idA) => Api_Host.get(`/get_factura_nota_credito/${idR}/${idA}/`);
+export const getFacturaNotaCredito = async (idR,idA, related) => Api_Host.get(`/get_factura_nota_credito/${idR}/${idA}/${related}`);
+
+export const createNotaCredito=async(data)=>Api_Host.post('/creditNote/', data);
+
+export const getRelationTypes= async () => Api_Host.get('/relationTypes/')

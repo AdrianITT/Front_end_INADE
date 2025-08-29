@@ -9,7 +9,7 @@ import { getEmpresaById } from "../../../apis/ApisServicioCliente/EmpresaApi";
 import { Api_Host } from "../../../apis/api";
 import PaymentCards from "../Facturacionjs/FacturaPagos"
 import { getAllFacturaPagos } from "../../../apis/ApisServicioCliente/FacturaPagosApi";
-import {updatepachFactura, getFacturRespaldo} from "../../../apis/ApisServicioCliente/FacturaApi";
+import {updatepachFactura, getFacturRespaldo, getFacturaNotaCredito, getRelationTypes} from "../../../apis/ApisServicioCliente/FacturaApi";
 import {getOrganizacionById} from '../../../apis/ApisServicioCliente/organizacionapi';
 //import axios from "axios";
 import {  getAllfacturafacturama} from "../../../apis/ApisServicioCliente/FacturaFacturamaApi";
@@ -75,6 +75,8 @@ const DetallesFactura = () => {
   const [deleteFacturaReemplazo, setDeleteFacturaReemplazo] = useState(false);
   const [reemplazoActivo, setReemplazoActivo] = useState(false);
   const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+  const [relationtype,setRelationType]= useState([]);
+  const [relationtypeId,setRelationTypeId]= useState(null);
   // Texto dinámico que aparece dentro del Modal de éxito
   const [modalText, setModalText] = useState(
     "La factura ha sido cancelada. Serás redirigido al listado de facturas."
@@ -102,9 +104,21 @@ const DetallesFactura = () => {
     verificar();
   }, [organizationId, id]);
 
+
+  const typeVales=async()=>{
+      try{
+        const data=await getRelationTypes();
+        const filtrados =(data.data ?? []).filter(item=> !["01","02","03","04","05","06","08","09"].includes(item.codigo));
+        console.log("data RelatiosTypes: ",filtrados);
+        setRelationType(filtrados);
+      }catch(error){ console.error("Error cargando RelationType:", error)}
+    }
+
+
   useEffect(() => {
   if (isRespaldoModalVisible|| deleteFacturaReemplazo || setReemplazoActivo) {
     const orgId = parseInt(localStorage.getItem("organizacion_id"), 10);
+    typeVales();
     if (orgId) {
       getAllFacturaByOrganozacion(orgId)
         .then(response => {
@@ -184,10 +198,13 @@ const DetallesFactura = () => {
       }
         
     }
+
+  
   
   useEffect(() => {
     fetchValue();
     refreshPagos();
+    // typeVales();
   }, [id]);
   const hasPagos = facturaPagos !== null;
   
@@ -661,10 +678,7 @@ const confirmRelacionFactura = async (idA,idB) => {
   try {
     
     const data =await getFacturRespaldo(idB,idA);
-    console.log("hola dat :",data);
-    // const data2= await deleteFacturRenplasar(idB,idA);
-    // downloadXML(data2.data.acuse_xml_base64, "acuse_cancelacion.xml");
-    // console.log("data2: ",data2);
+
     message.success("Factura eliminada correctamente.");
     setIsDeleteModalVisible(false);
     // navigate("/factura");
@@ -681,18 +695,22 @@ const confirmRelacionFactura = async (idA,idB) => {
   }
 };
 
-const confirmNotaCredito = async (idA,idB) => {
+const confirmNotaCredito = async (idA,idB,related) => {
   // console.log(idA);
   // console.log(idB);
   try {
-    
-    const data =await getFacturRespaldo(idB,idA);
-    console.log("hola dat :",data);
-    // const data2= await deleteFacturRenplasar(idB,idA);
-    // downloadXML(data2.data.acuse_xml_base64, "acuse_cancelacion.xml");
-    // console.log("data2: ",data2);
+
+    const data =await getFacturaNotaCredito(idB,idA, related);
+    console.log("hola dat :",related);
+    // const paylod={
+    //   facturaidA: idA,
+    //   facturaidR: idB,
+    //   relationTypes:"01"
+    // }
+    // const datas =await createNotaCredito(paylod);
+    // console.log(datas);
     message.success("Factura eliminada correctamente.");
-    setIsDeleteModalVisible(false);
+    setNotaCredito(false);
     // navigate("/factura");
   } catch (error) {
     console.error("Error al eliminar la factura:", error);
@@ -701,9 +719,9 @@ const confirmNotaCredito = async (idA,idB) => {
       verificarFacturaFacturama();
       setLoading(false);
       message.success("Proceso Finalizado");
-      setIsRespaldoModalVisible(false);
+      setNotaCredito(false);
       //cifrarId
-      navigate(`/detallesfactura/${cifrarId(idB)}`);
+      // navigate(`/detallesfactura/${cifrarId(idB)}`);
   }
 };
 
@@ -924,12 +942,12 @@ const montoRestante =hasPagos
                       <Button
                         onClick={()=> setIsRespaldoModalVisible(true)}
                       >
-                        Reemplazó de una Factura
+                        Sustitución de una factura
                       </Button>
                       <Button
                       loading={loading}
                       onClick={()=>setNotaCredito(true)}>
-                        Crear Factura por Nota de Credito
+                        Crear Factura con Relacion
                       </Button>
                 </div>
                   </Flex>
@@ -1165,6 +1183,7 @@ const montoRestante =hasPagos
             title={<p style={{ color: resultStatus === "success" ? "green" : "red" }}>{resultMessage}</p>}
             />
         </Modal>
+
         <Modal
         title="Factura cancelada exitosamente"
         visible={isSuccessModalVisible}
@@ -1176,6 +1195,7 @@ const montoRestante =hasPagos
       >
         <p>La factura ha sido cancelada. Serás redirigido al listado de facturas en 2 segundos...</p>
       </Modal>
+      
       <Modal
         title="¿Estás seguro de eliminar esta factura?"
         open={isDeleteModalVisible}
@@ -1230,10 +1250,14 @@ const montoRestante =hasPagos
       </Modal>
 
           {/*Nota de Credito */}
-        <Modal
+      <Modal
         title="¿Estás seguro de Crear Nota de Credito?"
         open={notaCredito}
-        onCancel={() => setNotaCredito(false)}
+        onCancel={() => {
+          setNotaCredito(false);
+          setFacturaReemplazoId(undefined);
+          setRelationTypeId(undefined);
+        }}
         footer={[
           <Button key="cancelar" onClick={() => setNotaCredito(false)}>
             Cancelar
@@ -1241,13 +1265,13 @@ const montoRestante =hasPagos
           <Button key="eliminar" type="primary" 
           disabled={!facturaReemplazoId} 
           loading={loading}
-          onClick={()=>confirmNotaCredito(id,facturaReemplazoId)}>
+          onClick={()=>confirmNotaCredito(id,facturaReemplazoId, relationtypeId)}>
              Crear Factura
           </Button>,
         ]}
       >
         <p>Esta acción no se puede deshacer.</p>
-        <p> Selecciona la factura de I - Ingreso. No se puede desacer.</p>
+        <p> Selecciona la factura. No se puede desacer.</p>
 
         <Select
           style={{ width: "100%" }}
@@ -1262,6 +1286,21 @@ const montoRestante =hasPagos
           options={facturas.map(f => ({
             label: `Factura #${f.folio} - ${f.empresa || 'Empresa desconocida'}`,
             value: f.id,
+          }))}
+        />
+        <Select
+          style={{ width: "100%" }}
+          placeholder="Selecciona una factura para reemplazar"
+          value={relationtypeId}
+          onChange={setRelationTypeId}
+          showSearch
+          optionFilterProp="children"
+          filterOption={(input, option)=>
+          (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
+          }
+          options={relationtype.map(f => ({
+            label: `${f.codigo} - ${f.descripcion || 'Descripcion desconocida'}`,
+            value: f.codigo,
           }))}
         />
       </Modal>
