@@ -51,7 +51,7 @@ const EditarOrdenTrabajo = () => {
 
   useEffect(() => {
           const verificar = async () => {
-            console.log(id);
+
             const acceso = await validarAccesoPorOrganizacion({
               fetchFunction: getAllOrdenesTrabajoData,
               organizationId,
@@ -60,7 +60,7 @@ const EditarOrdenTrabajo = () => {
               navigate,
               mensajeError: "Acceso denegado a esta precotización.",
             });
-            console.log(acceso);
+
             if (!acceso) return;
           };
       

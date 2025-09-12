@@ -150,8 +150,8 @@ const handleAddConcepto = () => {
 
 
 const handleRemoveConcepto = (id) => {
-  console.log("Eliminando concepto con id:", id);
-  console.log("Conceptos antes de eliminar:", conceptos);
+  // console.log("Eliminando concepto con id:", id);
+  // console.log("Conceptos antes de eliminar:", conceptos);
 
 if (conceptos.length === 1) {
     return message.warning("Debe haber al menos un concepto");

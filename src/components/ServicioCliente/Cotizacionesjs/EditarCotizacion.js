@@ -1,6 +1,6 @@
 import React, { useState, useEffect,useMemo  } from "react";
 import "./Crearcotizacion.css";
-import { Form, Input, Button, Row, Col, Select, Checkbox, Divider, message, DatePicker, Card, Modal, Result, Text,InputNumber,Alert } from "antd";
+import { Form, Input, Button, Row, Col, Select, Checkbox, Divider, message, DatePicker, Card, Modal, Result, Text,InputNumber,Alert, Spin } from "antd";
 import dayjs from "dayjs";
 import { useParams, useNavigate } from "react-router-dom";
 import { getCotizacionById, updateCotizacion } from "../../../apis/ApisServicioCliente/CotizacionApi";
@@ -35,7 +35,9 @@ const EditarCotizacion = () => {
      const [isModalVisible, setIsModalVisible] = useState(false);
      const [serviciosRelacionados, setServiciosRelacionados] = useState([]);
      const [metodosData, setMetodosData] = useState([]);
+     const [loading, setLoading] = useState(false);
      const organizationId = useMemo(() => parseInt(localStorage.getItem("organizacion_id"), 10), []);
+
      useEffect(() => {
       const verificar = async () => {
         // console.log(id);
@@ -58,11 +60,12 @@ const EditarCotizacion = () => {
      useEffect(() => {
        const fetchTipoCambio = async () => {
          try {
+          setLoading(true);
            const response = await getInfoSistema();
            setTipoCambioDolar(parseFloat(response.data[0].tipoCambioDolar));
          } catch (error) {
            console.error("Error al obtener el tipo de cambio del dólar", error);
-         }
+         }finally { setLoading(false); }
        };
        fetchTipoCambio();
      }, []);
@@ -72,6 +75,7 @@ const EditarCotizacion = () => {
         
           const fetchCotizacion = async () => {
             try {
+              setLoading(true);
               const response = await getCotizacionById(id);
               const cotizacion = response.data;
               //console.log("Cotización obtenida:", cotizacion);
@@ -122,7 +126,7 @@ const EditarCotizacion = () => {
             } catch (error) {
               console.error("Error al obtener la cotización", error);
               message.error("Error al cargar la cotización");
-            }
+            }finally { setLoading(false); }
           };
         
           fetchCotizacion();
@@ -134,38 +138,42 @@ const EditarCotizacion = () => {
      useEffect(() => {
        const fetchTipoMoneda = async () => {
          try {
+          setLoading(true);
            const response = await getAllTipoMoneda();
            setTiposMonedaData(response.data);
          } catch (error) {
            console.error("Error al cargar los tipos de moneda", error);
-         }
+         }finally { setLoading(false); }
        };
    
        const fetchIva = async () => {
          try {
+            setLoading(true);
            const response = await getAllIva();
            setIvasData(response.data);
          } catch (error) {
            console.error("Error al cargar el IVA", error);
-         }
+         }finally { setLoading(false); }
        };
    
        const fetchServicios = async () => {
          try {
+            setLoading(true);
            const response = await getServicioData(organizationId);
            setServicios(response.data);
          } catch (error) {
            console.error("Error al cargar los servicios", error);
-         }
+         }finally { setLoading(false); }
        };
 
        const fetchMetodos = async () => {
         try {
+          setLoading(true);
           const response = await getAllMetodoData(organizationId);
           setMetodosData(response.data);
         } catch (error) {
           console.error("Error al cargar los métodos de pago", error);
-        }
+        }finally { setLoading(false); }
        };
        fetchMetodos();
        fetchTipoMoneda();
@@ -501,6 +509,7 @@ const EditarCotizacion = () => {
                    </Form.Item>
            
                    <Divider>Agregar Conceptos</Divider>
+                   <Spin spinning={loading} tip="Cargando...">
                     {conceptos.map((concepto, index) => (
                       <Card key={concepto.id} style={{ marginBottom: "24px", borderRadius: 12 }}>
                         <Row justify="space-between" align="middle" style={{ marginBottom: "10px" }}>
@@ -627,7 +636,7 @@ const EditarCotizacion = () => {
                           </Col>
                         </Row>
                       </Card>
-                    ))}
+                    ))}</Spin>
 
                     <Button
                       type="primary"

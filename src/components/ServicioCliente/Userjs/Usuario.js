@@ -90,6 +90,7 @@ const Usuario = () => {
 
   const handleFinish = async (values) => {
     try {
+       const allowedRoleIds = [1, 2, 3];
       const userData = {
         username: values.username,
         first_name: values.first_name,
@@ -102,21 +103,28 @@ const Usuario = () => {
       const response = await createUser(userData);
       const newUser = response.data;
 
-      // Actualizar la tabla localmente
+      if (
+      newUser.organizacion === organizationId &&
+      allowedRoleIds.includes(newUser.rol)
+    ) {
       setDataSource((prev) => [...prev, newUser]);
       setFilteredData((prev) => [...prev, newUser]);
+    }
 
-      setIsModalOpen(false);
-      form.resetFields();
-      message.success("Usuario creado exitosamente");
+    setIsModalOpen(false);
+    form.resetFields();
+    message.success("Usuario creado exitosamente");
 
-      // Volver a cargar los usuarios desde el backend
-      const updatedUsers = await getAllUser();
-      const filteredUsers = updatedUsers.data.filter(
-        (user) => user.organizacion === organizationId
-      );
-      setDataSource(filteredUsers);
-      setFilteredData(filteredUsers);
+    // Volver a cargar los usuarios desde el backend
+    const updatedUsers = await getAllUser();
+    const filteredUsers = updatedUsers.data.filter(
+      (user) =>
+        user.organizacion === organizationId &&
+        allowedRoleIds.includes(user.rol) // 🔥 aplicar filtro de roles
+    );
+
+    setDataSource(filteredUsers);
+    setFilteredData(filteredUsers);
     } catch (error) {
       console.error("Error al crear usuario", error);
       message.error("Error al crear usuario");

@@ -41,6 +41,7 @@ import EditarPreCotizacion from "./components/ServicioCliente/preCotizacion/Edit
 import VerificarExpiracionLocalStorage from "./components/DataLocalStorage/LocalStorage";
 import NoAutorizado from "./components/FetchProtected/NoAutorizado";
 import RegistroCotizacion from "./components/ServicioCliente/Cotizacionesjs/RegistroCotizaciones/RegistroCotizacion";
+// import TestCotizar from "./components/ServicioCliente/Cotizacionesjs/TestCotizacion";
 // import ReceptoresPage from "./components/ServicioCliente/Receptor/ReceptoresPage";
 
 // Hook para cambiar el título de la pestaña
@@ -138,6 +139,7 @@ const AppRouter = () => {
           <Route path="/CrearPagos" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><CrearPagos/></ProtectedRoute>} />
           <Route path="/CrearPagos/:ids" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><CrearPagos/></ProtectedRoute>} />
           {/* <Route path="/Receptores" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><ReceptoresPage/></ProtectedRoute>} /> */}
+          {/* <Route path="/TestCotizar" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><TestCotizar/></ProtectedRoute>} /> */}
         </Route>
       </Routes>
 

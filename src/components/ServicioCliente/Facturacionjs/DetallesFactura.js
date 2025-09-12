@@ -108,8 +108,8 @@ const DetallesFactura = () => {
   const typeVales=async()=>{
       try{
         const data=await getRelationTypes();
-        const filtrados =(data.data ?? []).filter(item=> !["01","02","03","04","05","06","08","09"].includes(item.codigo));
-        console.log("data RelatiosTypes: ",filtrados);
+        const filtrados =(data.data ?? []).filter(item=> !["02","04","05","06","08","09"].includes(item.codigo));
+        // console.log("data RelatiosTypes: ",filtrados);
         setRelationType(filtrados);
       }catch(error){ console.error("Error cargando RelationType:", error)}
     }
@@ -124,8 +124,8 @@ const DetallesFactura = () => {
         .then(response => {
           const facturasFiltradas = response.data.filter(factura => factura.id !== parseInt(id,10));
           setFacturas(facturasFiltradas);  // ajusta según cómo devuelva los datos
-          console.log("id: ",id)
-          console.log("response factura:",facturasFiltradas);
+          // console.log("id: ",id)
+          // console.log("response factura:",facturasFiltradas);
         })
         .catch(err => console.error("Error cargando facturas:", err));
     }
@@ -626,10 +626,10 @@ const handleCancelFactura = async () => {
           method: "GET",
           headers: { "Content-Type": "application/json" },
       });
-      console.log("response:",response);
+      // console.log("response:",response);
       if (response.ok) {
         const result = await response.json(); // 👈 Agrega esta línea SIEMPRE
-        console.log("asda: ",result);
+        // console.log("asda: ",result);
         const pdfBase64 = result.acuse_pdf_base64;
         if (pdfBase64) {
           base64ToPdf(pdfBase64, `acuse_cancelacion.pdf`);
@@ -701,7 +701,7 @@ const confirmNotaCredito = async (idA,idB,related) => {
   try {
 
     const data =await getFacturaNotaCredito(idB,idA, related);
-    console.log("hola dat :",related);
+    // console.log("hola dat :",related);
     // const paylod={
     //   facturaidA: idA,
     //   facturaidR: idB,
@@ -729,8 +729,8 @@ const EliminarFacturaRemplazo = async (idA,idB) => {
   setLoading(true);
   try {
     const data2= await deleteFacturRenplasar(idA,idB);
-    console.log("PDF base64:", data2?.data.acuse_pdf_base64?.slice(0, 30));
-    console.log("data2: ",data2);
+    // console.log("PDF base64:", data2?.data.acuse_pdf_base64?.slice(0, 30));
+    // console.log("data2: ",data2);
 
     base64ToPdf(data2?.data.acuse_pdf_base64, "acuse_cancelacion.pdf");
 
@@ -944,11 +944,11 @@ const montoRestante =hasPagos
                       >
                         Sustitución de una factura
                       </Button>
-                      <Button
+                      {/* <Button
                       loading={loading}
                       onClick={()=>setNotaCredito(true)}>
                         Crear Factura con Relacion
-                      </Button>
+                      </Button> */}
                 </div>
                   </Flex>
               ) : (

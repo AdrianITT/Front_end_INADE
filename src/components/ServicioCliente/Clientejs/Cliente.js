@@ -171,7 +171,7 @@ const Cliente = () => {
   // Función para crear un cliente (y crear empresa si es necesario)
   const createClientAndReturnId = async (formValues, createCompanyFlag) => {
     let empresaId = formValues.empresa;
-    console.log("formValues: ", formValues);
+    // console.log("formValues: ", formValues);
     if (createCompanyFlag) {
       const empresaData = {
         nombre: formValues.nombre,

@@ -17,7 +17,7 @@ const NotificacionesPolling = () => {
     const interval = setInterval(() => {
       getAllPrecotizacionByOrganizacion(organizationId)
         .then((res) => {
-          console.log("Precotizaciones recibidas:", res.data);
+
           res.data.forEach((precotizacion) => {
             if (
               precotizacion.estado?.estadoId === 8 &&

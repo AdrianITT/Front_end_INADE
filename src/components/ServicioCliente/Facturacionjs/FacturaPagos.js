@@ -53,9 +53,9 @@ const PaymentCards = ({ idFactura, correoCliente,refreshPagos }) => {
   // Función para realizar el pago
   const handleRealizarPago = async (pagoId) => {
     try {
-      console.log("Realizando pago para el ID:", pagoId);
+
       const reponse =await getAllFacturaPagosFacturama(pagoId);
-      console.log("Respuesta del servidor:", reponse);
+
     } catch (error) {
       console.log("Se recibió un error del servidor (500), pero se ignora:", error);
     } finally {

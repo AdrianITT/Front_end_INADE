@@ -20,9 +20,9 @@ const ReceptoresPage=()=> {
   const loadData = async () => {
     try {
       setLoading(true);
-      console.log("Cargando receptores para organización ID:", organizacionId);
+
       const rows = await getReceptores(organizacionId);
-      console.log("Receptores:", rows);
+
       const normalized = (rows.data || []).map((r) => ({
         id: r.id,
         nombrePila: r.nombrePila,

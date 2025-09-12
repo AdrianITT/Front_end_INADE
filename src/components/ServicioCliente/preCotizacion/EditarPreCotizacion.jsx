@@ -53,7 +53,7 @@ const EditarPreCotizacion = () => {
   const organizationId = parseInt(localStorage.getItem("organizacion_id"), 10);
   useEffect(() => {
     const verificar = async () => {
-      console.log(id);
+
       const acceso = await validarAccesoPorOrganizacion({
         fetchFunction: getAllPrecotizacionByOrganizacion,
         organizationId,
@@ -62,7 +62,7 @@ const EditarPreCotizacion = () => {
         navigate,
         mensajeError: "Acceso denegado a esta precotización.",
       });
-      console.log(acceso);
+
       if (!acceso) return;
     };
 

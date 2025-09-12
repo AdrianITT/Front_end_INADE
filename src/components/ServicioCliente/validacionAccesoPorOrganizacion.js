@@ -10,7 +10,6 @@ export const validarAccesoPorOrganizacion = async ({
    }) => {
      try {
        const response = await fetchFunction(organizationId);
-       console.log("response",response);
        const idsPermitidos = response.data.map((c) => {
           if (typeof campoId === "function") {
             return String(campoId(c));

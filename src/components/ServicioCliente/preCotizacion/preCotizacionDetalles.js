@@ -45,7 +45,7 @@ const PreCotizacionDetalles = () => {
         navigate,
         mensajeError: "Acceso denegado a esta precotización.",
       });
-      console.log(acceso);
+
       if (!acceso) return;
       // continuar...
     };
@@ -59,8 +59,7 @@ const PreCotizacionDetalles = () => {
       try {
         const response = await getAllDataPrecotizacion(id);
         const data = response.data;
-        console.log("Datos de la pre-cotización:", data);
-        console.log("Pre-Cotización Detalles:", data);   
+
         setaNumeros(data.numero);
         setCotizacionInfo(data); // contiene empresa, cliente,  los servicios listos
         setIvaPorcentaje(parseFloat(data.iva.porcentaje) || 0); // Ej. "0.00" -> 0

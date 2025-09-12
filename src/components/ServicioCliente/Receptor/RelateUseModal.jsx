@@ -14,8 +14,6 @@ useEffect(() => {
     try {
       setLoadingUsers(true);
       const list = await getUsuariosAsignables(organizacionId);
-      console.log("Usuarios asignables:", list);
-      console.log("Receptor ID para relacionar:", idReceptor);
       setUsuarios(list.data || []);
     } catch (e) {
       console.error("Error al cargar usuarios asignables:", e);
@@ -31,7 +29,7 @@ useEffect(() => {
   const handleOk = async () => {
     try {
       const { user_id } = await form.validateFields();
-      console.log("Relatando usuario ID:", user_id, "al receptor ID:", idReceptor);
+      
       onSubmit(user_id);
     } catch (_) {}
   };

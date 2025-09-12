@@ -39,7 +39,7 @@ const GenerarOrdenTrabajo = () => {
     const organizationId = useMemo(() => parseInt(localStorage.getItem("organizacion_id"), 10), []);
     useEffect(() => {
           const verificar = async () => {
-            console.log("id: ",id);
+
             const acceso = await validarAccesoPorOrganizacion({
               fetchFunction: getAllcotizacionesdata,
               organizationId,
@@ -48,7 +48,7 @@ const GenerarOrdenTrabajo = () => {
               navigate,
               mensajeError: "Acceso denegado.",
             });
-            console.log(acceso);
+
             if (!acceso) return;
             // continuar...
           };

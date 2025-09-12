@@ -8,6 +8,7 @@ import { useCotizacionesData } from "../Cotizacionesjs/usoCotizacionesData";
 import { useCotizacionesColumns } from "../Cotizacionesjs/CotizacionesColumns";
 import { getDetallecotizaciondataById } from "../../../apis/ApisServicioCliente/CotizacionApi";
 import { descifrarId, cifrarId } from "../secretKey/SecretKey";
+import CotizacionesPorServicioModal from "../Cotizacionesjs/ModalFiltroServicio/CotizacionesPorServicioModal";
 
 const Cotizar = () => {
   const [searchText, setSearchText] = useState("");
@@ -15,6 +16,7 @@ const Cotizar = () => {
   const navigate = useNavigate();
   const [expandedData, setExpandedData] = useState({});
   const [loadingRows, setLoadingRows] = useState({});
+  const [openServicioModal, setOpenServicioModal] = useState(false);
 
   const tdBaseStyle = {
     border: "1px solid #d9d9d9",
@@ -73,6 +75,7 @@ const Cotizar = () => {
     }
   };
 
+
   return (
     <div className="cotizar-container">
       <center>
@@ -96,6 +99,10 @@ const Cotizar = () => {
         <Link to="/proyectos">
           <Button className="ver-proyectos-button">Ver Proyectos</Button>
         </Link>
+
+        {/* <Button type="primary" onClick={() => setOpenServicioModal(true)}>
+          Ver cotizaciones por servicio
+          </Button> */}
       </div>
 
       {isLoading ? (
@@ -265,6 +272,12 @@ const Cotizar = () => {
           </div>
         </>
       )}
+      <CotizacionesPorServicioModal
+        open={openServicioModal}
+        onClose={() => setOpenServicioModal(false)}
+        orgId={organizationId}
+        onRowClick={(row) => navigate(`/detalles_cotizaciones/${cifrarId(row.id)}`)}
+      />
     </div>
   );
 };

@@ -1,6 +1,6 @@
 import React, {useState, useEffect, useMemo} from "react";
 import moment from 'moment';
-import { Form, Input, Button, Select, Row, Col,DatePicker, message, Table } from "antd";
+import { Form, Input, Button, Select, Row, Col,DatePicker, message, Table, Spin } from "antd";
 import { useParams, useNavigate, data } from "react-router-dom";
 import "./crearfactura.css";
 import { NumericInput } from "../../NumericInput/NumericInput";
@@ -67,7 +67,7 @@ const CrearFactura = () => {
 
         useEffect(() => {
           const verificar = async () => {
-            console.log(id);
+            // console.log(id);
             const acceso = await validarAccesoPorOrganizacion({
               fetchFunction: getAllcotizacionesdata,
               organizationId,
@@ -76,7 +76,7 @@ const CrearFactura = () => {
               navigate,
               mensajeError: "Acceso denegado a esta precotización.",
             });
-            console.log(acceso);
+            // console.log(acceso);
             if (!acceso) return;
           };
       
@@ -93,9 +93,10 @@ const CrearFactura = () => {
   useEffect(() => {
     const fetchDetalle = async () => {
       try {
+        setLoading(true);
         const res = await getDataCotizacionBy(id);
         const d = res.data;
-        console.log("1data: ", d);
+        // console.log("1data: ", d);
         setDataID(d);
         // EMISOR / RECEPTOR
         setOrganizacion(d.emisor);   // antes ponías d.empresa, ahora es d.emisor
@@ -248,7 +249,7 @@ const CrearFactura = () => {
             if (b.codigo === "99") return 1;  // b va primero
             return 0; // no cambia el orden
           });
-          console.log("Forma de Pago:", sortedList);
+          // console.log("Forma de Pago:", sortedList);
           setFormaPagoList(sortedList);
       } catch (error) {
           console.error("Error al obtener Forma de Pago", error);
@@ -299,6 +300,7 @@ const CrearFactura = () => {
   ];
   
   const handlecrearFactura = async (values) => {
+    if (loading) return;
     setLoading(true);
     const porcentajeFactura = values.poresentajeFactura ?? 0;    // e.g. 50
     const tasaIVA = tasaIva;                                    // e.g. 0.16
@@ -344,14 +346,15 @@ const CrearFactura = () => {
       tipoMoneda:      tipoMoneda.codigo,
       cotizacion:      id,
     };
-    console.log("totalConIva: ", totalConIva.toFixed(2));
-    console.log("totalRedondeado: ", resumenCot.importeRedondeado);
+    // console.log("totalConIva: ", totalConIva.toFixed(2));
+    // console.log("totalRedondeado: ", resumenCot.importeRedondeado);
   
     // 8) Crear factura
     const response = await createFactura(datosFactura);
     const facturaId = response.data.id;
   
     try {
+      setLoading(true);
       // 9) Guardar solo los servicios NO seleccionados
       await Promise.all(
         serviciosAFacturar.map(s =>
@@ -436,7 +439,7 @@ const CrearFactura = () => {
         </Col>
       </Row>
 
-
+        <Spin spinning={loading}>
       <Form layout="vertical" className="my-factura-form"
       form={form} // Conecta el formulario con la instancia
       onFinish={handlecrearFactura}>
@@ -557,11 +560,12 @@ const CrearFactura = () => {
           </Col>
         </Row>
         <div className="factura-buttons">
-          <Button type="primary" htmlType="submit" style={{ backgroundColor: "#52c41a", borderColor: "#52c41a" }} loading={loading}>
+          <Button type="primary" htmlType="submit" style={{ backgroundColor: "#52c41a", borderColor: "#52c41a" }} disable={loading}>
             Confirmar datos
           </Button>
           <Button
             type="danger"
+            disable={loading}
             style={{ backgroundColor: "#f5222d", borderColor: "#f5222d" }}
             onClick={() => navigate(`/detalles_cotizaciones/${id}`)}
           >
@@ -569,6 +573,7 @@ const CrearFactura = () => {
           </Button>
         </div>
       </Form>
+      </Spin>
     </div>
   );
 };
