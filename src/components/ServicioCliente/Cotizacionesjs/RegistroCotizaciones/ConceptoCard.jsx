@@ -1,6 +1,7 @@
 // ConceptoCard.jsx
 import React from "react";
-import { Row, Col, Form, Input, Select, Checkbox, Card } from "antd";
+import { Row, Col, Form, Input, Select, Checkbox, Card, Tooltip } from "antd";
+import "./ConceptoCa.css";
 
 const { TextArea } = Input;
 
@@ -13,7 +14,7 @@ const ConceptoCard = ({
   onRemove,
 }) => {
   return (
-    <Card>
+    <Card style={{ marginTop: 16 }}>
       <h3>Concepto {concepto.id}</h3>
 
       <Row justify="end">
@@ -31,16 +32,25 @@ const ConceptoCard = ({
           >
             <Select
               showSearch
+              dropdownMatchSelectWidth={false}
+              dropdownStyle={{ width: 'auto', minWidth: '100%' }}
+              className="select-wrap-text"
+              style={{ width: "100%", whiteSpace: "normal", wordWrap: "break-word" }}
               placeholder="Selecciona un servicio"
               value={concepto.servicio || undefined}
               onChange={(value) => onServicioChange(concepto.id, value)}
+              optionFilterProp="children"
               filterOption={(input, option) =>
                 option.children.toLowerCase().includes(input.toLowerCase())
               }
             >
               {servicios.map((serv) => (
                 <Select.Option key={serv.id} value={serv.id}>
-                  {serv.nombreServicio}
+                  <Tooltip title={serv.nombreServicio}>
+                    <div style={{ whiteSpace: "normal", wordWrap: "break-word" }}>
+                      {serv.nombreServicio}
+                    </div>
+                  </Tooltip>
                 </Select.Option>
               ))}
             </Select>

@@ -13,6 +13,8 @@ import {updatepachFactura, getFacturRespaldo, getFacturaNotaCredito, getRelation
 import {getOrganizacionById} from '../../../apis/ApisServicioCliente/organizacionapi';
 //import axios from "axios";
 import {  getAllfacturafacturama} from "../../../apis/ApisServicioCliente/FacturaFacturamaApi";
+import { updateInfoSistemapatch } from "../../../apis/ApisServicioCliente/InfoSistemaApi";
+import { confirmTipoCambioBanxicoSelects } from "./confirmarCambioBanxico/confirmarCambioBanxico";
 import { getInfoSistema } from "../../../apis/ApisServicioCliente/InfoSistemaApi";
 import PDFpreFactura from "./Plantilla/PDFpreFactura";
 import { PDFDownloadLink} from '@react-pdf/renderer';
@@ -403,6 +405,22 @@ const DetallesFactura = () => {
   const handleCrearFactura = async () => {
     setLoading(true);
     try {
+          if (String(moneda.descripcion).toUpperCase() === "USD") {
+        // A) Llamada directa a Banxico (expone token y puede fallar por CORS)
+        const rate = await confirmTipoCambioBanxicoSelects({
+          token: "3487379dee962285e81cbbad6bea7ef19936271d8ec7fff95170cae223bdc144",
+          serie: "SF43718",       // FIX
+          daysBack: 60,
+          // backendUrl: "/api/banxico/fix-range" // ← B) Mejor: tu backend proxy
+        });
+        let tipoCambio = rate ?? 1.0; // Si cancelan, usar 1.0 (no es ideal, pero evita bloquear)
+        
+        if (rate == null) return; // cancelado
+        tipoCambio = rate;
+
+        console.log("💱 Tipo de cambio obtenido:", tipoCambio);
+        await updateInfoSistemapatch(1, { tipoCambioDolar: tipoCambio.toFixed(2) });
+      }
       //console.log(id);
       const response = await createPDFfactura(id);
       // console.log("📄 Respuesta de la API:", response);
@@ -797,7 +815,7 @@ const handleConfirmCrearFactura = () => {
       </Menu.Item>
       <Menu.Item key="6" onClick={() => setVisibleCancelModal(true)} icon={<CloseCircleTwoTone />}>Cancelar factura</Menu.Item>
       <Menu.Item key="7" onClick={() => handleDownloadAcuse(id)}icon={<FileTextTwoTone />}>Descargar Acuse</Menu.Item>
-      {/* <Menu.Item key="8" onClick={abrirModal}icon={<FileTextTwoTone />}>Crear o editar Addenda</Menu.Item> */}
+      <Menu.Item key="8" onClick={abrirModal}icon={<FileTextTwoTone />}>Crear o editar Addenda</Menu.Item>
       {/* getdescargaAcuse */}
     </Menu>
   );
@@ -1231,6 +1249,7 @@ const montoRestante =hasPagos
       >
         <p>Esta acción no se puede deshacer.</p>
         <p>Esta acción reemplazará la factura actual con otra seleccionada. No se puede desacer.</p>
+        <p>Por default 04-Situacion de los CFDI previos.</p>
 
         <Select
           style={{ width: "100%" }}
@@ -1290,7 +1309,7 @@ const montoRestante =hasPagos
         />
         <Select
           style={{ width: "100%" }}
-          placeholder="Selecciona una factura para reemplazar"
+          placeholder="Tipo de Relación"
           value={relationtypeId}
           onChange={setRelationTypeId}
           showSearch

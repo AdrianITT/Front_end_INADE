@@ -249,11 +249,16 @@ const CrearPreCotizaciones = () => {
     const factorConversion = esUSD ? tipoCambioDolar : 1;
 
     return {
-      subtotal: subtotal / factorConversion,
-      descuentoValor: descuentoValor / factorConversion,
-      subtotalConDescuento: subtotalConDescuento / factorConversion,
-      iva: iva / factorConversion,
-      total: total / factorConversion,
+      // subtotal: subtotal / factorConversion,
+      // descuentoValor: descuentoValor / factorConversion,
+      // subtotalConDescuento: subtotalConDescuento / factorConversion,
+      // iva: iva / factorConversion,
+      // total: total / factorConversion,
+      subtotal: subtotal ,
+      descuentoValor: descuentoValor ,
+      subtotalConDescuento: subtotalConDescuento,
+      iva: iva ,
+      total: total ,
     };
   };
 
@@ -552,7 +557,8 @@ const CrearPreCotizaciones = () => {
             </Row>
           
           {conceptos.map((concepto, index) => (
-            <div key={concepto.id}>
+            <div key={concepto.id}
+            style={{padding:'10px'}}>
               <Card>
                 <h3 style={{ marginBottom: 10 }}>Concepto {concepto.id}</h3>
                 <Row justify="space-between" align="middle">
@@ -647,7 +653,7 @@ const CrearPreCotizaciones = () => {
               </Card>
             </div>
           ))}
-          <Button type="primary" onClick={handleAddConcepto} style={{ marginBottom: "16px" }}>
+          <Button type="primary" variant="dashed" onClick={handleAddConcepto} style={{ marginBottom: "16px" }} block>
             Añadir Concepto
           </Button>
           <Alert

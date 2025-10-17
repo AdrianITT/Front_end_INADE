@@ -423,7 +423,7 @@ const receptorSeleccionado = receptor.find(r => r.id === ordenFormValues?.recept
           <Button type="primary" htmlType="submit" className="register-button">
             Registrar
           </Button>
-          <Button type="default" className="cancel-button" onClick={() => navigate(`/detalles_cotizaciones/${cifrarId(cotizacionId)}`)}>
+          <Button type="primary" danger onClick={() => navigate(`/detalles_cotizaciones/${cifrarId(cotizacionId)}`)}>
             Cancelar
           </Button>
         </div>

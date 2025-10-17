@@ -1,8 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { Modal, Table, Input, Select, Space, message, Empty } from "antd";
 import debounce from "lodash/debounce";
-import { getCotizacionesByServicioOrg} from "../../../../apis/ApisServicioCliente/CotizacionApi";
+import { getCotizacionesByServicioOrg, getDetallecotizaciondataById} from "../../../../apis/ApisServicioCliente/CotizacionApi";
 import {getServicioData} from "../../../../apis/ApisServicioCliente/ServiciosApi";
+import CotizacionDetalleExpand from "../CotizacionDetalleExpand/CotizacionDetalleExpand";
+import { useNavigate } from "react-router-dom";
+import { cifrarId } from "../../secretKey/SecretKey";
 
 const { Option } = Select;
 
@@ -15,6 +18,17 @@ const CotizacionesPorServicioModal = ({
   pageSizeDefault = 10,
   servicios: serviciosProp,    // opcional: si ya traes la lista de servicios desde afuera
 }) => {
+  const navigate = useNavigate();
+  // --- NUEVO: estados para expandibles en el modal ---
+  const [expandedData, setExpandedData] = useState({});
+  const [loadingRows, setLoadingRows] = useState({});
+  const [expandedRowKeys, setExpandedRowKeys] = useState([]);
+
+  const formatCurrency = (value) =>
+    `$${Number(value).toLocaleString("es-MX", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
   // Estados
   const [servicioId, setServicioId] = useState(initialServicioId);
   const [servicios, setServicios] = useState([]);
@@ -37,7 +51,7 @@ const CotizacionesPorServicioModal = ({
     { title: "Solicitud", dataIndex: "fechaSolicitud", sorter: true },
     { title: "Expiración", dataIndex: "fechaCaducidad", sorter: true },
     { title: "Cliente ID", dataIndex: "cliente" },
-    { title: "Moneda ID", dataIndex: "tipoMoneda" },
+    { title: "Empresa", dataIndex: "empresa" },
   ]), []);
 
   // Carga de servicios (si no vienen por props)
@@ -163,6 +177,31 @@ const CotizacionesPorServicioModal = ({
     });
   };
 
+  const handleExpand = useCallback(
+    async (expanded, record) => {
+      const id = record.id; // en el modal usas rowKey = r.id
+      if (expanded) {
+        setExpandedRowKeys((prev) => (prev.includes(id) ? prev : [...prev, id]));
+      } else {
+        setExpandedRowKeys((prev) => prev.filter((k) => k !== id));
+      }
+
+      if (expanded && !expandedData[id]) {
+        try {
+          setLoadingRows((prev) => ({ ...prev, [id]: true }));
+          const detalle = await getDetallecotizaciondataById(id);
+          setExpandedData((prev) => ({ ...prev, [id]: detalle }));
+        } catch (error) {
+          console.error(`Error al obtener detalle de cotización ${id}:`, error);
+          message.error("No se pudo cargar el detalle de la cotización.");
+        } finally {
+          setLoadingRows((prev) => ({ ...prev, [id]: false }));
+        }
+      }
+    },
+    [expandedData]
+  );
+
   return (
     <Modal
       title="Cotizaciones por servicio"
@@ -171,6 +210,14 @@ const CotizacionesPorServicioModal = ({
       footer={null}
       width={960}
       destroyOnClose
+      styles={{ 
+        body:{
+          maxHeight: '70vh',
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          paddingRight: '12px',
+        }
+      }}
     >
       <Space style={{ width: "100%", marginBottom: 12 }} wrap>
         <Select
@@ -228,6 +275,29 @@ const CotizacionesPorServicioModal = ({
             onClick: () => onRowClick?.(record),
             style: { cursor: onRowClick ? "pointer" : "default" },
           })}
+
+          expandable={{
+            expandedRowKeys,
+            onExpand: handleExpand,
+            onExpandedRowsChange: setExpandedRowKeys,
+            rowExpandable: () => true,
+            expandedRowRender: (record) => {
+              const id = record.id;
+              const detalle = expandedData[id];
+
+              if (loadingRows[id]) return <p>Cargando detalles...</p>;
+              if (!detalle) return <p>Sin datos adicionales.</p>;
+
+              return (
+                <CotizacionDetalleExpand
+                  detalle={detalle}
+                  navigate={navigate}
+                  cifrarId={cifrarId}
+                  formatCurrency={formatCurrency}
+                />
+              );
+            },
+          }}
         />
       )}
     </Modal>

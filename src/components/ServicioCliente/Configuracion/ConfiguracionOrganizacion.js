@@ -746,24 +746,28 @@ const CotizacionPureva= async ()=>{
            </Form.Item>
            </Col>
            </Row>
+            <Alert message="Aviso importante"
+              description="Si la imagen aparece completamente en blanco, no la elimine. Es una marca de agua transparente utilizada en las cotizaciones y órdenes de trabajo."
+              type="warning"
+              showIcon/>
            <Form.Item>
-        {marcaAgua ? (
-            <>
-            <p> se usara en cotizacio y ordenes de trabajo</p>
-            <p>Imagen cargada actualmente:</p>
-            <img
-              src={marcaAgua}
-              alt="Marca de Agua"
-              style={{ width: 100, height: 'auto', opacity: 0.4, border: '1px solid #ddd', borderRadius: 4}}
-            />
-            </>
-          ):(
-            <>
-            <p style={{ color: "red", fontWeight: "bold" }}>
-              No se ha subido ninguna imagen de marca de agua.
-            </p>
-            <br/>
-          </>)}
+            {marcaAgua ? (
+                <>
+                <p> se usara en cotizacio y ordenes de trabajo</p>
+                <p>Imagen cargada actualmente:</p>
+                <img
+                  src={marcaAgua}
+                  alt="Marca de Agua"
+                  style={{ width: 100, height: 'auto', opacity: 0.4, border: '1px solid #ddd', borderRadius: 4}}
+                />
+                </>
+              ):(
+                <>
+                <p style={{ color: "red", fontWeight: "bold" }}>
+                  No se ha subido ninguna imagen de marca de agua.
+                </p>
+                <br/>
+              </>)}
         </Form.Item>
         <Form.Item
           label="Imagen marca de agua:"

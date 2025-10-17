@@ -1,278 +1,1117 @@
+def llenarExcelAguas(request, aguaresidualinforme_id):
+    from openpyxl import load_workbook
+    from django.shortcuts import get_object_or_404
+    import os
+    from openpyxl.drawing.image import Image
 
-def datosInformeAR2(request, informe_id):
-    """
-    GET /api/campo/aguaresidualinforme/<informe_id>/datos/
-    """
-    informe = get_object_or_404(
-        AguaResidualInforme.objects.select_related(
-            "OrdenTrabajo",
-            "OrdenTrabajo__cotizacion",
-            "OrdenTrabajo__cotizacion__cliente",
-            "OrdenTrabajo__cotizacion__cliente__empresa",
-        ),
-        id=informe_id,
-    )
+    ruta_plantilla = "media/aguasCampo/AguasResiduales2.xlsx"
+    wb = load_workbook(ruta_plantilla)
+
+    # Obtiene las plantillas
+    hoja_calibracion_c = wb ["CalibracionVerificacionC"]
+    hoja_calibracion_ph = wb ["CalibracionVerificacionPh"]
+    hoja_protocolo_plantilla = wb["ProtocoloMuestreo"]
+    hoja_campo_plantilla = wb["HojaCampo"]
+
+    # Listas para hojas
+    hojas_protocolo = []
+    hojas_campo = []
+
+    informe = get_object_or_404(AguaResidualInforme, id=aguaresidualinforme_id)
+    croquis = informe.CroquisUbicacion
+    orden = informe.OrdenTrabajo
+    cotizacion = orden.cotizacion
+    cliente = cotizacion.cliente
+    empresa = cliente.empresa
+    organizacion= empresa.organizacion
+    logo_path = os.path.join(settings.MEDIA_ROOT, str(organizacion.logo))
+    img = Image(logo_path)
+
+    # (Opcional) Cambiar tamaño
+    img.width = 80
+    img.height = 50
     
-    calibraciones = (
+    receptor = orden.receptor
+    calibracionverificacion = informe.calibracionverificacion_set.all()
+    calibracionverificacions = (
         CalibracionVerificacion.objects
-        .filter(aguaResidualInforme_id=informe.id)
-        .prefetch_related(
-            # Trae TODAS las CalibracionConductiva de cada CalibracionVerificacion
-            Prefetch(
-                "calibracionconductiva_set",  # sin related_name
-                queryset=CalibracionConductiva.objects.select_related(
-                    # desde CC -> OneToOne reverso a hijos:
-                    "conductividadlaboratorio",
-                    "conductividadlaboratorio__conductividadAceptacionMc",
-                    "conductividadlaboratorio__conductividadAceptacionMr",
-                    "conductividadcampo",
-                    "conductividadcampo__conductividadAceptacionMc",
-                    "conductividadcampo__conductividadAceptacionMr",
-                ),
-                to_attr="prefetched_ccs"  # las tendrás como lista en cal.prefetched_ccs
-            ),
-            Prefetch(
-                "intermediario_set",
-                queryset=Intermediario.objects.select_related(
-                    "protocoloMuestreo", "protocoloMuestreo__sitioMuestreo", "hojaCampo"
-                ),
-                to_attr="prefetched_intermediario_set"
-            ),
-            Prefetch("calibracionph_set", to_attr="prefetched_ph"),
-        )
+        .filter(aguaResidualInforme_id=aguaresidualinforme_id)
+        .order_by('id')  # o por fecha, como prefieras
     )
+    for idx, cv in enumerate(calibracionverificacions):
+    # Para CONDUCTIVIDAD (hoja "CalibracionVerificacionC")
+        hoja_c_actual = hoja_calibracion_c if idx == 0 else wb.copy_worksheet(hoja_calibracion_c)
+        if idx > 0:
+            hoja_c_actual.title = f"CalibracionVerificacionC {idx+1}"
+            
+        calibracionc= (
+            CalibracionConductiva.objects
+            .filter(calibracionVerificacion=cv)
+            .select_related(
+                "conductividadlaboratorio",
+                "conductividadlaboratorio__conductividadAceptacionMr",
+                "conductividadlaboratorio__conductividadAceptacionMc",
+                "conductividadcampo",
+                "conductividadcampo__conductividadAceptacionMr",
+                "conductividadcampo__conductividadAceptacionMc",
+            )
+            .order_by("-id")
+            .first()
+        )
+        if not calibracionc:
+            continue
 
-    calibracion_data = []
-    for cal in calibraciones:
+        conductividadla = getattr(calibracionc, "conductividadlaboratorio", "")
+        conductividadcam = getattr(calibracionc, "conductividadcampo","")
+        Aceptacionmrla = getattr(conductividadla, "conductividadAceptacionMr","")
+        Aceptacionmcla = getattr(conductividadla, "conductividadAceptacionMc","")
+        Aceptacionmrcam = getattr(conductividadcam, "conductividadAceptacionMr","")
+        Aceptacionmccam = getattr(conductividadcam, "conductividadAceptacionMc","")
+        # Crear la línea diagonal
+        thin = Side(style='thin')
+        diagonal_border = Border(
+            left=thin,
+            right=thin,
+            top=thin,
+            bottom=thin,
+            diagonal=thin,
+            diagonalUp=True,
+            diagonalDown=False
+        )
         
-        # ---- Intermediarios (tu código actual) ----
-        inters = []
-        for i in getattr(cal, "prefetched_intermediario_set", []):
-            sitio = i.protocoloMuestreo.sitioMuestreo if i.protocoloMuestreo else None
-            inters.append({
-                "id": i.id,
-                "numero": i.numero,
-                "protocoloMuestreo": {
-                    "id": i.protocoloMuestreo_id,
-                    "numero": i.protocoloMuestreo.numero if i.protocoloMuestreo else None,
-                    "sitioMuestreo": {
-                        "id": sitio.id if sitio else None,
-                        "domicilio": sitio.domicilio if sitio else None,
-                        "giroEmpresa": sitio.giroEmpresa if sitio else None,
-                    },
-                },
-                "hojaCampo": {"id": i.hojaCampo_id, "numero": i.hojaCampo.numero if i.hojaCampo else None},
-            })
-        if not inters:
-            inters = [{
-                "id": None,
-                "numeroInter": None,
-                "protocoloMuestreo": {"id": None, "numero": None},
-                "hojaCampo": {"id": None, "numero": None},
-            }]
+        
+        calibraciones_ph = CalibracionPh.objects.filter(calibracionVerificacion=cv)
 
-        # ---- pH (tu código actual) ----
-        ph = [
-            {
-                "id": p.id,
-                "numero": p.numero,
-                "calibracionPhLaboratorio": model_to_dict(p.calibracionPhLaboratorio) if p.calibracionPhLaboratorio else None,
-                "calibracionPhCampo": model_to_dict(p.calibracionPhCampo) if p.calibracionPhCampo else None,
-            }
-            for p in getattr(cal, "prefetched_ph", [])
-        ]
 
-        # ---- Conductividad (todas las CC asociadas a esta calibración) ----
-        ccs_json = []
-        # print(cc)
-        # model_to_dict(cc)
-        print(cal.prefetched_ccs)
-        model_to_dict(cal)
-        for cc in getattr(cal, "prefetched_ccs", []):
-            lab = getattr(cc, "conductividadlaboratorio", None)   # reverso OneToOne por defecto
-            print("cc")
-            print(cc.conductividadlaboratorio)
-            print(lab)
-            campo = getattr(cc, "conductividadcampo", None)
-            print(campo)
 
-            mc_lab  = getattr(lab, "conductividadAceptacionMc", None)   if lab else None
-            print(mc_lab)
-            mr_lab  = getattr(lab, "conductividadAceptacionMr", None)   if lab else None
-            print(mr_lab)
-            mc_campo= getattr(campo, "conductividadAceptacionMc", None) if campo else None
-            print(mc_campo)
-            mr_campo= getattr(campo, "conductividadAceptacionMr", None) if campo else None
-            print(mr_campo)
+        mapa_fecha_por_protocolo = {}
+        for cal in calibracionverificacion:
+            for inter in cal.intermediario_set.all():
+                if inter.protocoloMuestreo:
+                    mapa_fecha_por_protocolo[inter.protocoloMuestreo.id] = cal
+        
+        # calidaverificacion = informe.calibracionverificacion_set.all()
+        # intermediarios = calidaverificacion.intermediario_set.all()
+        intermediarios = [i for calidad in calibracionverificacion for i in calidad.intermediario_set.all()]
+        #------CALIBRACION Y VERIFICACION DE CONDUCTIVIDAD
+        if hoja_calibracion_c is not None:
+            fecha= cv.fechaCalibracion
+            equipo= cv.equipoUtilizado
+            idequipo= cv.idEquipo
+            marcaequipo= cv.marcaEquipo
+            modeloequipo= cv.modeloEquipo
+            serieequipo= cv.serialEquipo
+            hora_mr = Aceptacionmrla.horaMr
+            valor_aceptacion = Aceptacionmrla.seAceptaMr
+            hora_mc = Aceptacionmcla.horaMc
+            valor_aceptacionc = Aceptacionmcla.seAceptaMc
+            
+            
 
-            ccs_json.append({
-                "id": cc.id,
-                "observacion": cc.observacion,
-                "lab": {
-                    "id": lab.id if lab else None,
-                    "mc": model_to_dict(mc_lab) if mc_lab else None,
-                    "mr": model_to_dict(mr_lab) if mr_lab else None,
-                },
-                "campo": {
-                    "id": campo.id if campo else None,
-                    "mc": model_to_dict(mc_campo) if mc_campo else None,
-                    "mr": model_to_dict(mr_campo) if mr_campo else None,
-                },
-            })
+            # Insertar en celda (ejemplo: A1)
+            img = Image(logo_path)
 
-        calibracion_data.append({
-            "id": cal.id,
-            "numero": cal.numero,
-            "equipoUtilizado": cal.equipoUtilizado,
-            "idEquipo": cal.idEquipo,
-            "marcaEquipo": cal.marcaEquipo,
-            "modeloEquipo": cal.modeloEquipo,
-            "serialEquipo": cal.serialEquipo,
-            "calibracionesConductivas": ccs_json,   # <- ahora es lista (porque FK 1:N)
-            "intermediarios": inters,
-            "ph": ph,
-        })
+            # (Opcional) Cambiar tamaño
+            img.width = 80
+            img.height = 50
+            hoja_calibracion_c.add_image(img, "A1")
 
-    # si quieres fallback cuando NO hay calibraciones:
-    if not calibracion_data:
-        calibracion_data = [{
-            "id": None,
-            "numero": None,
-            "equipoUtilizado": None,
-            "idEquipo": None,
-            "marcaEquipo": None,
-            "modeloEquipo": None,
-            "serialEquipo": None,
-            "calibracionesConductivas": [],
-            "intermediarios": [{
-                "id": None,
-                "numero": None,
-                "protocoloMuestreo": {"id": None, "numero": None},
-                "hojaCampo": {"id": None, "numero": None},
-            }],
-            "ph": [{"id": None, "calibracionPhLaboratorio": None}],
-        }]
+            hoja_calibracion_c["U4"]=fecha.strftime('%d/%m/%Y')
+            hoja_calibracion_c['AB4'] = str(orden.codigo)
+            hoja_calibracion_c['E5'] = str(equipo)
+            hoja_calibracion_c['L5'] = str(idequipo)
+            hoja_calibracion_c['P5'] = str(marcaequipo)
+            hoja_calibracion_c['X5'] = str(modeloequipo)
+            hoja_calibracion_c['AC5'] = str(serieequipo)
+            hoja_calibracion_c['M9'] = str(conductividadla.usCmLaboratorio)
+            hoja_calibracion_c['F11'] = str(conductividadla.estandarMr)
+            hoja_calibracion_c['L11'] = str(conductividadla.marcaMr)
+            hoja_calibracion_c['R11'] = str(conductividadla.loteMr)
+            hoja_calibracion_c['Z11'] = str(conductividadla.fechaMrCaducidad.strftime('%d/%m/%Y'))
+            hoja_calibracion_c['F12'] = str(conductividadla.estandarMc)
+            hoja_calibracion_c['L12'] = str(conductividadla.marcaMc)
+            hoja_calibracion_c['R12'] = str(conductividadla.loteMc)
+            hoja_calibracion_c['Z12'] = str(conductividadla.fechaMcCaducidad.strftime('%d/%m/%Y'))
+            hoja_calibracion_c['B16'] = str(hora_mr.strftime('%H:%M') if hora_mr else '')
+            # hoja_calibracion_c['D16'] = int(Aceptacionmrla.l1Mr)
+            # hoja_calibracion_c['F16'] = int(Aceptacionmrla.t1Mr)
+            # hoja_calibracion_c['G16'] = int(Aceptacionmrla.l2Mr)
+            # hoja_calibracion_c['I16'] = int(Aceptacionmrla.t2Mr)
+            # hoja_calibracion_c['J16'] = int(Aceptacionmrla.l3Mr)
+            # hoja_calibracion_c['M16'] = int(Aceptacionmrla.t3Mr)
+            set_valor_decimal(hoja_calibracion_c, 'D16', Aceptacionmrla.l1Mr)
+            set_valor_decimal(hoja_calibracion_c, 'F16', Aceptacionmrla.t1Mr)
+            set_valor_decimal(hoja_calibracion_c, 'G16', Aceptacionmrla.l2Mr)
+            set_valor_decimal(hoja_calibracion_c, 'I16', Aceptacionmrla.t2Mr)
+            set_valor_decimal(hoja_calibracion_c, 'J16', Aceptacionmrla.l3Mr)
+            set_valor_decimal(hoja_calibracion_c, 'M16', Aceptacionmrla.t3Mr)
+            hoja_calibracion_c['W16'] = str(Aceptacionmrla.criterioMr)
+            if str(valor_aceptacion).lower() == "true":
+                hoja_calibracion_c['AC16'] = 'X'
+                hoja_calibracion_c['AE16'].border=diagonal_border
+            else:
+                hoja_calibracion_c['AE16'] = 'X'
+                hoja_calibracion_c['AC16'].border=diagonal_border
+                
+            hoja_calibracion_c['B18'] = str(hora_mc.strftime('%H:%M') if hora_mc else '')
+            set_valor_decimal(hoja_calibracion_c, 'D18', Aceptacionmcla.l1Mc)
+            set_valor_decimal(hoja_calibracion_c, 'F18', Aceptacionmcla.t1Mc)
+            set_valor_decimal(hoja_calibracion_c, 'G18', Aceptacionmcla.l2Mc)
+            set_valor_decimal(hoja_calibracion_c, 'I18', Aceptacionmcla.t2Mc)
+            set_valor_decimal(hoja_calibracion_c, 'J18', Aceptacionmcla.l3Mc)
+            set_valor_decimal(hoja_calibracion_c, 'M18', Aceptacionmcla.t3Mc)
+            hoja_calibracion_c['W18'] = str(Aceptacionmcla.criterioMc)
+            if str(valor_aceptacionc).lower() == "true":
+                hoja_calibracion_c['AC18'] = 'X'
+                hoja_calibracion_c['AE18'].border=diagonal_border
+            else:
+                hoja_calibracion_c['AE18'] = 'X'
+                hoja_calibracion_c['AC18'].border=diagonal_border
+            
+            camhoramr=Aceptacionmrcam.horaMr
+            valor_aceptacionmr = Aceptacionmrcam.seAceptaMr
+            hoja_calibracion_c['J22'] = str(conductividadcam.usCmCampo)
+            hoja_calibracion_c['P22'] = str(conductividadcam.usCmCampoRango)
+            hoja_calibracion_c['B26'] = str(camhoramr.strftime('%H:%M') if camhoramr else '')
+            set_valor_decimal(hoja_calibracion_c, 'D26', Aceptacionmrcam.l1Mr)
+            set_valor_decimal(hoja_calibracion_c, 'F26', Aceptacionmrcam.t1Mr)
+            set_valor_decimal(hoja_calibracion_c, 'G26', Aceptacionmrcam.l2Mr)
+            set_valor_decimal(hoja_calibracion_c, 'I26', Aceptacionmrcam.t2Mr)
+            set_valor_decimal(hoja_calibracion_c, 'J26', Aceptacionmrcam.l3Mr)
+            set_valor_decimal(hoja_calibracion_c, 'M26', Aceptacionmrcam.t3Mr)
+            hoja_calibracion_c['W26'] = str(Aceptacionmrcam.criterioMr or '')
+            if str(valor_aceptacionmr).lower()== "true":
+                hoja_calibracion_c['AC26'] = 'X'
+                hoja_calibracion_c['AE26'].border=diagonal_border
+            else:
+                hoja_calibracion_c['AE26'] = 'X'
+                hoja_calibracion_c['AC26'].border=diagonal_border
+                
+                
+            camhoramc=Aceptacionmccam.horaMc
+            valor_aceptacionmccam = Aceptacionmccam.seAceptaMc
+            hoja_calibracion_c['B28'] = str(camhoramc.strftime('%H:%M') if camhoramr else '')
+            set_valor_decimal(hoja_calibracion_c, 'D28', Aceptacionmccam.l1Mc)
+            set_valor_decimal(hoja_calibracion_c, 'F28', Aceptacionmccam.t1Mc)
+            set_valor_decimal(hoja_calibracion_c, 'G28', Aceptacionmccam.l2Mc)
+            set_valor_decimal(hoja_calibracion_c, 'I28', Aceptacionmccam.t2Mc)
+            set_valor_decimal(hoja_calibracion_c, 'J28', Aceptacionmccam.l3Mc)
+            set_valor_decimal(hoja_calibracion_c, 'M28', Aceptacionmccam.t3Mc)
+            hoja_calibracion_c['W28'] = str(Aceptacionmccam.criterioMc)
+            if str(valor_aceptacionmccam).lower()== "true":
+                hoja_calibracion_c['AC28'] = 'X'
+                hoja_calibracion_c['AE28'].border=diagonal_border
+            else:
+                hoja_calibracion_c['AE28'] = 'X'
+                hoja_calibracion_c['AC28'].border=diagonal_border
+                
+            texto = str(calibracionc.observacion)
+            limite = 90  # número máximo de caracteres para la primera celda
+
+            # Si el texto es corto, va solo en E32
+            if len(texto) <= limite:
+                hoja_calibracion_c['E32'] = texto
+                hoja_calibracion_c['E33'] = ""
+            else:
+                hoja_calibracion_c['E32'] = texto[:limite]
+                hoja_calibracion_c['E33'] = texto[limite:]
+                
+            hoja_calibracion_c['D41'] =str(calibracionc.realizo)
+            hoja_calibracion_c['S41'] =str(calibracionc.supervisor)
+
+        for idx, calph in enumerate(calibraciones_ph):
+            if idx == 0:
+                # 👇 Usar directamente la hoja plantilla para el primero
+                hoja_actual = hoja_calibracion_ph
+            else:
+                # 👇 Crear una nueva copia para los siguientes
+                hoja_actual = wb.copy_worksheet(hoja_calibracion_ph)
+                hoja_actual.title = f"CalibracionPh {idx + 1}"
+                
+            # 2️⃣ Acceder a los modelos relacionados
+            
+            fecha= cv.fechaCalibracion
+            equipo= cv.equipoUtilizado
+            idequipo= cv.idEquipo
+            marcaequipo= cv.marcaEquipo
+            modeloequipo= cv.modeloEquipo
+            serieequipo= cv.serialEquipo
+            lab = calph.calibracionPhLaboratorio
+            campo = calph.calibracionPhCampo
+            puntolab=lab.primerPuntoLaboratorio
+            segpuntolab=lab.segundoPuntoLaboratorio
+            puntocam=campo.primerPuntoCampo
+            segpuntocam=campo.segundoPuntoCampo
+            
+            lectlabestandar=puntolab.certificadoLectura
+            lect2labestandar=puntolab.certificadoLectura2
+            lect3labestandar=puntolab.certificadoLectura3
+            
+            lectlabcomer=puntolab.comercialLectura
+            lect2labcomer=puntolab.comercialLectura2
+            lect3labcomer=puntolab.comercialLectura3
+            
+            lectlabestandar2=segpuntolab.certificadoLectura
+            lect2labestandar2=segpuntolab.certificadoLectura2
+            lect3labestandar2=segpuntolab.certificadoLectura3
+            
+            lectlabcomer2=segpuntolab.comercialLectura
+            lect2labcomer2=segpuntolab.comercialLectura2
+            lect3labcomer2=segpuntolab.comercialLectura3
+            
+            lectcamestandar=puntocam.certificadoLectura
+            lect2camestandar=puntocam.certificadoLectura2
+            lect3camestandar=puntocam.certificadoLectura3
+            
+            lectcamcomer=puntocam.comercialLectura
+            lect2camcomer=puntocam.comercialLectura2
+            lect3camcomer=puntocam.comercialLectura3
+            
+            lectcamestandar2=segpuntocam.certificadoLectura
+            lect2camestandar2=segpuntocam.certificadoLectura2
+            lect3camestandar2=segpuntocam.certificadoLectura3
+            
+            lectcamcomer2=segpuntocam.comercialLectura
+            lect2camcomer2=segpuntocam.comercialLectura2
+            lect3camcomer2=segpuntocam.comercialLectura3
+            #primer punto tabla de certificado laboratorio
+            img = Image(logo_path)
+
+            # (Opcional) Cambiar tamaño
+            img.width = 80
+            img.height = 50
+            hoja_actual.add_image(img, "A1")
+            hoja_actual['R4'] = fecha.strftime('%d/%m/%Y') if fecha else ""
+            hoja_actual['Z4'] = str(orden.codigo) if orden and orden.codigo else ""
+            hoja_actual['E5'] = str(equipo) if equipo else ""
+            hoja_actual['L5'] = str(idequipo) if idequipo else ""
+            hoja_actual['P5'] = str(marcaequipo) if marcaequipo else ""
+            hoja_actual['W5'] = str(modeloequipo) if modeloequipo else ""
+            hoja_actual['AA5'] = str(serieequipo) if serieequipo else ""
+            
+            hoja_actual['E13'] = str(puntolab.certificadoPh) if puntolab and puntolab.certificadoPh else ""
+            hoja_actual['D14'] = puntolab.certificadoHora.strftime('%H:%M') if puntolab and puntolab.certificadoHora else ""
+            hoja_actual['D15'] = str(puntolab.certificadoMarca) if puntolab and puntolab.certificadoMarca else ""
+            hoja_actual['D16'] = str(puntolab.certificadoLote) if puntolab and puntolab.certificadoLote else ""
+            hoja_actual['D17'] = puntolab.certificadoCaducidad.strftime('%d/%m/%Y') if puntolab and puntolab.certificadoCaducidad else ""
+            # hoja_actual['D18'] = int(lectlabestandar.lectura) if lectlabestandar and lectlabestandar.lectura is not None else ""
+            # hoja_actual['D19'] = int(lect2labestandar.lectura) if lect2labestandar and lect2labestandar.lectura is not None else ""
+            # hoja_actual['D20'] = int(lect3labestandar.lectura) if lect3labestandar and lect3labestandar.lectura is not None else ""
+            # hoja_actual['G18'] = int(lectlabestandar.temperatura) if lectlabestandar and lectlabestandar.temperatura is not None else ""
+            # hoja_actual['G19'] = int(lect2labestandar.temperatura) if lect2labestandar and lect2labestandar.temperatura is not None else ""
+            # hoja_actual['G20'] = int(lect3labestandar.temperatura) if lect3labestandar and lect3labestandar.temperatura is not None else ""
+            # Uso de tu función en vez de int()
+            set_valor_decimal(hoja_actual, 'D18', lectlabestandar.lectura if lectlabestandar else None)
+            set_valor_decimal(hoja_actual, 'D19', lect2labestandar.lectura if lect2labestandar else None)
+            set_valor_decimal(hoja_actual, 'D20', lect3labestandar.lectura if lect3labestandar else None)
+
+            set_valor_decimal(hoja_actual, 'G18', lectlabestandar.temperatura if lectlabestandar else None)
+            set_valor_decimal(hoja_actual, 'G19', lect2labestandar.temperatura if lect2labestandar else None)
+            set_valor_decimal(hoja_actual, 'G20', lect3labestandar.temperatura if lect3labestandar else None)
+
+            #segundo punto tabla comercial laboratorio
+            
+            hoja_actual['I13'] = str(puntolab.comercialPh) if puntolab and puntolab.comercialPh else ""
+            hoja_actual['H14'] = puntolab.comercialHora.strftime('%H:%M') if puntolab and puntolab.comercialHora else ""
+            hoja_actual['H15'] = str(puntolab.comercialMarca) if puntolab and puntolab.comercialMarca else ""
+            hoja_actual['H16'] = str(puntolab.comercialLote) if puntolab and puntolab.comercialLote else ""
+            hoja_actual['H17'] = puntolab.comercialCaducidad.strftime('%d/%m/%Y') if puntolab and puntolab.comercialCaducidad else ""
+            # hoja_actual['H18'] = int(lectlabcomer.lectura) if lectlabcomer and lectlabcomer.lectura is not None else ""
+            # hoja_actual['H19'] = int(lect2labcomer.lectura) if lect2labcomer and lect2labcomer.lectura is not None else ""
+            # hoja_actual['H20'] = int(lect3labcomer.lectura) if lect3labcomer and lect3labcomer.lectura is not None else ""
+            # hoja_actual['K18'] = int(lectlabcomer.temperatura) if lectlabcomer and lectlabcomer.temperatura is not None else ""
+            # hoja_actual['K19'] = int(lect2labcomer.temperatura) if lect2labcomer and lect2labcomer.temperatura is not None else ""
+            # hoja_actual['K20'] = int(lect3labcomer.temperatura) if lect3labcomer and lect3labcomer.temperatura is not None else ""
+            set_valor_decimal(hoja_actual, 'H18', lectlabcomer.lectura if lectlabcomer else None)
+            set_valor_decimal(hoja_actual, 'H19', lect2labcomer.lectura if lect2labcomer else None)
+            set_valor_decimal(hoja_actual, 'H20', lect3labcomer.lectura if lect3labcomer else None)
+            set_valor_decimal(hoja_actual, 'K18', lectlabcomer.temperatura if lectlabcomer else None)
+            set_valor_decimal(hoja_actual, 'K19', lect2labcomer.temperatura if lect2labcomer else None)
+            set_valor_decimal(hoja_actual, 'K20', lect3labcomer.temperatura if lect3labcomer else None)
+            #TERCERA TABLA DE PRIMER PUNTO LABORATORIO
+            
+            hoja_actual['W13'] = str(segpuntolab.certificadoPh) if segpuntolab and segpuntolab.certificadoPh else ""
+            hoja_actual['U14'] = segpuntolab.certificadoHora.strftime('%H:%M') if segpuntolab and segpuntolab.certificadoHora else ""
+            hoja_actual['U15'] = str(segpuntolab.certificadoMarca) if segpuntolab and segpuntolab.certificadoMarca else ""
+            hoja_actual['U16'] = str(segpuntolab.certificadoLote) if segpuntolab and segpuntolab.certificadoLote else ""
+            hoja_actual['U17'] = segpuntolab.certificadoCaducidad.strftime('%d/%m/%Y') if segpuntolab and segpuntolab.certificadoCaducidad else ""
+            # hoja_actual['U18'] = int(lectlabestandar2.lectura) if lectlabestandar2 and lectlabestandar2.lectura is not None else ""
+            # hoja_actual['U19'] = int(lect2labestandar2.lectura) if lect2labestandar2 and lect2labestandar2.lectura is not None else ""
+            # hoja_actual['U20'] = int(lect3labestandar2.lectura) if lect3labestandar2 and lect3labestandar2.lectura is not None else ""
+            # hoja_actual['X18'] = int(lectlabestandar2.temperatura) if lectlabestandar2 and lectlabestandar2.temperatura is not None else ""
+            # hoja_actual['X19'] = int(lect2labestandar2.temperatura) if lect2labestandar2 and lect2labestandar2.temperatura is not None else ""
+            # hoja_actual['X20'] = int(lect3labestandar2.temperatura) if lect3labestandar2 and lect3labestandar2.temperatura is not None else ""
+            set_valor_decimal(hoja_actual, 'U18', lectlabestandar2.lectura if lectlabestandar2 else None)
+            set_valor_decimal(hoja_actual, 'U19', lect2labestandar2.lectura if lect2labestandar2 else None)
+            set_valor_decimal(hoja_actual, 'U20', lect3labestandar2.lectura if lect3labestandar2 else None)
+            set_valor_decimal(hoja_actual, 'X18', lectlabestandar2.temperatura if lectlabestandar2 else None)
+            set_valor_decimal(hoja_actual, 'X19', lect2labestandar2.temperatura if lect2labestandar2 else None)
+            set_valor_decimal(hoja_actual, 'X20', lect3labestandar2.temperatura if lect3labestandar2 else None)
+            #segundo punto tabla comercial laboratorio
+            
+            hoja_actual['Z13'] = str(segpuntolab.comercialPh) if segpuntolab and segpuntolab.comercialPh else ""
+            hoja_actual['Y14'] = segpuntolab.comercialHora.strftime('%H:%M') if segpuntolab and segpuntolab.comercialHora else ""
+            hoja_actual['Y15'] = str(segpuntolab.comercialMarca) if segpuntolab and segpuntolab.comercialMarca else ""
+            hoja_actual['Y16'] = str(segpuntolab.comercialLote) if segpuntolab and segpuntolab.comercialLote else ""
+            hoja_actual['Y17'] = segpuntolab.comercialCaducidad.strftime('%d/%m/%Y') if segpuntolab and segpuntolab.comercialCaducidad else ""
+            # hoja_actual['Y18'] = int(getattr(lectlabcomer2, 'lectura', "") or 0) if lectlabcomer2 and getattr(lectlabcomer2, 'lectura', None) is not None else ""
+            # hoja_actual['Y19'] = int(lect2labcomer2.lectura) if lect2labcomer2 and lect2labcomer2.lectura is not None else ""
+            # hoja_actual['Y20'] = int(lect3labcomer2.lectura) if lect3labcomer2 and lect3labcomer2.lectura is not None else ""
+            # hoja_actual['AB18'] = int(getattr(lectlabcomer2, 'temperatura', "") or 0) if lectlabcomer2 and getattr(lectlabcomer2, 'temperatura', None) is not None else ""
+            # hoja_actual['AB19'] = int(lect2labcomer2.temperatura) if lect2labcomer2 and lect2labcomer2.temperatura is not None else ""
+            # hoja_actual['AB20'] = int(lect3labcomer2.temperatura) if lect3labcomer2 and lect3labcomer2.temperatura is not None else ""
+            set_valor_decimal(hoja_actual, 'Y18', getattr(lectlabcomer2, 'lectura', None) if lectlabcomer2 else None)
+            set_valor_decimal(hoja_actual, 'Y19', lect2labcomer2.lectura if lect2labcomer2 else None)
+            set_valor_decimal(hoja_actual, 'Y20', lect3labcomer2.lectura if lect3labcomer2 else None)
+            set_valor_decimal(hoja_actual, 'AB18', getattr(lectlabcomer2, 'temperatura', None) if lectlabcomer2 else None)
+            set_valor_decimal(hoja_actual, 'AB19', lect2labcomer2.temperatura if lect2labcomer2 else None)
+            set_valor_decimal(hoja_actual, 'AB20', lect3labcomer2.temperatura if lect3labcomer2 else None)
+            
+            #PRIMERA PARTE DE CAMPO
+            
+            hoja_actual['E31'] = str(puntocam.certificadoPh) if puntocam and puntocam.certificadoPh else ""
+            hoja_actual['D32'] = puntocam.certificadoHora.strftime('%H:%M') if puntocam and puntocam.certificadoHora else ""
+            hoja_actual['D33'] = str(puntocam.certificadoMarca) if puntocam and puntocam.certificadoMarca else ""
+            hoja_actual['D34'] = str(puntocam.certificadoLote) if puntocam and puntocam.certificadoLote else ""
+            hoja_actual['D35'] = puntocam.certificadoCaducidad.strftime('%d/%m/%Y') if puntocam and puntocam.certificadoCaducidad else ""
+            # hoja_actual['D36'] = int(lectcamestandar.lectura) if lectcamestandar and lectcamestandar.lectura is not None else ""
+            # hoja_actual['D37'] = int(lect2camestandar.lectura) if lect2camestandar and lect2camestandar.lectura is not None else ""
+            # hoja_actual['D38'] = int(lect3camestandar.lectura) if lect3camestandar and lect3camestandar.lectura is not None else ""
+            # hoja_actual['G36'] = int(lectcamestandar.temperatura) if lectcamestandar and lectcamestandar.temperatura is not None else ""
+            # hoja_actual['G37'] = int(lect2camestandar.temperatura) if lect2camestandar and lect2camestandar.temperatura is not None else ""
+            # hoja_actual['G38'] = int(lect3camestandar.temperatura) if lect3camestandar and lect3camestandar.temperatura is not None else ""
+            set_valor_decimal(hoja_actual, 'D36', lectcamestandar.lectura if lectcamestandar else None)
+            set_valor_decimal(hoja_actual, 'D37', lect2camestandar.lectura if lect2camestandar else None)
+            set_valor_decimal(hoja_actual, 'D38', lect3camestandar.lectura if lect3camestandar else None)
+            set_valor_decimal(hoja_actual, 'G36', lectcamestandar.temperatura if lectcamestandar else None)
+            set_valor_decimal(hoja_actual, 'G37', lect2camestandar.temperatura if lect2camestandar else None)
+            set_valor_decimal(hoja_actual, 'G38', lect3camestandar.temperatura if lect3camestandar else None)
+            #segundo punto tabla comercial CAMPO
+            
+            hoja_actual['I31'] = str(puntocam.comercialPh) if puntocam and puntocam.comercialPh else ""
+            hoja_actual['H32'] = puntocam.comercialHora.strftime('%H:%M') if puntocam and puntocam.comercialHora else ""
+            hoja_actual['H33'] = str(puntocam.comercialMarca) if puntocam and puntocam.comercialMarca else ""
+            hoja_actual['H34'] = str(puntocam.comercialLote) if puntocam and puntocam.comercialLote else ""
+            hoja_actual['H35'] = puntocam.comercialCaducidad.strftime('%d/%m/%Y') if puntocam and puntocam.comercialCaducidad else ""
+            # hoja_actual['H36'] = int(lectcamcomer.lectura) if lectcamcomer and lectcamcomer.lectura is not None else ""
+            # hoja_actual['H37'] = int(lect2camcomer.lectura) if lect2camcomer and lect2camcomer.lectura is not None else ""
+            # hoja_actual['H38'] = int(lect3camcomer.lectura) if lect3camcomer and lect3camcomer.lectura is not None else ""
+            # hoja_actual['K36'] = int(lectcamcomer.temperatura) if lectcamcomer and lectcamcomer.temperatura is not None else ""
+            # hoja_actual['K37'] = int(lect2camcomer.temperatura) if lect2camcomer and lect2camcomer.temperatura is not None else ""
+            # hoja_actual['K38'] = int(lect3camcomer.temperatura) if lect3camcomer and lect3camcomer.temperatura is not None else ""
+            set_valor_decimal(hoja_actual, 'H36', lectcamcomer.lectura if lectcamcomer else None)
+            set_valor_decimal(hoja_actual, 'H37', lect2camcomer.lectura if lect2camcomer else None)
+            set_valor_decimal(hoja_actual, 'H38', lect3camcomer.lectura if lect3camcomer else None)
+            set_valor_decimal(hoja_actual, 'K36', lectcamcomer.temperatura if lectcamcomer else None)
+            set_valor_decimal(hoja_actual, 'K37', lect2camcomer.temperatura if lect2camcomer else None)
+            set_valor_decimal(hoja_actual, 'K38', lect3camcomer.temperatura if lect3camcomer else None)
+            #TERCERA TABLA DE PRIMER PUNTO CAMPO
+            
+            hoja_actual['W31'] = str(segpuntocam.certificadoPh) if segpuntocam and segpuntocam.certificadoPh else ""
+            hoja_actual['U32'] = segpuntocam.certificadoHora.strftime('%H:%M') if segpuntocam and segpuntocam.certificadoHora else ""
+            hoja_actual['U33'] = str(segpuntocam.certificadoMarca) if segpuntocam and segpuntocam.certificadoMarca else ""
+            hoja_actual['U34'] = str(segpuntocam.certificadoLote) if segpuntocam and segpuntocam.certificadoLote else ""
+            hoja_actual['U35'] = segpuntocam.certificadoCaducidad.strftime('%d/%m/%Y') if segpuntocam and segpuntocam.certificadoCaducidad else ""
+            # hoja_actual['U36'] = int(lectcamestandar2.lectura) if lectcamestandar2 and lectcamestandar2.lectura is not None else ""
+            # hoja_actual['U37'] = int(lect2camestandar2.lectura) if lect2camestandar2 and lect2camestandar2.lectura is not None else ""
+            # hoja_actual['U38'] = int(lect3camestandar2.lectura) if lect3camestandar2 and lect3camestandar2.lectura is not None else ""
+            # hoja_actual['X36'] = int(lectcamestandar2.temperatura) if lectcamestandar2 and lectcamestandar2.temperatura is not None else ""
+            # hoja_actual['X37'] = int(lect2camestandar2.temperatura) if lect2camestandar2 and lect2camestandar2.temperatura is not None else ""
+            # hoja_actual['X38'] = int(lect3camestandar2.temperatura) if lect3camestandar2 and lect3camestandar2.temperatura is not None else ""
+            set_valor_decimal(hoja_actual, 'U36', lectcamestandar2.lectura if lectcamestandar2 else None)
+            set_valor_decimal(hoja_actual, 'U37', lect2camestandar2.lectura if lect2camestandar2 else None)
+            set_valor_decimal(hoja_actual, 'U38', lect3camestandar2.lectura if lect3camestandar2 else None)
+            set_valor_decimal(hoja_actual, 'X36', lectcamestandar2.temperatura if lectcamestandar2 else None)
+            set_valor_decimal(hoja_actual, 'X37', lect2camestandar2.temperatura if lect2camestandar2 else None)
+            set_valor_decimal(hoja_actual, 'X38', lect3camestandar2.temperatura if lect3camestandar2 else None)
+            #segundo punto tabla comercial CAMPO
+            
+            hoja_actual['Z31'] = str(segpuntocam.comercialPh) if segpuntocam and segpuntocam.comercialPh else ""
+            hoja_actual['Y32'] = segpuntocam.comercialHora.strftime('%H:%M') if segpuntocam and segpuntocam.comercialHora else ""
+            hoja_actual['Y33'] = str(segpuntocam.comercialMarca) if segpuntocam and segpuntocam.comercialMarca else ""
+            hoja_actual['Y34'] = str(segpuntocam.comercialLote) if segpuntocam and segpuntocam.comercialLote else ""
+            hoja_actual['Y35'] = segpuntocam.comercialCaducidad.strftime('%d/%m/%Y') if segpuntocam and segpuntocam.comercialCaducidad else ""
+            # hoja_actual['Y36'] = int(lectcamcomer2.lectura) if lectcamcomer2 and lectcamcomer2.lectura is not None else ""
+            # hoja_actual['Y37'] = int(lect2camcomer2.lectura) if lect2camcomer2 and lect2camcomer2.lectura is not None else ""
+            # hoja_actual['Y38'] = int(lect3camcomer2.lectura) if lect3camcomer2 and lect3camcomer2.lectura is not None else ""
+            # hoja_actual['AB36'] = int(lectcamcomer2.temperatura) if lectcamcomer2 and lectcamcomer2.temperatura is not None else ""
+            # hoja_actual['AB37'] = int(lect2camcomer2.temperatura) if lect2camcomer2 and lect2camcomer2.temperatura is not None else ""
+            # hoja_actual['AB38'] = int(lect3camcomer2.temperatura) if lect3camcomer2 and lect3camcomer2.temperatura is not None else ""
+            set_valor_decimal(hoja_actual, 'Y36', lectcamcomer2.lectura if lectcamcomer2 else None)
+            set_valor_decimal(hoja_actual, 'Y37', lect2camcomer2.lectura if lect2camcomer2 else None)
+            set_valor_decimal(hoja_actual, 'Y38', lect3camcomer2.lectura if lect3camcomer2 else None)
+            set_valor_decimal(hoja_actual, 'AB36', lectcamcomer2.temperatura if lectcamcomer2 else None)
+            set_valor_decimal(hoja_actual, 'AB37', lect2camcomer2.temperatura if lect2camcomer2 else None)
+            set_valor_decimal(hoja_actual, 'AB38', lect3camcomer2.temperatura if lect3camcomer2 else None)
+            
+            if str(puntolab.asectacion).lower() == "true":
+                hoja_actual['G24'] = 'X'
+                hoja_actual['J24'].border = diagonal_border
+            else:
+                hoja_actual['G24'].border = diagonal_border
+                hoja_actual['J24'] = 'X'
+                
+            if str(segpuntolab.asectacion).lower() == "true":
+                hoja_actual['X24'] = 'X'
+                hoja_actual['AA24'].border = diagonal_border
+            else:
+                hoja_actual['AA24'] = 'X'
+                hoja_actual['X24'].border = diagonal_border
+                
+            if str(puntocam.asectacion).lower() == "true":
+                hoja_actual['G42'] = 'X'
+                hoja_actual['J42'].border = diagonal_border
+            else:
+                hoja_actual['J42'] = 'X'
+                hoja_actual['G42'].border = diagonal_border
+            
+            if str(segpuntocam.asectacion).lower() == "true":
+                hoja_actual['X42'] = 'X'
+                hoja_actual['AA42'].border = diagonal_border
+            else:
+                hoja_actual['AA42'] = 'X'
+                hoja_actual['X42'].border = diagonal_border
+            
+            if str(campo.usoPh).lower() == "true":
+                hoja_actual['P31'] = 'X'
+                hoja_actual['P32'].border = diagonal_border
+            else:
+                hoja_actual['P32'] = 'X'  
+                hoja_actual['P31'].border = diagonal_border
+                
+            if campo.rangoA:
+                hoja_actual['N33'] = str(campo.rangoA)
+            else:
+                hoja_actual['N33'].border = diagonal_border
+
+            # 🟩 Para celda P33
+            if campo.rangoB:
+                hoja_actual['P33'] = str(campo.rangoB)
+            else:
+                hoja_actual['P33'].border = diagonal_border
+
+            
+            texto = str(calibracionc.observacion)
+            limite = 90  # número máximo de caracteres para la primera celda
+
+            # Si el texto es corto, va solo en E32
+            if len(texto) <= limite:
+                hoja_actual['D44'] = texto
+                hoja_actual['D45'] = ""
+            else:
+                hoja_actual['D44'] = texto[:limite]
+                hoja_actual['D45'] = texto[limite:]
+                
+            hoja_actual['D47']=str(calibracionc.realizo)
+            hoja_actual['R47']=str(calibracionc.supervisor)
+        
+        
+
+    # Crear hojas adicionales si hay más de un protocolo
+    protocolos = [intermediario.protocoloMuestreo for intermediario in intermediarios if intermediario.protocoloMuestreo]
+    for i in range(1, len(protocolos)):
+        nueva_hoja = wb.copy_worksheet(hoja_protocolo_plantilla)
+        nueva_hoja.title = f"Protocolo Muestreo {i+1}"
+        hojas_protocolo.append(nueva_hoja)
+
+    # Procesar cada hoja con su protocolo correspondiente
+    for hoja_num, hoja in enumerate(hojas_protocolo + [hoja_protocolo_plantilla]):
+        protocolo = protocolos[hoja_num]
+        sitio = protocolo.sitioMuestreo
+        punto = protocolo.puntoMuestreo
+        procedimiento = protocolo.procedimientoMuestreo
+        plan = protocolo.planMuestreo
+        fecha= cv.fechaCalibracion
+
+        # img = Image('../backend/media/logos/logo_1.png')
+        # img.width = 80
+        # img.height = 50
+        # hoja.add_image(img, 'A1')  # Ubicación en la hoja
+        img = Image(logo_path)
+
+        # (Opcional) Cambiar tamaño
+        img.width = 80
+        img.height = 50
+        
+        hoja.add_image(img, "A1")
+        
+        # Escribir información común
+        hoja['K4'] = fecha.strftime('%d/%m/%Y') if fecha and fecha else ''
+        hoja['Q4'] = orden.codigo
+        hoja['E6'] = empresa.nombre
+
+        # Escribir el domicilio del sitio en las celdas E7 y E8
+        direccionSitio = sitio.domicilio if sitio and sitio.domicilio else ""
+        celdasDireccionSitio = ['E7', 'E8']
+        anchoCeldasSitio = [120, 120]  # Limite aproximado de caracteres por celda
+
+        lineasSitio = textwrap.wrap(direccionSitio, width=anchoCeldasSitio[0])
+        hoja[celdasDireccionSitio[0]] = lineasSitio.pop(0) if lineasSitio else ""
+        for i in range(1, len(celdasDireccionSitio)):
+            texto_restante_sitio = " ".join(lineasSitio)
+            lineasSitio = textwrap.wrap(texto_restante_sitio, width=anchoCeldasSitio[i])
+            hoja[celdasDireccionSitio[i]] = lineasSitio.pop(0) if lineasSitio else ""
+
+        # Escribir el giro del sitio en las celdas E9 y E10
+        giroSitio = sitio.giroEmpresa if sitio and sitio.giroEmpresa else ""
+        celdasGiroSitio = ['E9', 'E10']
+        anchoCeldasGiro = [120, 120]  # Limite aproximado de caracteres por celda
+
+        lineasGiro = textwrap.wrap(giroSitio, width=anchoCeldasGiro[0])
+        hoja[celdasGiroSitio[0]] = lineasGiro.pop(0) if lineasGiro else ""
+        for i in range(1, len(celdasGiroSitio)):
+            texto_restante_giro = " ".join(lineasGiro)
+            lineasGiro = textwrap.wrap(texto_restante_giro, width=anchoCeldasGiro[i])
+            hoja[celdasGiroSitio[i]] = lineasGiro.pop(0) if lineasGiro else ""
+
+        hoja['H13'] = punto.identificacionPunto if punto and punto.identificacionPunto else ""
+        
+        descripcionProceso = punto.descripcionProceso if punto and punto.descripcionProceso else ""
+        celdasDescripcionProceso = ['E14', 'E15', 'E16']
+        anchoCeldasDescripcion = [120, 120, 120]
+        lineasDescripcion = textwrap.wrap(descripcionProceso, width=anchoCeldasDescripcion[0])
+        hoja[celdasDescripcionProceso[0]] = lineasDescripcion.pop(0) if lineasDescripcion else ""
+        for i in range(1, len(celdasDescripcionProceso)):
+            texto_restante = " ".join(lineasDescripcion)
+            lineasDescripcion = textwrap.wrap(texto_restante, width=anchoCeldasDescripcion[i])
+            hoja[celdasDescripcionProceso[i]] = lineasDescripcion.pop(0) if lineasDescripcion else ""
+            
+        hoja['E18'] = punto.origenMuestra if punto and punto.origenMuestra else ""
+        
+        #aguaResidualTratamiento = punto.aguaResidualTratamiento.id if punto and punto.aguaResidualTratamiento.id else None
+        trat_ids = set()
+        if punto and getattr(punto, "aguaResidualTratamiento", None):
+            rel = punto.aguaResidualTratamiento
+            try:
+                # Si es M2M:
+                qs = rel.all()
+            except AttributeError:
+                # Es FK (u otro objeto)
+                obj_id = getattr(rel, "id", None)
+                if obj_id:
+                    trat_ids = {obj_id}
+            else:
+                # Es M2M
+                trat_ids = set(qs.values_list("id", flat=True))
+        # Lista de celdas en orden correspondiente a los valores del 1 al 7
+        agua_celdas= ['A20', 'C20', 'G20', 'J20', 'O20', 'S20', 'A21']
+
+        # Recorremos todas las celdas
+        for idx, cel in enumerate(agua_celdas, start=1):  # idx = 1..7
+            if idx in trat_ids:
+                hoja[cel] = 'X'
+            else:
+                hoja[cel].border = diagonal_border # Poner diagonal en las demás
 
         
+        if punto and punto.aguaResidualOtro:
+            hoja['E21'] = punto.aguaResidualOtro
+        else:
+            hoja['E21'].border = diagonal_border
+            # hoja['E21'] = ""  # o puedes dejarla sin esto si la celda ya está vacía
+        
+        hoja['G22'] = punto.horasOperacion if punto and punto.horasOperacion else ""
+        
+        hoja['P22'] = punto.horasDescarga if punto and punto.horasDescarga else ""
+        
+        hoja['G23'] = punto.frecuenciaDescarga if punto and punto.frecuenciaDescarga else ""
+        
+        tipoDescarga = punto.tipoDescarga.id if punto and punto.tipoDescarga else None
+        celtipodescarga=['E25','H25','K25','N25']
+        for idt, celtipodescarga in enumerate(celtipodescarga, start=1):
+            if tipoDescarga ==idt:
+                hoja[celtipodescarga]='X'
+            else:
+                hoja[celtipodescarga].border= diagonal_border
+                
+        # if tipoDescarga == 1:
+        #     hoja['E25'] = 'X'
+        # elif tipoDescarga == 2:
+        #     hoja['H25'] = 'X'
+        # elif tipoDescarga == 3:
+        #     hoja['K25'] = 'X'
+        # elif tipoDescarga == 4:
+        #     hoja['N25'] = 'X'
+        # else:
+        #     pass
+        
+        hoja['A28'] = punto.informacionProporcionada if punto and punto.informacionProporcionada else ""
+        
+#--------------- AQUI EMPIEZA EL 3. PROCEDIMIENTO DE MUESTREO ----------------#
+        hoja ['E31'] = procedimiento.parametroADeterminar if procedimiento and procedimiento.parametroADeterminar else ""
+
+        celdasMaterialUso = {
+            1: 'A33',
+            2: 'D33',
+            3: 'G33',
+            4: 'J33',
+            5: 'L33',
+            6: 'N33',
+            7: 'R33',
+            8: 'A34',
+            9: 'D34',
+            10: 'G34',
+            11: 'J34',
+            12: 'L34',
+            13: 'N34',
+            14: 'R34',
+        }
+
+        materiales = procedimiento.materialUso.all()
+        for material in materiales:
+            celda = celdasMaterialUso.get(material.id)
+            if celda:
+                hoja[celda] = 'X'
+            else:
+                hoja[celda].border=diagonal_border
+                
+        celdasRecipiente = {
+            1: 'A36',
+            2: 'D36',
+        }
+
+        recipiente_ids = {r.id for r in procedimiento.recipiente.all()}
+
+        for id_, celda in celdasRecipiente.items():
+            if id_ in recipiente_ids:
+                hoja[celda] = 'X'
+            else:
+                hoja[celda].border = diagonal_border
+                
+        celdasPreservadorUtilizado = {
+            1: 'G36',
+            2: 'K36',
+            3: 'M36',
+            4: 'O36',
+            5: 'Q36',
+            6: 'S36',
+            7: 'A37',
+        }
+        
+        preservador_ids = {p.id for p in procedimiento.preservadorUtilizado.all()}
+
+        for id_, celda in celdasPreservadorUtilizado.items():
+            if id_ in preservador_ids:
+                hoja[celda] = 'X'
+            else:
+                hoja[celda].border = diagonal_border
+
+
+        tipoMuestreo = procedimiento.tipoMuestreo
+        if tipoMuestreo:
+            hoja['G38'] = 'X'
+            hoja['M38'].border=diagonal_border
+        else:
+            hoja['M38'] = 'X'
+            hoja['G38'].border=diagonal_border
+            
+        frecuenciaMuestreo = procedimiento.frecuenciaMuestreo.id if procedimiento and procedimiento.frecuenciaMuestreo else None
+        if frecuenciaMuestreo == 1:
+            hoja['A42'] = 'X'
+            hoja['A43'].border=diagonal_border
+            hoja['A44'].border=diagonal_border
+            hoja['A45'].border=diagonal_border
+            hoja['A46'].border=diagonal_border
+            hoja['R47'] = hoja['H42'].value
+        elif frecuenciaMuestreo == 2:
+            hoja['A43'] = 'X'
+            hoja['A42'].border=diagonal_border
+            hoja['A44'].border=diagonal_border
+            hoja['A45'].border=diagonal_border
+            hoja['A46'].border=diagonal_border
+            hoja['R47'] = hoja['H43'].value
+        elif frecuenciaMuestreo == 3:
+            hoja['A44'].border=diagonal_border
+            hoja['A42'].border=diagonal_border
+            hoja['A43'].border=diagonal_border
+            hoja['A45'].border=diagonal_border
+            hoja['A46'].border=diagonal_border
+            hoja['R47'] = hoja['H44'].value
+        elif frecuenciaMuestreo == 4:
+            hoja['A45'] = 'X'
+            hoja['A42'].border=diagonal_border
+            hoja['A43'].border=diagonal_border
+            hoja['A44'].border=diagonal_border
+            hoja['A46'].border=diagonal_border
+            hoja['R47'] = hoja['H45'].value
+        elif frecuenciaMuestreo == 5:
+            hoja['A46'] = 'X'
+            hoja['A42'].border=diagonal_border
+            hoja['A43'].border=diagonal_border
+            hoja['A44'].border=diagonal_border
+            hoja['A45'].border=diagonal_border
+            hoja['R47'] = hoja['H46'].value
+        else:
+            pass
+        
+        tipoAgua = procedimiento.tipoAgua.id if procedimiento and procedimiento.tipoAgua else None
+        agua_celdas = {
+            1: 'A51',
+            2: 'D51',
+            3: 'G51',
+            4: 'K51',
+            5: 'A52',
+            6: 'D52',
+            7: 'G52',
+            8: 'K52',
+            9: 'N51',
+        }
+
+        # Establece la X en la celda correspondiente si es válida
+        if tipoAgua in agua_celdas:
+            celda_objetivo = agua_celdas[tipoAgua]
+            hoja[celda_objetivo] = 'X'
+
+        # Recorre todas las celdas, y si están en blanco, aplica borde diagonal
+        for celda in agua_celdas.values():
+            if hoja[celda].value in [None, ""]:
+                hoja[celda].border = diagonal_border
+                
+        thin = Side(style='thin')
+        diagonal = Border(
+            bottom=thin,
+            diagonal=thin,
+            diagonalUp=True,
+            diagonalDown=False,
+        )
+        
+        tipoAguaOtro = procedimiento.tipoAguaOtro if procedimiento and procedimiento.tipoAguaOtro else ""
+        celdasTipoAguaOtro = ['P51', 'N52']
+        anchoCeldasTipoAguaOtro = [35, 50]
+        if tipoAguaOtro:
+            hoja['P51'] = tipoAguaOtro  # Puedes elegir dónde colocarlo
+        else:
+            for celda in celdasTipoAguaOtro:
+                hoja[celda].border = diagonal
+        
+        lineasTipoAguaOtro = textwrap.wrap(tipoAguaOtro, width=anchoCeldasTipoAguaOtro[0])
+        hoja[celdasTipoAguaOtro[0]] = lineasTipoAguaOtro.pop(0) if lineasTipoAguaOtro else ""
+        for i in range(1, len(celdasTipoAguaOtro)):
+            texto_restante = " ".join(lineasTipoAguaOtro)
+            lineasTipoAguaOtro = textwrap.wrap(texto_restante, width=anchoCeldasTipoAguaOtro[i])
+            hoja[celdasTipoAguaOtro[i]] = lineasTipoAguaOtro.pop(0) if lineasTipoAguaOtro else ""
+            
+        cuerpoReceptor = procedimiento.cuerpoReceptor.id if procedimiento and procedimiento.cuerpoReceptor else None
+        celcuerecep=['D54','F54','H54','K54','D55','F55','H55','K55','N54']
+        
+        for idc, celcuerecep in enumerate(celcuerecep, start=1):
+            if cuerpoReceptor==idc:
+                hoja[celcuerecep]='X'
+            else:
+                hoja[celcuerecep].border = diagonal_border
+            
+        # if cuerpoReceptor == 1:
+        #     hoja['D54'] = 'X'
+        # elif cuerpoReceptor == 2:
+        #     hoja['F54'] = 'X'
+        # elif cuerpoReceptor == 3:
+        #     hoja['H54'] = 'X'
+        # elif cuerpoReceptor == 4:
+        #     hoja['K54'] = 'X'
+        # elif cuerpoReceptor == 5:
+        #     hoja['D55'] = 'X'
+        # elif cuerpoReceptor == 6:
+        #     hoja['F55'] = 'X'
+        # elif cuerpoReceptor == 7:
+        #     hoja['H55'] = 'X'
+        # elif cuerpoReceptor == 8:
+        #     hoja['K55'] = 'X'
+        # elif cuerpoReceptor == 9:
+        #     hoja['N54'] = 'X'
+        # else:
+        #     pass
+        
+        cuerpoReceptorOtro = procedimiento.cuerpoReceptorOtro if procedimiento and procedimiento.cuerpoReceptorOtro else ""
+        celdasCuerpoReceptorOtro = ['P54', 'O55']
+        anchoCeldasCuerpoReceptorOtro = [35, 45]
+        
+        if cuerpoReceptorOtro:
+            hoja['P54'] = cuerpoReceptorOtro # Puedes elegir dónde colocarlo
+        else:
+            for celda in celdasCuerpoReceptorOtro:
+                hoja[celda].border = diagonal
+        
+        lineasCuerpoReceptorOtro = textwrap.wrap(cuerpoReceptorOtro, width=anchoCeldasCuerpoReceptorOtro[0])
+        hoja[celdasCuerpoReceptorOtro[0]] = lineasCuerpoReceptorOtro.pop(0) if lineasCuerpoReceptorOtro else ""
+        for i in range(1, len(celdasCuerpoReceptorOtro)):
+            texto_restante = " ".join(lineasCuerpoReceptorOtro)
+            lineasCuerpoReceptorOtro = textwrap.wrap(texto_restante, width=anchoCeldasCuerpoReceptorOtro[i])
+            hoja[celdasCuerpoReceptorOtro[i]] = lineasCuerpoReceptorOtro.pop(0) if lineasCuerpoReceptorOtro else ""
+    #--------------- AQUI TERMINA EL 3. PROCEDIMIENTO DE MUESTREO ----------------#
+#------------------- AQUI EMPIEZA EL 4. PLAN DE MUESTREO ----------------#
+
+        inicial = plan.inicial if plan and plan.inicial else ""
+        celdasInicial = ['C57', 'A58']
+        anchoCeldasInicial = [150, 120]
+        
+        lineasInicial = textwrap.wrap(inicial, width=anchoCeldasInicial[0])
+        hoja[celdasInicial[0]] = lineasInicial.pop(0) if lineasInicial else ""
+        for i in range(1, len(celdasInicial)):
+            texto_restante = " ".join(lineasInicial)
+            lineasInicial = textwrap.wrap(texto_restante, width=anchoCeldasInicial[i])
+            hoja[celdasInicial[i]] = lineasInicial.pop(0) if lineasInicial else ""
+            
+        hoja['Q58'] = plan.horaInicial.strftime("%H:%M:%S") if plan and plan.horaInicial else ""
+        
+        final = plan.final if plan and plan.final else ""
+        celdasFinal = ['C59', 'A60']
+        anchoCeldasFinal = [150, 120]
+        lineasFinal = textwrap.wrap(final, width=anchoCeldasFinal[0])
+        hoja[celdasFinal[0]] = lineasFinal.pop(0) if lineasFinal else ""
+        for i in range(1, len(celdasFinal)):
+            texto_restante = " ".join(lineasFinal)
+            lineasFinal = textwrap.wrap(texto_restante, width=anchoCeldasFinal[i])
+            hoja[celdasFinal[i]] = lineasFinal.pop(0) if lineasFinal else ""
+            
+        hoja['Q60'] = plan.horaFinal.strftime("%H:%M:%S") if plan and plan.horaFinal else ""
+        
+        observacion = plan.observacion if plan and plan.observacion else ""
+        celdasObservacion = ['D61', 'A62']
+        anchoCeldasObservacion = [170, 190]
+        lineasObservacion = textwrap.wrap(observacion, width=anchoCeldasObservacion[0])
+        hoja[celdasObservacion[0]] = lineasObservacion.pop(0) if lineasObservacion else ""
+        for i in range(1, len(celdasObservacion)):
+            texto_restante = " ".join(lineasObservacion)
+            lineasObservacion = textwrap.wrap(texto_restante, width=anchoCeldasObservacion[i])
+            hoja[celdasObservacion[i]] = lineasObservacion.pop(0) if lineasObservacion else ""
+            
+    # ---------------- AQUI EMPIEZA LA SECCION DE HOJAS DE CAMPO ---------------- #
+    hojas_campo_data = [i.hojaCampo for i in intermediarios if i.hojaCampo]
+
+    for j in range(1, len(hojas_campo_data)):
+        nueva_hoja_hc = wb.copy_worksheet(hoja_campo_plantilla)
+        nueva_hoja_hc.title = f"Hoja Campo {j + 1}"
+        hojas_campo.append((nueva_hoja_hc, hojas_campo_data[j]))
+    if hojas_campo_data:
+        hojas_campo.append((hoja_campo_plantilla, hojas_campo_data[0]))
+
+    celdasNumeroMuestra = ["A9", "A13", "A17", "A21", "A25", "A29"]
+    celdasHoraMuestra = ["C9", "C13", "C17", "C21", "C25", "C29"]
+    celdasPhMuestra = [
+        ["E9", "E10", "E11"],
+        ["E13", "E14", "E15"],
+        ["E17", "E18", "E19"],
+        ["E21", "E22", "E23"],
+        ["E25", "E26", "E27"],
+        ["E29", "E30", "E31"]
+    ]
+    celdasTemperaturaMuestra = [
+        ["G9", "G10", "G11"],
+        ["G13", "G14", "G15"],
+        ["G17", "G18", "G19"],
+        ["G21", "G22", "G23"],
+        ["G25", "G26", "G27"],
+        ["G29", "G30", "G31"]
+    ]
     
-    print(informe.estado)
-    ot   = informe.OrdenTrabajo
-    rec  = ot.receptor
-    coti = ot.cotizacion
-    cli  = coti.cliente
-    emp  = cli.empresa
-    croquis = getattr(informe, "CroquisUbicacion", None)
-    data = {
-        "informe": {
-            "id": informe.id,
-            "numeroInfo": informe.numero,
-            "estatusid":informe.estado.id if informe else None,
-            "estatus":informe.estado.nombre,
-        },
-        "croquis": {
-            "id": croquis.id if croquis else None,
-            "numeroCroquis": croquis.numero if croquis else None,
-            "domicilio": croquis.domicilio if croquis else None,
-            "comentario": croquis.comentario if croquis else None,
-        },
-        "ordenTrabajo": {
-            "id": ot.id,
-            "numero": ot.numero,
-            "codigo": ot.codigo,
-            "estado": ot.estado.nombre,
-            "receptor": (
-                    f"{rec.nombrePila} {rec.apPaterno} {rec.apMaterno}"
-                    if rec else None
-                ),
-        },
-        "cliente": {
-            "id": cli.id,
-            "nombre": f"{cli.nombrePila} {cli.apPaterno} {cli.apMaterno}",
-            "correo": cli.correo,
-            "telefono": cli.celular,
-            "direccion": (f"{cli.calleCliente} {cli.numeroCliente}, {cli.coloniaCliente}, {cli.ciudadCliente}, {cli.estadoCliente}, {cli.codigoPostalCliente} ")
-        },
-        "empresa": {
-            "id": emp.id,
-            "nombre": emp.nombre,
-            "direccion": f"{emp.calle}, {emp.numero}, {emp.colonia}, {emp.ciudad}, {emp.estado}, {emp.codigoPostal}"
-        },
-        "calibraciones": calibracion_data, 
-    }
-    return JsonResponse(data, safe=False)
+    celdasConductividadMuestra = [
+        ["I9", "I10", "I11"],
+        ["I13", "I14", "I15"],
+        ["I17", "I18", "I19"],
+        ["I21", "I22", "I23"],
+        ["I25", "I26", "I27"],
+        ["I29", "I30", "I31"]
+    ]
+    
+    celdasTemperaturaAireMuestra = [
+        ["M9", "M10", "M11"],
+        ["M13", "M14", "M15"],
+        ["M17", "M18", "M19"],
+        ["M21", "M22", "M23"],
+        ["M25", "M26", "M27"],
+        ["M29", "M30", "M31"]
+    ]
+    
+    celdasTiempoMuestra = [
+        ["O9", "O10", "O11"],
+        ["O13", "O14", "O15"],
+        ["O17", "O18", "O19"],
+        ["O21", "O22", "O23"],
+        ["O25", "O26", "O27"],
+        ["O29", "O30", "O31"]
+    ]
+    
+    celdasVolumenMuestra = [
+        ["Q9", "Q10", "Q11"],
+        ["Q13", "Q14", "Q15"],
+        ["Q17", "Q18", "Q19"],
+        ["Q21", "Q22", "Q23"],
+        ["Q25", "Q26", "Q27"],
+        ["Q29", "Q30", "Q31"]
+    ]
+    
+    celdasColorMuestra = ["X9", "X13", "X17", "X21", "X25", "X29"]
+    celdasOlorMuestra = ["X10", "X14", "X18", "X22", "X26", "X30"]
+    
+    celdasSolidoSi = ["X11", "X15", "X19", "X23", "X27", "X31"]
+    celdasSolidoNo = ["Z11", "Z15", "Z19", "Z23", "Z27", "Z31"]
+    
+    celdasLluviaSi = ["X12", "X16", "X20", "X24", "X28", "X32"]
+    celdasLluviaNo = ["Z12", "Z16", "Z20", "Z24", "Z28", "Z32"]
+    
+    celdasSoleado = ["AC12", "AC16", "AC20", "AC24", "AC28", "AC32"]
+    celdasNublado = ["AE12", "AE16", "AE20", "AE24", "AE28", "AE32"]
+    celdasMedioNublado = ["AH12", "AH16", "AH20", "AH24", "AH28", "AH32"]
+    
+    celdasMateriaFlotanteFalse = ["L9", "L13", "L17", "L21", "L25", "L29"]
+    celdasMateriaFlotanteTrue = ["L11", "L15", "L19", "L23", "L27", "L31"]
 
-from django.shortcuts import get_object_or_404
-from django.http import JsonResponse, Http404
-from django.forms.models import model_to_dict
-from django.db.models import Prefetch
 
-from campo.models import CalibracionVerificacion, CalibracionConductiva, ConductividadLaboratorio, ConductividadCampo, ConductividadAceptacionMr, ConductividadAceptacionMc
-#la idea es enviar el id de CalibracionVerificacion este tiee el foreikey de CalibracionConductiva y CalibracionConductiva tiene el foreikey de ConductividadLaboratorioy asi donde ConductividadLaboratorio y ConductividadCampo, estos tiene el forreikey de ConductividadAceptacionMr, ConductividadAceptacionMc, como hago para crear una vista que me muestre todos los datos
+    for hoja_hc, hojaCampo in hojas_campo:
+        
+        img = Image(logo_path)
 
-def detalles_clibracion_verificacion_conductividad(request, cal_id):
-     """
-     GET /api/campo/calibracion/<cal_id>/
+        # (Opcional) Cambiar tamaño
+        img.width = 80
+        img.height = 50
+        hoja_hc.add_image(img, "A1")
+        if hojaCampo.normaReferencia =="NMX-AA-003-1980":
+            hoja_hc['E4']='X'
+        elif hojaCampo.normaReferencia =="NMX-AA-014-1980":
+            hoja_hc['I4']='X'
+        elif hojaCampo.normaReferencia =="NOM-014-SSA1-1993":
+            hoja_hc['M4']='X'
+        hoja_hc["W2"] = hojaCampo.idMuestra if hojaCampo and hojaCampo.idMuestra else ""
+        hoja_hc["AC2"] = hojaCampo.fechaMuestreo.strftime("%d-%m-%Y") if hojaCampo and hojaCampo.fechaMuestreo else ""
+        muestraHojaCampo = hojaCampo.muestrahojacampo_set.all()
+        for index, muestra in enumerate(muestraHojaCampo):
+            if index < len(celdasNumeroMuestra):
+                hoja_hc[celdasNumeroMuestra[index]] = muestra.numero if hasattr(muestra, 'numero') else ""
+                hoja_hc[celdasHoraMuestra[index]] = muestra.hora.strftime("%H:%M:%S") if hasattr(muestra, 'hora') and muestra.hora else ""
+                
+                # Asignar pH
+                if hasattr(muestra, 'ph') and muestra.ph:
+                    for i, valor in enumerate([muestra.ph.ph1, muestra.ph.ph2, muestra.ph.ph3]):
+                        hoja_hc[celdasPhMuestra[index][i]] = valor if valor else ""
+                
+                # Asignar Temperatura
+                if hasattr(muestra, 'temperatura') and muestra.temperatura:
+                    for i, valor in enumerate([muestra.temperatura.temp1, muestra.temperatura.temp2, muestra.temperatura.temp3]):
+                        hoja_hc[celdasTemperaturaMuestra[index][i]] = valor if valor else ""
+                
+                # Asignar Conductividad
+                if hasattr(muestra, 'conductividad') and muestra.conductividad:
+                    for i, valor in enumerate([muestra.conductividad.cond1, muestra.conductividad.cond2, muestra.conductividad.cond3]):
+                        hoja_hc[celdasConductividadMuestra[index][i]] = valor if valor else ""
+                        
+                # Asignar Temperatura Aire
+                if hasattr(muestra, 'temperaturaAire') and muestra.temperaturaAire:
+                    for i, valor in enumerate([muestra.temperaturaAire.tempAire1, muestra.temperaturaAire.tempAire2, muestra.temperaturaAire.tempAire3]):
+                        hoja_hc[celdasTemperaturaAireMuestra[index][i]] = valor if valor else ""
+                        
+                # Asignar Tiempo Muestra
+                if hasattr(muestra, 'tiempoMuestra') and muestra.tiempoMuestra:
+                    for i, valor in enumerate([muestra.tiempoMuestra.tiempo1, muestra.tiempoMuestra.tiempo2, muestra.tiempoMuestra.tiempo3]):
+                        hoja_hc[celdasTiempoMuestra[index][i]] = valor if valor else ""
+                        
+                # Asignar Volumen Muestra
+                if hasattr(muestra, 'volumenMuestra') and muestra.volumenMuestra:
+                    for i, valor in enumerate([muestra.volumenMuestra.volumen1, muestra.volumenMuestra.volumen2, muestra.volumenMuestra.volumen3]):
+                        hoja_hc[celdasVolumenMuestra[index][i]] = valor if valor else ""
+                        
+                hoja_hc[celdasColorMuestra[index]] = muestra.color if hasattr(muestra, 'color') else ""
+                hoja_hc[celdasOlorMuestra[index]] = muestra.olor if hasattr(muestra, 'olor') else ""
+                
+                if hasattr(muestra, 'solido'):
+                    if muestra.solido:
+                        hoja_hc[celdasSolidoSi[index]] = "X"
+                    else:
+                        hoja_hc[celdasSolidoNo[index]] = "X"
 
-     Devuelve toda la jerarquía de la calibración indicada.
-     """
-     cv=get_object_or_404(
-          CalibracionVerificacion.objects.select_related(
-               "calibracionConductiva",
-               "calibracionConductiva__conductividadLaboratorio",
-               "calibracionConductiva__conductividadLaboratorio__conductividadAceptacionMr",
-               "calibracionConductiva__conductividadLaboratorio__conductividadAceptacionMc",
-               "calibracionConductiva__conductividadCampo",
-               "calibracionConductiva__conductividadCampo__conductividadAceptacionMr",
-               "calibracionConductiva__conductividadCampo__conductividadAceptacionMc",
-          ), id=cal_id,
-     )
-     cc= cv.calibracionConductiva
-     lab = getattr(cc,"conductividadLaboratorio", None)
-     cam= getattr(cc,"conductividadCampo", None)
-     
-     data = {
-          "calibracionVerificacion": {
-               "id": cv.id,
-               "numero": cv.numero,
-               "equipoUtilizado":cv.equipoUtilizado,
-               "idEquipo":cv.idEquipo,
-               "marcaEquipo":cv.marcaEquipo,
-               "modeloEquipo":cv.modeloEquipo,
-               "serialEquipo": cv.serialEquipo,
-               # "fecha": cv.fecha,          # añade tus campos
-          },
-          "calibracionConductiva": (
-               model_to_dict(cc) if cc else None
-          ),
-          "laboratorio": None,
-          "campo": None,
-     }
+                if hasattr(muestra, 'lluvia'):
+                    if muestra.lluvia:
+                        hoja_hc[celdasLluviaSi[index]] = "X"
+                    else:
+                        hoja_hc[celdasLluviaNo[index]] = "X"
+                        
+                if hasattr(muestra, 'condicion') and muestra.condicion:
+                    if muestra.condicion == "Soleado":
+                        hoja_hc[celdasSoleado[index]] = "X"
+                    elif muestra.condicion == "Nublado":
+                        hoja_hc[celdasNublado[index]] = "X"
+                    elif muestra.condicion == "Medio_nublado":
+                        hoja_hc[celdasMedioNublado[index]] = "X"
+                        
+                if hasattr(muestra, 'materiaFlotante'):
+                    if muestra.materiaFlotante:
+                        hoja_hc[celdasMateriaFlotanteTrue[index]] = "X"
+                    else:
+                        hoja_hc[celdasMateriaFlotanteFalse[index]] = "X"
+        hoja_hc["G40"] = hojaCampo.observacion if hojaCampo and hojaCampo.observacion else ""
+        
+        hoja_hc["F42"] = hojaCampo.muestreador if hojaCampo and hojaCampo.muestreador else ""        
+        hoja_hc["V42"] = hojaCampo.supervisor if hojaCampo and hojaCampo.supervisor else ""
+        
+        if hojaCampo.condicionMuestreo:
+            hoja_hc["S4"] = "X"
+        else:
+            hoja_hc["V4"] = "X"
+        
+    #----------AQUI PONER LA PARTE DEL CROQUIS EN LA HOJA DE CROQUIS----------#
+    from django.http import FileResponse
+    from openpyxl.drawing.image import Image
+    hoja_croquis = wb["Croquis"]  # Asegúrate de que la hoja se llame "Croquis" en la plantilla
+    
+    #Logo
+    img = Image(logo_path)
 
-     if lab:
-        data["laboratorio"] = {
-            **model_to_dict(lab),
-            "aceptacionMr": (
-                model_to_dict(lab.conductividadAceptacionMr)
-                if getattr(lab, "conductividadAceptacionMr", None) else None
-            ),
-            "aceptacionMc": (
-                model_to_dict(lab.conductividadAceptacionMc)
-                if getattr(lab, "conductividadAceptacionMc", None) else None
-            ),
-        }
+    # (Opcional) Cambiar tamaño
+    img.width = 80
+    img.height = 50
+    hoja_croquis.add_image(img, "A1")
+    
+    # Escribir el comentario del croquisUbicacion en las celdas D36 y A37
+    comentario_croquis = croquis.comentario if croquis and croquis.comentario else ""
+    celdas_comentario_croquis = ['D36', 'A37']
+    ancho_celdas_comentario = [120, 120]  # Limite aproximado de caracteres por celda
 
-     if cam:
-        data["campo"] = {
-            **model_to_dict(cam),
-            "aceptacionMr": (
-                model_to_dict(cam.conductividadAceptacionMr)
-                if getattr(cam, "conductividadAceptacionMr", None) else None
-            ),
-            "aceptacionMc": (
-                model_to_dict(cam.conductividadAceptacionMc)
-                if getattr(cam, "conductividadAceptacionMc", None) else None
-            ),
-        }
+    lineas_comentario = textwrap.wrap(comentario_croquis, width=ancho_celdas_comentario[0])
+    hoja_croquis[celdas_comentario_croquis[0]] = lineas_comentario.pop(0) if lineas_comentario else ""
+    for i in range(1, len(celdas_comentario_croquis)):
+        texto_restante = " ".join(lineas_comentario)
+        lineas_comentario = textwrap.wrap(texto_restante, width=ancho_celdas_comentario[i])
+        hoja_croquis[celdas_comentario_croquis[i]] = lineas_comentario.pop(0) if lineas_comentario else ""
 
-     return JsonResponse(data)
-     
+    # Insertar la imagen del croquis en el área que abarca desde A9 hasta AA35
+    if croquis and croquis.croquis:
+        ruta_imagen = croquis.croquis.path  # Obtener la ruta del archivo de imagen
+        imagen = Image(ruta_imagen)
+        print(f"Ruta de la imagen: {ruta_imagen}")
+
+        # Ajustar el tamaño de la imagen para que se ajuste al área de A9:AA35
+        ancho_area = sum(hoja_croquis.column_dimensions[col].width for col in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ') * 7.5  # Aproximación del ancho en píxeles
+        alto_area = sum(hoja_croquis.row_dimensions[row].height or 15 for row in range(9, 36)) * 1.33  # Altura en puntos, convertido a píxeles
+
+        # Obtener el tamaño original de la imagen
+        imagen_width, imagen_height = imagen.width, imagen.height
+
+        # Calcular el factor de escala para ajustar la imagen
+        escala_ancho = ancho_area / imagen_width
+        escala_alto = alto_area / imagen_height
+        escala = min(escala_ancho, escala_alto)  # Escalar proporcionalmente
+
+        # Aplicar el nuevo tamaño
+        imagen.width = int(imagen_width * escala)
+        imagen.height = int(imagen_height * escala)
+
+        # Calcular el punto de anclaje para centrar la imagen
+        columna_inicio = 'A'
+        columna_fin = 'X'
+        fila_inicio = 9
+        fila_fin = 28
+
+        ancho_total_columnas = sum(hoja_croquis.column_dimensions[col].width for col in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ') * 7.5
+        alto_total_filas = sum(hoja_croquis.row_dimensions[row].height or 15 for row in range(fila_inicio, fila_fin + 1)) * 1.33
+
+        offset_x = (ancho_total_columnas - imagen.width) / 2
+        offset_y = (alto_total_filas - imagen.height) / 2
+
+        # Centrar la imagen en el área
+        imagen.anchor = f"{columna_inicio}{fila_inicio}"
+        hoja_croquis.add_image(imagen)
+
+    # Guardar y retornar el archivo
+    ruta_salida = f"media/aguasCampo/temp/InformeAguas_{informe.id}.xlsx"
+    os.makedirs(os.path.dirname(ruta_salida), exist_ok=True)
+    wb.save(ruta_salida)
+    return FileResponse(open(ruta_salida, 'rb'), as_attachment=True, filename=os.path.basename(ruta_salida))

@@ -62,6 +62,7 @@ const PreCotizacionDetalles = () => {
 
         setaNumeros(data.numero);
         setCotizacionInfo(data); // contiene empresa, cliente,  los servicios listos
+        setServicios(data.precotizacionservicios || []); // Asegúrate de que servicios esté definido
         setIvaPorcentaje(parseFloat(data.iva.porcentaje) || 0); // Ej. "0.00" -> 0
   
       } catch (error) {

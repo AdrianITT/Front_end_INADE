@@ -1,212 +1,231 @@
-import React, { useState, useEffect } from 'react';
-import { AppstoreOutlined } from '@ant-design/icons';
-import { Menu, Button, Drawer } from 'antd';
-import { Link, useLocation } from "react-router-dom";
-import Logout_Api from '../../apis/ApisServicioCliente/LogoutApi';
-import './Header.css';
-import { getOrganizacionById } from '../../apis/ApisServicioCliente/organizacionapi';
+import React, { useEffect, useMemo, useState } from "react";
+import {
+  AppstoreOutlined,
+  HomeOutlined,
+  BankOutlined,
+  TeamOutlined,
+  ToolOutlined,
+  DollarOutlined,
+  SettingOutlined,
+  FileTextOutlined,
+  FileDoneOutlined,
+  MenuOutlined,
+  UserOutlined,
+  LogoutOutlined,
+} from "@ant-design/icons";
+import {
+  Layout,
+  Menu,
+  Button,
+  Drawer,
+  Dropdown,
+  Avatar,
+  Space,
+  Grid,
+  Typography,
+  Skeleton,
+} from "antd";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import Logout_Api from "../../apis/ApisServicioCliente/LogoutApi";
+import { getOrganizacionById } from "../../apis/ApisServicioCliente/organizacionapi";
+import "./Header.css";
 
-// Definición de los items del menú
-const items = [
+const { Header: AntHeader } = Layout;
+const { useBreakpoint } = Grid;
+const { Text } = Typography;
+
+const navItems = [
+  { key: "home", label: <Link to="/home">Home</Link>, icon: <HomeOutlined /> },
+  { key: "empresa", label: <Link to="/empresa">Empresa</Link>, icon: <BankOutlined /> },
+  { key: "cliente", label: <Link to="/cliente">Cliente</Link>, icon: <TeamOutlined /> },
+  { key: "servicio", label: <Link to="/servicio">Servicios</Link>, icon: <ToolOutlined /> },
+  { key: "cotizar", label: <Link to="/cotizar">Cotizar</Link>, icon: <DollarOutlined /> },
   {
-    key: 'home',
-    label: (<Link to="/home" rel="noopener noreferrer">Home</Link>),
-  },
-  {
-    key: 'empresa',
-    label: (
-      <Link to="/empresa" rel="noopener noreferrer">
-        Empresa
-      </Link>
-    ),
-  },
-  {
-    key: 'cliente',
-    label: (
-      <Link to="/cliente" rel="noopener noreferrer">
-        Cliente
-      </Link>
-    ),
-  },
-  {
-    key: 'servicio',
-    label: (
-      <Link to="/servicio" rel="noopener noreferrer">
-        Servicios
-      </Link>
-    ),
-  },
-  {
-    key: 'cotizar',
-    label: (
-      <Link to="/cotizar" rel="noopener noreferrer">
-        Cotizar
-      </Link>
-    ),
-  },
-  {
-    key: 'mas',
-    label: 'Más',
+    key: "mas",
+    label: "Más",
     icon: <AppstoreOutlined />,
     children: [
-      {
-        key: 'generar_orden',
-        label: (
-          <Link to="/generar_orden" rel="noopener noreferrer">
-            Generar Orden de Trabajo
-          </Link>
-        ),
-      },
-      {
-        key: 'usuario',
-        label: (
-          <Link to="/usuario" rel="noopener noreferrer">
-            Usuarios
-          </Link>
-        ),
-      },
-      {
-        key: 'configuracion',
-        label: (
-          <Link to="/configuracionorganizacion" rel="noopener noreferrer">
-            Configuración de la organización
-          </Link>
-        ),
-      },
-      {
-        key: 'facturas',
-        label: (
-          <Link to="/factura" rel="noopener noreferrer">
-            Facturas
-          </Link>
-        ),
-      },
-      {
-        key: 'Pre-Cotizaciones',
-        label: (
-          <Link to="/PreCotizacion" rel="noopener noreferrer">
-            Pre-Cotizaciones
-          </Link>
-        ),
-      },
+      { key: "generar_orden", label: <Link to="/generar_orden">Generar Orden de Trabajo</Link>, icon: <FileDoneOutlined /> },
+      { key: "usuario", label: <Link to="/usuario">Usuarios</Link>, icon: <UserOutlined /> },
+      { key: "configuracion", label: <Link to="/configuracionorganizacion">Configuración de la organización</Link>, icon: <SettingOutlined /> },
+      { key: "facturas", label: <Link to="/factura">Facturas</Link>, icon: <FileTextOutlined /> },
+      { key: "Pre-Cotizaciones", label: <Link to="/PreCotizacion">Pre-Cotizaciones</Link>, icon: <FileTextOutlined /> },
     ],
-  },
-  {
-    key: 'logout',
-    label: (
-      <div className="logout-button">
-        <Button
-          onClick={async () => {
-            try {
-              await Logout_Api.post("", {}, {
-                headers: {
-                  Authorization: `Token ${localStorage.getItem('token')}`,
-                },
-              });
-              // Limpiar localStorage
-              localStorage.removeItem('token');
-              localStorage.removeItem('user_id');
-              localStorage.removeItem('username');
-              localStorage.removeItem('rol');
-              localStorage.removeItem('organizacion');
-              localStorage.removeItem('organizacion_id');
-              //localStorage.clear();
-              // Redirige al usuario a la página principal
-              window.location.href = '/';
-            } catch (error) {
-              console.error('Error al cerrar sesión:', error);
-            }
-          }}
-        >
-          Cerrar sesión
-        </Button>
-      </div>
-    ),
   },
 ];
 
-const Header = () => {
-  // Obtener el logo de la organización
-  const [logoOrganizacion, setLogoOrganizacion] = useState(null);
+export default function Header() {
+  const [logoOrg, setLogoOrg] = useState(null);
+  const [orgName, setOrgName] = useState("");
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [loadingOrg, setLoadingOrg] = useState(true);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const screens = useBreakpoint(); // xs, sm, md, lg...
+
+  // Carga del logo/nombre
   useEffect(() => {
-    const fetchLogoOrganizacion = async () => {
-      const organizationId = parseInt(localStorage.getItem("organizacion_id"), 10);
+    (async () => {
       try {
-        const response = await getOrganizacionById(organizationId);
-        setLogoOrganizacion(response.data);
-      } catch (error) {
-        console.error("Error al obtener la organización:", error);
+        const organizationId = parseInt(localStorage.getItem("organizacion_id") || "0", 10);
+        if (organizationId) {
+          const res = await getOrganizacionById(organizationId);
+          setLogoOrg(res.data?.logo || null);
+          setOrgName(res.data?.nombre || "");
+        }
+      } catch (e) {
+        console.error("Error obteniendo organización:", e);
+      } finally {
+        setLoadingOrg(false);
       }
-    };
-    fetchLogoOrganizacion();
+    })();
   }, []);
 
-  // Control del Drawer para el menú en dispositivos móviles
-  const [open, setOpen] = useState(false);
-  const showDrawer = () => setOpen(true);
-  const onClose = () => setOpen(false);
+  // Ruta activa
+  const selectedKey = useMemo(() => {
+    const findKey = (items) => {
+      for (const it of items) {
+        const lbl = it.label;
+        if (lbl?.props?.to && location.pathname.startsWith(lbl.props.to)) return it.key;
+        if (it.children) {
+          const child = findKey(it.children);
+          if (child) return child;
+        }
+      }
+      return "";
+    };
+    return findKey(navItems);
+  }, [location.pathname]);
 
-  // Utilizar useLocation para determinar la ruta activa y seleccionar la clave correspondiente
-  const location = useLocation();
-  const getDefaultSelectedKey = () => {
-    // Recorre los items (y sub-items) para encontrar coincidencias con la ruta actual
-    for (const item of items) {
-      // Si el item tiene un label con Link, comprueba la propiedad "to"
-      if (item.label && typeof item.label === 'object' && item.label.props && item.label.props.to) {
-        if (location.pathname.startsWith(item.label.props.to)) {
-          return item.key;
-        }
-      }
-      // Si tiene hijos, comprueba cada uno
-      if (item.children) {
-        for (const child of item.children) {
-          if (child.label && child.label.props && child.label.props.to) {
-            if (location.pathname.startsWith(child.label.props.to)) {
-              return child.key;
-            }
-          }
-        }
-      }
+  // Menú de usuario (avatar)
+  const onLogout = async () => {
+    try {
+      await Logout_Api.post(
+        "",
+        {},
+        { headers: { Authorization: `Token ${localStorage.getItem("token")}` } }
+      );
+    } catch (e) {
+      console.error("Error al cerrar sesión:", e);
+    } finally {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user_id");
+      localStorage.removeItem("username");
+      localStorage.removeItem("rol");
+      localStorage.removeItem("organizacion");
+      localStorage.removeItem("organizacion_id");
+      window.location.href = "/";
     }
-    return '';
   };
 
-  const defaultSelectedKey = getDefaultSelectedKey();
-
-  // Control de las claves abiertas para submenús
-  const [openKeys, setOpenKeys] = useState([]);
-  const onOpenChange = (keys) => {
-    setOpenKeys(keys);
+  const userMenu = {
+    items: [
+      // {
+      //   key: "profile",
+      //   label: (
+      //     <span onClick={() => navigate("/usuario")}>
+      //       Perfil / Usuarios
+      //     </span>
+      //   ),
+      //   icon: <UserOutlined />,
+      // },
+      {
+        type: "divider",
+      },
+      {
+        key: "logout",
+        label: <span onClick={onLogout}>Cerrar sesión</span>,
+        icon: <LogoutOutlined />,
+      },
+    ],
   };
+
+  // ¿Desktop? (md en adelante)
+  const isDesktop = screens.md;
 
   return (
-    <div className="header-container">
-      <Link to="/home">
-        <div className="header-logo">
-          {logoOrganizacion && logoOrganizacion.logo ? (
-            <img alt="Logo de la Organización" src={logoOrganizacion.logo} style={{ height: '40px', marginRight: '8px' }} />
-          ) : (
-            <img alt="LOGO" style={{ height: '40px', marginRight: '8px' }} />
-          )}
-        </div>
+    <AntHeader className="app-header" role="banner">
+      {/* IZQUIERDA: Logo + nombre */}
+      <Link to="/home" className="logo-wrap" aria-label="Ir a inicio">
+        {loadingOrg ? (
+          <Skeleton.Avatar active size="large" shape="square" />
+        ) : logoOrg ? (
+          <img src={logoOrg} alt="Logo de la organización" className="org-logo" />
+        ) : (
+          <div className="org-logo placeholder" />
+        )}
+        <Text className="org-name" ellipsis={{ tooltip: orgName }}>
+          {orgName || "Mi Organización"}
+        </Text>
       </Link>
-      <div className="header-button">
-        <Button type="primary" onClick={showDrawer}>
-          Menu
-        </Button>
-      </div>
-      <Drawer title="Menu" onClose={onClose} open={open}>
+
+      {/* CENTRO: menú horizontal en desktop */}
+      {isDesktop && (
+        <Menu
+          mode="horizontal"
+          selectedKeys={[selectedKey]}
+          items={navItems}
+          className="nav-horizontal"
+        />
+      )}
+
+      {/* DERECHA: acciones */}
+      <Space size="middle" className="right-actions">
+        {/* En móvil: botón hamburguesa */}
+        {!isDesktop && (
+          <Button
+            type="primary"
+            icon={<MenuOutlined />}
+            onClick={() => setDrawerOpen(true)}
+            aria-label="Abrir menú"
+          />
+        )}
+
+        {/* Avatar + menú usuario (también en móvil, así cierras sesión fácil) */}
+        <Dropdown menu={userMenu} trigger={["click"]} placement="bottomRight">
+          <div className="user-trigger" role="button" aria-label="Abrir menú de usuario">
+            <Avatar size={36} icon={<UserOutlined />} />
+            {screens.lg && (
+              <span className="user-name">{localStorage.getItem("username") || "Usuario"}</span>
+            )}
+          </div>
+        </Dropdown>
+
+      </Space>
+
+      {/* Drawer para móvil */}
+      <Drawer
+        title={
+          <Space>
+            {logoOrg ? (
+              <img src={logoOrg} alt="Logo" className="org-logo sm" />
+            ) : (
+              <div className="org-logo placeholder sm" />
+            )}
+            <Text strong>{orgName || "Mi Organización"}</Text>
+          </Space>
+        }
+        placement="right"
+        onClose={() => setDrawerOpen(false)}
+        open={drawerOpen}
+        bodyStyle={{ padding: 0 }}
+      >
         <Menu
           mode="inline"
-          selectedKeys={[defaultSelectedKey]}
-          openKeys={openKeys}
-          onOpenChange={onOpenChange}
-          style={{ width: 256 }}
-          items={items}
+          selectedKeys={[selectedKey]}
+          style={{ borderInlineEnd: "none" }}
+          items={[
+            ...navItems,
+            { type: "divider" },
+            {
+              key: "logout_inline",
+              icon: <LogoutOutlined />,
+              label: <span onClick={onLogout}>Cerrar sesión</span>,
+            },
+          ]}
+          onClick={() => setDrawerOpen(false)}
         />
       </Drawer>
-    </div>
+    </AntHeader>
   );
-};
-
-export default Header;
+}

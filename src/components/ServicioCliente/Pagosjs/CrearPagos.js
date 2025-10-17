@@ -752,6 +752,18 @@ const handleRemoveConcepto = (facturaId, e) => {
             </Card>
           ))}
 
+          {/*Boton agregar pago */}
+          <div style={{ marginBottom: 20 }}>
+          <Button
+              onClick={agregarFactura}
+              color="primary" 
+              variant="dashed"
+              block
+            >
+              Agregar factura
+            </Button>
+
+          </div>
           {/* Notas generales */}
           <Form.Item
             label="Notas"
@@ -765,10 +777,11 @@ const handleRemoveConcepto = (facturaId, e) => {
           </Form.Item>
         </Form>
       </Card>
+      
 
       {/* Botones */}
       <div style={{ marginTop: 20 }}>
-        <Button
+        {/* <Button
           onClick={agregarFactura}
           style={{
             marginRight: 10,
@@ -779,7 +792,7 @@ const handleRemoveConcepto = (facturaId, e) => {
           }}
         >
           Agregar factura
-        </Button>
+        </Button> */}
         <Button
           type="primary"
           style={{

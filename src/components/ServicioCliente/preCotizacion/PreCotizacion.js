@@ -24,18 +24,16 @@ const PreCotizacionData = () => {
         // 🔹 Obtener estados
         const estadosResponse = await getAllEstado();
         const estadosMap = estadosResponse.data.reduce((acc, estado) => {
-          acc[estado.id] = estado.nombre; // Mapea { 1: "Pendiente", 2: "Aprobado", etc. }
+          acc[estado.id] = estado.nombre;
           return acc;
         }, {});
-
         setEstados(estadosMap);
 
         // 🔹 Obtener pre-cotizaciones
         const response = await getAllPrecotizacionByOrganizacion(organizationId);
-        //console.log("Pre-Cotizaciones:", response.data);
-        // 🔸 Filtrar si necesitas excluir los estados 7 y 8:
+        
         const filteredPreCotizaciones = response.data;       
-        //console.log("Filtered Pre-Cotizaciones:", filteredPreCotizaciones);
+        
         const data = filteredPreCotizaciones.map((item) => ({
           key: item.precotizacionId,
           id: item.precotizacionId,
@@ -44,7 +42,6 @@ const PreCotizacionData = () => {
           empresa: item.nombreEmpresa,
           estado: item.estado.nombre || "Desconocido",
         }));
-
         setPreCotizaciones(data);
       } catch (error) {
         message.error("Error al obtener los datos");
@@ -52,7 +49,6 @@ const PreCotizacionData = () => {
         setLoading(false);
       }
     };
-
     fetchData();
   }, [organizationId]);
 
@@ -69,33 +65,85 @@ const PreCotizacionData = () => {
       title: "Cliente",
       dataIndex: "cliente",
       key: "cliente",
-      filterDropdown: ({ setSelectedKeys, selectedKeys, confirm }) => (
+      filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
         <div style={{ padding: 8 }}>
           <Input
             placeholder="Buscar cliente"
             value={selectedKeys[0]}
             onChange={(e) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
-            onPressEnter={() => confirm()} // Filtrar al presionar Enter
+            onPressEnter={() => confirm()}
             style={{ width: 188, marginBottom: 8, display: "block" }}
           />
-           <Button
-            type="primary"
-            onClick={() => confirm()}
-            icon={<SearchOutlined />}
-            size="small"
-            style={{ width: "100%" }}
-          >
-            Buscar
-          </Button>
+          <Space>
+            <Button
+              type="primary"
+              onClick={() => confirm()}
+              icon={<SearchOutlined />}
+              size="small"
+              style={{ width: 90 }}
+            >
+              Buscar
+            </Button>
+            <Button
+              onClick={() => {
+                clearFilters();
+                confirm();
+              }}
+              size="small"
+              style={{ width: 90 }}
+            >
+              Limpiar
+            </Button>
+          </Space>
         </div>
-          ),
-          onFilter: (value, record) =>
-            record.cliente.toLowerCase().includes(value.toLowerCase()),
+      ),
+      filterIcon: (filtered) => (
+        <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+      ),
+      onFilter: (value, record) =>
+        record.cliente.toLowerCase().includes(value.toLowerCase()),
     },
     {
       title: "Empresa",
       dataIndex: "empresa",
       key: "empresa",
+      filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
+        <div style={{ padding: 8 }}>
+          <Input
+            placeholder="Buscar empresa"
+            value={selectedKeys[0]}
+            onChange={(e) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+            onPressEnter={() => confirm()}
+            style={{ width: 188, marginBottom: 8, display: "block" }}
+          />
+          <Space>
+            <Button
+              type="primary"
+              onClick={() => confirm()}
+              icon={<SearchOutlined />}
+              size="small"
+              style={{ width: 90 }}
+            >
+              Buscar
+            </Button>
+            <Button
+              onClick={() => {
+                clearFilters();
+                confirm();
+              }}
+              size="small"
+              style={{ width: 90 }}
+            >
+              Limpiar
+            </Button>
+          </Space>
+        </div>
+      ),
+      filterIcon: (filtered) => (
+        <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+      ),
+      onFilter: (value, record) =>
+        record.empresa.toLowerCase().includes(value.toLowerCase()),
     },
     {
       title: "Estado",
@@ -106,7 +154,7 @@ const PreCotizacionData = () => {
         { text: "No validado", value: "No validado" },
         { text: "Chat no validado", value: "Chat no validado" },
         { text: "Chat validado", value: "Chat validado" },
-      ], // 🔹 Filtro basado en los nombres de los estados
+      ],
       onFilter: (value, record) => record.estado === value,
     },
     {
@@ -133,8 +181,7 @@ const PreCotizacionData = () => {
           </Button>
         </Link>
       </div>
-        <ContadoPreCotizacion/>
-
+      <ContadoPreCotizacion/>
       <Table 
         className="custom-table"
         columns={columns} 

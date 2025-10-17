@@ -16,11 +16,16 @@ export const calcularTotales = ({ conceptos, descuento, tipoCambioDolar, tipoMon
   const factorConversion = Number(tipoMoneda === 2 ? tipoCambioDolar : 1) || 1;
 
   return {
-    subtotal: +(subtotal / factorConversion).toFixed(3),
-    descuentoValor: +(descuentoValor / factorConversion).toFixed(3),
-    subtotalConDescuento: +(subtotalConDescuento / factorConversion).toFixed(3),
-    iva: +(iva / factorConversion).toFixed(3),
-    total: +(total / factorConversion).toFixed(3),
+    subtotal: +(subtotal ).toFixed(3),
+    descuentoValor: +(descuentoValor ).toFixed(3),
+    subtotalConDescuento: +(subtotalConDescuento).toFixed(3),
+    iva: +(iva ).toFixed(3),
+    total: +(total).toFixed(3),
+    // subtotal: +(subtotal / factorConversion).toFixed(3),
+    // descuentoValor: +(descuentoValor / factorConversion).toFixed(3),
+    // subtotalConDescuento: +(subtotalConDescuento / factorConversion).toFixed(3),
+    // iva: +(iva / factorConversion).toFixed(3),
+    // total: +(total / factorConversion).toFixed(3),
   };
 };
 

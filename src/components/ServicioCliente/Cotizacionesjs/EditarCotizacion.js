@@ -253,11 +253,16 @@ const EditarCotizacion = () => {
           const total = subtotalConDescuento + iva;
         
           return {
-            subtotal: subtotal / factorConversion,
-            descuentoValor: descuentoValor / factorConversion,
-            subtotalConDescuento: subtotalConDescuento / factorConversion,
-            iva: iva / factorConversion,
-            total: total / factorConversion,
+            subtotal: subtotal ,
+            descuentoValor: descuentoValor ,
+            subtotalConDescuento: subtotalConDescuento ,
+            iva: iva ,
+            total: total ,
+            // subtotal: subtotal / factorConversion,
+            // descuentoValor: descuentoValor / factorConversion,
+            // subtotalConDescuento: subtotalConDescuento / factorConversion,
+            // iva: iva / factorConversion,
+            // total: total / factorConversion,
           };
         };
 
@@ -322,6 +327,8 @@ const EditarCotizacion = () => {
         // Crear el objeto actualizado combinando la información actual con los nuevos valores
         const cotizacionUpdatePayload = {
           ...cotizacionActual,  // conserva todos los campos actuales
+          fechaSolicitud: fechaSolicitada ? fechaSolicitada.format("YYYY-MM-DD") : cotizacionActual.fechaSolicitud,
+          fechaCaducidad: fechaCaducidad ? fechaCaducidad.format("YYYY-MM-DD") : cotizacionActual.fechaCaducidad,
           tipoMoneda: tipoMonedaSeleccionada,
           iva: ivaSeleccionado,
           descuento: descuento,
@@ -535,6 +542,8 @@ const EditarCotizacion = () => {
                               <Select
                                 placeholder="Selecciona un servicio"
                                 showSearch
+                                dropdownMatchSelectWidth={false}
+                                style={{ width: "100%" }}
                                 optionFilterProp="label"
                                 value={concepto.servicio || undefined}
                                 onChange={(value) => handleServicioChange(concepto.id, value)}

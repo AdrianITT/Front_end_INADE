@@ -198,6 +198,7 @@ if (conceptos.length === 1) {
       setIdCotizacionCreada(cotizacionId);
 
       for (const concepto of conceptos) {
+        console.log("Creando cotizacionServicio para concepto:", concepto);
         await createCotizacionServicio({
           descripcion: concepto.descripcion,
           precio: concepto.precioFinal,
@@ -302,7 +303,16 @@ if (conceptos.length === 1) {
           />
         ))}
 
-        <Button onClick={handleAddConcepto}>Añadir Concepto</Button>
+        <div style={{ marginTop: 16 }} >
+
+          <Button 
+          onClick={handleAddConcepto}
+          color="primary" 
+          variant="dashed"
+          block>
+            Añadir Concepto
+          </Button>
+        </div>
         <Row justify="center" style={{ marginTop: "20px" }}>
           <Col>
           <CotizacionTotales

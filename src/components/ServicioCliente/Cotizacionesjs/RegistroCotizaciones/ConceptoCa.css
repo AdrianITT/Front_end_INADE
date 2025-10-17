@@ -1,0 +1,46 @@
+/* Estilos para el Select con salto de línea */
+.select-wrap-text .ant-select-selector {
+  height: auto !important;
+  min-height: 40px !important;
+  padding: 8px 11px !important;
+}
+
+/* Para el texto seleccionado dentro del input */
+.select-wrap-text .ant-select-selection-item {
+  white-space: normal !important;
+  word-wrap: break-word !important;
+  word-break: break-word !important;
+  line-height: 1.5 !important;
+  padding-right: 24px !important;
+  display: block !important;
+}
+
+.select-wrap-text .ant-select-selection-search {
+  height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.select-wrap-text .ant-select-selection-placeholder {
+  white-space: normal !important;
+  line-height: 1.5 !important;
+}
+
+/* Para las opciones del dropdown */
+.select-wrap-text .ant-select-item-option {
+  height: auto !important;
+  min-height: 32px !important;
+  padding: 8px 12px !important;
+  line-height: 1.5 !important;
+}
+
+.select-wrap-text .ant-select-item-option-content {
+  white-space: normal !important;
+  word-wrap: break-word !important;
+  word-break: break-word !important;
+}
+
+/* Ajustar el ícono de flecha */
+.select-wrap-text .ant-select-arrow {
+  top: 12px !important;
+}

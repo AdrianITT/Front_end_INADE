@@ -9,6 +9,7 @@ import { useCotizacionesColumns } from "../Cotizacionesjs/CotizacionesColumns";
 import { getDetallecotizaciondataById } from "../../../apis/ApisServicioCliente/CotizacionApi";
 import { descifrarId, cifrarId } from "../secretKey/SecretKey";
 import CotizacionesPorServicioModal from "../Cotizacionesjs/ModalFiltroServicio/CotizacionesPorServicioModal";
+import CotizacionDetalleExpand from "./CotizacionDetalleExpand/CotizacionDetalleExpand";
 
 const Cotizar = () => {
   const [searchText, setSearchText] = useState("");
@@ -100,9 +101,9 @@ const Cotizar = () => {
           <Button className="ver-proyectos-button">Ver Proyectos</Button>
         </Link>
 
-        {/* <Button type="primary" onClick={() => setOpenServicioModal(true)}>
+        <Button type="primary" onClick={() => setOpenServicioModal(true)}>
           Ver cotizaciones por servicio
-          </Button> */}
+          </Button>
       </div>
 
       {isLoading ? (
@@ -135,129 +136,14 @@ const Cotizar = () => {
                 }
 
                 return (
-                  <div style={{ padding: "20px" }}>
-                    
-                    <Card
-                    size="small"
-                    bordered={false}
-                    style={{ marginBottom: "1rem" }}>
-                    <Row justify="center" align="middle" >
-                      <Col>
-                        <strong>Division:</strong> {detalle.data.cliente?.direccion?.division}
-                      </Col>
-                    </Row>
-                    <Row justify="center" align="middle" >
-                      <Col>
-                        <strong>Estado de aceptación:</strong> {detalle.data.ordenTrabajo?.mensaje} {" -OT: "}
-                        <Space size={[4, 4]} wrap>
-                        {detalle?.data?.ordenTrabajo?.items.map(({id,codigo})=>(
-                          <Tag key={id} onClick={() => navigate(`/DetalleOrdenTrabajo/${cifrarId(id)}`)} style={{ cursor: "pointer" }}>
-                            {codigo || "Pendiente"}
-                          </Tag>
-                        ))}</Space>
-                        {/* {detalle?.data?.ordenTrabajo?.ids?.join(",") || "Pendiente"} */}
-                      </Col>
-                    </Row>
-                    </Card>
-
-                    <Card 
-                    size="small"
-                    bordered={false}
-                    style={{ marginBottom: "1rem" }}>
-
-
-                    <table style={{
-                      width: "100%",
-                      borderCollapse: "collapse",
-                      fontSize: "14px",
-                      marginTop: "8px"
-                    }}>
-                      <thead>
-                        <tr>
-                          <th style={{
-                            backgroundColor: "#fafafa",
-                            fontWeight: 600,
-                            textAlign: "left",
-                            border: "1px solid #d9d9d9",
-                            padding: "8px 12px"
-                          }}>Servicio</th>
-                          <th style={{
-                            backgroundColor: "#fafafa",
-                            fontWeight: 600,
-                            textAlign: "left",
-                            border: "1px solid #d9d9d9",
-                            padding: "8px 12px"
-                          }}>Descripción</th>
-                          <th style={{
-                            backgroundColor: "#fafafa",
-                            fontWeight: 600,
-                            textAlign: "center",
-                            border: "1px solid #d9d9d9",
-                            padding: "8px 12px"
-                          }}>Cantidad</th>
-                          <th style={{
-                            backgroundColor: "#fafafa",
-                            fontWeight: 600,
-                            textAlign: "right",
-                            border: "1px solid #d9d9d9",
-                            padding: "8px 12px"
-                          }}>Precio</th>
-                          <th style={{
-                            backgroundColor: "#fafafa",
-                            fontWeight: 600,
-                            textAlign: "right",
-                            border: "1px solid #d9d9d9",
-                            padding: "8px 12px"
-                          }}>Subtotal</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                      {detalle.data.cotizacionServicio.map((s, index) => (
-                        <tr
-                          key={s.id}
-                          style={{
-                            backgroundColor: index % 2 === 0 ? "#ffffff" : "#f8f8f8",
-                            transition: "background-color 0.3s ease",
-                          }}
-                        >
-                          <td style={{ ...tdBaseStyle }}>{s.servicioNombre || "—"}</td>
-                          <td style={{ ...tdBaseStyle }}>{s.descripcion || "—"}</td>
-                          <td style={{ ...tdBaseStyle, textAlign: "center" }}>{s.cantidad}</td>
-                          <td style={{ ...tdBaseStyle, textAlign: "right" }}>
-                            {formatCurrency(s.precio)}
-                          </td>
-                          <td style={{ ...tdBaseStyle, textAlign: "right" }}>
-                            {formatCurrency(s.subtotal)}
-                          </td>
-                        </tr>
-                      ))}
-
-                      </tbody>
-                    </table>
-                    </Card>
-
-                    <Card
-                    size="small"
-                    bordered={false}>
-                    <Row>
-                      <Col xs={24} sm={12} md={8}>
-                        <strong>Moneda:</strong> {detalle.data.tipoMoneda?.codigo}
-                      </Col>
-                      <Col xs={24} sm={12} md={8}>
-                        <strong>Subtotal:</strong> ${detalle.data.valores?.subtotal}
-                      </Col>
-                      <Col xs={24} sm={12} md={8}>
-                        <strong>Descuento:</strong> {detalle.data.descuento || "0"}
-                      </Col>
-                      <Col xs={24} sm={12} md={8}>
-                        <strong>IVA:</strong> {detalle.data.valores?.iva} → ${detalle.data.valores?.ivaValor}
-                      </Col>
-                      <Col xs={24} sm={12} md={8}>
-                        <strong>Importe total:</strong> ${detalle.data.valores?.importe}
-                      </Col>
-                    </Row>
-                    </Card>
-                  </div>
+                <CotizacionDetalleExpand
+                        detalle={detalle}
+                        navigate={navigate}
+                        cifrarId={cifrarId}
+                        formatCurrency={(v) =>
+                          `$${Number(v).toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                        }
+                      />
                 );
               },
               rowExpandable: () => true,
