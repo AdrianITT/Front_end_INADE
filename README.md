@@ -1,3 +1,3 @@
-en este repositorio seta tdod el diseño usando ant design, desta la creacion de enpresa y cliente hasta la cotizacion y factuación,
-podinedo agregar los servicios que quieras
-y cotizacion editables por si se precenta cambio en por parte del cliente.
+en este repositorio seta todo el diseño usandocon el uso de  ant design, desde la creacion de enpresa y cliente hasta la cotizacion y factuación,
+pudinedo agregar los servicios que quieras
+y cotizacion editables, si se precenta cambio en por parte del cliente.
