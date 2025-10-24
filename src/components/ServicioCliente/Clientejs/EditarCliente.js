@@ -305,6 +305,17 @@ useEffect(() => {
               rules={[
                 { type: "email", message: "Por favor ingresa un correo válido" },
                 { required: true, message: "Por favor ingresa un correo" },
+                {
+                    validator: (_, value) => {
+                      if(!value) return Promise.resolve();
+                      //regex que detecta vocales con acento y caracteres especiales
+                      const accentRegax = /[áéíóúÁÉÍÓÚüÜñÑ¡!¿?´`~^¨¨°#$%&/()=+{}[\]|;:"<>,]/;
+                      if (accentRegax.test(value)) {
+                        return Promise.reject(new Error('El correo no debe contener acentos ni caracteres especiales'));
+                      }
+                      return Promise.resolve();
+                    }
+                  }
               ]}
             >
               <Input placeholder="Correo electrónico" />

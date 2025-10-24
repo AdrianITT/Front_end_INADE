@@ -113,6 +113,10 @@ const RegistroCotizacion = () => {
     setFechaSolicitada(date);
     setFechaCaducidad(date ? date.add(1, "month") : null);
   };
+  const handleFechaCaducidadChange = (date) => {
+  // Permite modificar manualmente la fecha de caducidad
+  setFechaCaducidad(date);
+};
 
   const handleInputChange = (id, field, value) => {
     setConceptos(prev => prev.map(c => c.id === id ? { ...c, [field]: value } : c));
@@ -242,7 +246,7 @@ if (conceptos.length === 1) {
           </Col>
           <Col span={12}>
             <Form.Item label="Fecha Caducidad" rules={[{ required: true }]}> 
-              <DatePicker value={fechaCaducidad} style={{ width: "100%" }} format="DD/MM/YYYY" />
+              <DatePicker value={fechaCaducidad} onChange={handleFechaCaducidadChange} style={{ width: "100%" }} format="DD/MM/YYYY" />
             </Form.Item>
           </Col>
         </Row>

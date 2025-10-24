@@ -39,13 +39,13 @@ const ConceptoCard = ({
               placeholder="Selecciona un servicio"
               value={concepto.servicio || undefined}
               onChange={(value) => onServicioChange(concepto.id, value)}
-              optionFilterProp="children"
+              optionFilterProp="label"
               filterOption={(input, option) =>
-                option.children.toLowerCase().includes(input.toLowerCase())
+                option.label.toLowerCase().includes(input.toLowerCase())
               }
             >
               {servicios.map((serv) => (
-                <Select.Option key={serv.id} value={serv.id}>
+                <Select.Option key={serv.id} value={serv.id} label={serv.nombreServicio}>
                   <Tooltip title={serv.nombreServicio}>
                     <div style={{ whiteSpace: "normal", wordWrap: "break-word" }}>
                       {serv.nombreServicio}

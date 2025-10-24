@@ -443,7 +443,19 @@ const Cliente = () => {
               <Form.Item
                 label="Correo Electrónico:"
                 name="correo"
-                rules={[{type:'email', message: 'El correo no es válido'},{ required: true, message: "Por favor ingresa un correo electrónico." }]}
+                rules={[{type:'email', message: 'El correo no es válido'},{ required: true, message: "Por favor ingresa un correo electrónico." },
+                  {
+                    validator: (_, value) => {
+                      if(!value) return Promise.resolve();
+                      //regex que detecta vocales con acento y caracteres especiales
+                      const accentRegax = /[áéíóúÁÉÍÓÚüÜñÑ¡!¿?´`~^¨¨°#$%&/()=+{}[\]|;:"<>,]/;
+                      if (accentRegax.test(value)) {
+                        return Promise.reject(new Error('El correo no debe contener acentos ni caracteres especiales'));
+                      }
+                      return Promise.resolve();
+                    }
+                  }
+                ]}
               >
                 <Input placeholder="Correo electrónico" />
               </Form.Item>

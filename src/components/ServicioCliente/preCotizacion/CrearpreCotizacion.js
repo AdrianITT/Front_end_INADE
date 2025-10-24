@@ -469,6 +469,17 @@ const CrearPreCotizaciones = () => {
                       {
                       required: true,
                       },
+                      {
+                    validator: (_, value) => {
+                      if(!value) return Promise.resolve();
+                      //regex que detecta vocales con acento y caracteres especiales
+                      const accentRegax = /[áéíóúÁÉÍÓÚüÜñÑ¡!¿?´`~^¨¨°#$%&/()=+{}[\]|;:"<>,]/;
+                      if (accentRegax.test(value)) {
+                        return Promise.reject(new Error('El correo no debe contener acentos ni caracteres especiales'));
+                      }
+                      return Promise.resolve();
+                    }
+                  }
                       ]}
                 >
                       <Input value={correos} 

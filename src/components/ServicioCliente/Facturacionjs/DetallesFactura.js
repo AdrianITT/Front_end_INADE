@@ -9,7 +9,7 @@ import { getEmpresaById } from "../../../apis/ApisServicioCliente/EmpresaApi";
 import { Api_Host } from "../../../apis/api";
 import PaymentCards from "../Facturacionjs/FacturaPagos"
 import { getAllFacturaPagos } from "../../../apis/ApisServicioCliente/FacturaPagosApi";
-import {updatepachFactura, getFacturRespaldo, getFacturaNotaCredito, getRelationTypes} from "../../../apis/ApisServicioCliente/FacturaApi";
+import {updatepachFactura, getFacturRespaldo, getFacturaRelacionX, getRelationTypes} from "../../../apis/ApisServicioCliente/FacturaApi";
 import {getOrganizacionById} from '../../../apis/ApisServicioCliente/organizacionapi';
 //import axios from "axios";
 import {  getAllfacturafacturama} from "../../../apis/ApisServicioCliente/FacturaFacturamaApi";
@@ -110,7 +110,7 @@ const DetallesFactura = () => {
   const typeVales=async()=>{
       try{
         const data=await getRelationTypes();
-        const filtrados =(data.data ?? []).filter(item=> !["02","04","05","06","08","09"].includes(item.codigo));
+        const filtrados =(data.data ?? []).filter(item=> !["02","05","06","08","09"].includes(item.codigo));
         // console.log("data RelatiosTypes: ",filtrados);
         setRelationType(filtrados);
       }catch(error){ console.error("Error cargando RelationType:", error)}
@@ -714,19 +714,11 @@ const confirmRelacionFactura = async (idA,idB) => {
 };
 
 const confirmNotaCredito = async (idA,idB,related) => {
-  // console.log(idA);
-  // console.log(idB);
+  setLoading(true);
   try {
 
-    const data =await getFacturaNotaCredito(idB,idA, related);
-    // console.log("hola dat :",related);
-    // const paylod={
-    //   facturaidA: idA,
-    //   facturaidR: idB,
-    //   relationTypes:"01"
-    // }
-    // const datas =await createNotaCredito(paylod);
-    // console.log(datas);
+    const data =await getFacturaRelacionX(idB,idA, related);
+
     message.success("Factura eliminada correctamente.");
     setNotaCredito(false);
     // navigate("/factura");
@@ -739,7 +731,9 @@ const confirmNotaCredito = async (idA,idB,related) => {
       message.success("Proceso Finalizado");
       setNotaCredito(false);
       //cifrarId
-      // navigate(`/detallesfactura/${cifrarId(idB)}`);
+      if(related==="04"){
+        navigate(`/detallesfactura/${cifrarId(idB)}`);
+      }
   }
 };
 
@@ -1270,7 +1264,7 @@ const montoRestante =hasPagos
 
           {/*Nota de Credito */}
       <Modal
-        title="¿Estás seguro de Crear Nota de Credito?"
+        title="¿Estás seguro de Crear Factura con Relación?"
         open={notaCredito}
         onCancel={() => {
           setNotaCredito(false);
