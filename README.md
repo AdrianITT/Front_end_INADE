@@ -77,8 +77,8 @@ npm start
 
 **Adrián I.T.**  
 💻 Desarrollador Frontend | UI/UX Enthusiast  
-📧 [tu_correo@ejemplo.com](mailto:tu_correo@ejemplo.com)  
-🔗 [LinkedIn](https://linkedin.com/in/tuusuario)
+📧 [adriancvtj@gmail.com](mailto:adriancvtj@gmail.com)  
+
 
 ---
 
