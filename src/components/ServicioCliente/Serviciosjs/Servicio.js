@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import { Tabs, Table, Input, Button, Modal, Form, Row, Col, Select, Checkbox, message, Space } from "antd";
+import { Tabs, Table, Input, Button, Modal, Form, Row, Col, Select, Checkbox, message, Space, Spin } from "antd";
 import "./Servicio.css"
 import Highlighter from 'react-highlight-words';
 //import { Link} from "react-router-dom";
@@ -34,7 +34,7 @@ const Servicio = () => {
   const [isServiceDeleteModalVisible, setIsServiceDeleteModalVisible] = useState(false); 
   const [isSuccessModalVisible, setIsSuccessModalVisible] = useState(false);
   const [successMessage, setSuccessMessage] = useState(""); // Mensaje dinámico
-   const [loadings, setLoadings] = useState(false);
+  const [loadings, setLoadings] = useState(false);
   //const [searchServicios, setSearchServicios] = useState("");
   // Al inicio del componente, declara el estado y la función
   const [metodoSeleccionado, setMetodoSeleccionado] = useState(null);
@@ -161,6 +161,7 @@ const handleMetodoChange = (value) => {
   // Function to fetch all necessary data
   const fetchData = async () => {
     try {
+      setLoadings(true); // Iniciar el loading
       const [metodosRes, claveCDFIRes, unidadCDFIRes, objetoImpuestoRes,serviciosRes ] = await Promise.all([
         getAllMetodoData(organizationId),
         getAllClaveCDFI(),
@@ -181,6 +182,8 @@ const handleMetodoChange = (value) => {
     } catch (error) {
       console.error("Error al cargar los datos", error);
       message.error("Error al cargar los datos");
+    }finally {
+      setLoadings(false); // Finalizar el loading
     }
   };
 
@@ -498,6 +501,7 @@ const handleConfirmDeleteService = async () => {
                 >
                   Añadir Servicio
                 </Button>
+                <Spin spinning={loadings} tip="Cargando...">
                 <Table
                   dataSource={filteredServicios}
                   columns={columnsServicios}
@@ -508,6 +512,7 @@ const handleConfirmDeleteService = async () => {
                     pageSizeOptions: ["5", "10", "20"],
                   }}
                 />
+                </Spin>
               </div>
             ),
           },
@@ -535,7 +540,7 @@ const handleConfirmDeleteService = async () => {
                 >
                   Añadir Método
                 </Button>
-                
+                <Spin spinning={loadings} tip="Cargando...">
                 <Table
                   dataSource={metodos}
                   columns={columnsMetodos}
@@ -546,6 +551,7 @@ const handleConfirmDeleteService = async () => {
                     pageSizeOptions: ["5", "10", "20"],
                   }}
                 />
+                </Spin>
               </div>
             ),
           },

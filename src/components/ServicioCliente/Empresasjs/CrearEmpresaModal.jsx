@@ -4,7 +4,7 @@ import { Modal, Form, Input, Select, Row, Col } from 'antd';
 import './Empresa.css';
 
 
-const CreateEmpresaModal = ({ visible, onCancel, onCreate, regimenFiscal,usosCfdi }) => {
+const CreateEmpresaModal = ({ open, onCancel, onCreate, regimenFiscal,usosCfdi }) => {
   const [form] = Form.useForm();
 
   
@@ -22,7 +22,7 @@ const CreateEmpresaModal = ({ visible, onCancel, onCreate, regimenFiscal,usosCfd
   return (
     <Modal
       title="Registro de Empresa"
-      open={visible}
+      open={open}
       onOk={handleOk}
       onCancel={onCancel}
       okText="Crear Empresa"

@@ -4,7 +4,7 @@ import { Modal, Form, Input, Select, Row, Col } from 'antd';
 import './Empresa.css';
 
 
-const EditEmpresaModal = ({ visible, onCancel, onEdit, regimenFiscal, empresa,usosCfdi }) => {
+const EditEmpresaModal = ({ open, onCancel, onEdit, regimenFiscal, empresa,usosCfdi }) => {
   const [form] = Form.useForm();
 
   // Cuando cambie la empresa a editar, setear los valores iniciales
@@ -38,7 +38,7 @@ const EditEmpresaModal = ({ visible, onCancel, onEdit, regimenFiscal, empresa,us
   return (
     <Modal
       title="Editar Empresa"
-      visible={visible}
+      open={open}
       onOk={handleOk}
       onCancel={onCancel}
       okText="Guardar cambios"

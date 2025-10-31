@@ -426,24 +426,6 @@ useEffect(() => {
                 </Form.Item>
               </Col>
           </Row>
-        {/* Campo para seleccionar UsoCfdi 
-        <Row gutter={16}>
-          <Col span={12}>
-            <Form.Item
-              label="Uso CFDI:"
-              name="UsoCfdi"
-              rules={[{ required: true, message: "Por favor selecciona un uso CFDI" }]}
-            >
-              <Select placeholder="Selecciona un uso CFDI">
-                {usoCfdiOptions.map((usoCfdi) => (
-                  <Select.Option key={usoCfdi.id} value={usoCfdi.id}>
-                    {usoCfdi.codigo} - {usoCfdi.descripcion}
-                  </Select.Option>
-                ))}
-              </Select>
-            </Form.Item>
-          </Col>
-        </Row>*/}
 
         <div className="editar-cliente-buttons">
           <Button type="primary" htmlType="submit">

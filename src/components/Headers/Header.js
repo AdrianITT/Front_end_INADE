@@ -208,7 +208,9 @@ export default function Header() {
         placement="right"
         onClose={() => setDrawerOpen(false)}
         open={drawerOpen}
-        bodyStyle={{ padding: 0 }}
+        style={{ 
+          body: { padding: 0},
+         }}
       >
         <Menu
           mode="inline"

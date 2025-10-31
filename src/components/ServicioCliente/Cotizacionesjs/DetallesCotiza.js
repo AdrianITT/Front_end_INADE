@@ -1,7 +1,7 @@
 // src/pages/CotizacionDetalles.js
 import React, { useState, useMemo, useEffect} from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Tabs, Typography, Spin, Menu, message, Modal } from "antd";
+import { Tabs, Typography, Spin, message } from "antd";
 import { MailTwoTone,
   EditTwoTone, 
   CheckCircleTwoTone, 
@@ -21,7 +21,6 @@ import { descifrarId, cifrarId } from "../secretKey/SecretKey";
 import { validarAccesoPorOrganizacion } from "../validacionAccesoPorOrganizacion";
 import { getAllcotizacionesdata } from "../../../apis/ApisServicioCliente/CotizacionApi";
 
-const { Title, Text } = Typography;
 
 const CotizacionDetalles = () => {
   const { ids } = useParams();
@@ -219,32 +218,47 @@ const CotizacionDetalles = () => {
   };
 
   
-  // Definición del menú de acciones (enviar correo, editar, actualizar estado, ver PDF)
-  const menu = (
-    <Menu>
-      <Menu.Item key="1" icon={<MailTwoTone />} onClick={() => setIsModalVisible(true)}>
-        Enviar por correo
-      </Menu.Item>
-      <Menu.Item key="3" icon={<EditTwoTone />} onClick={() => navigate(`/EditarCotizacion/${cifrarId(id)}`)}>
-        Editar
-      </Menu.Item>
-      <Menu.Item key="4" icon={<CheckCircleTwoTone />} onClick={() => { updateEstadoCotizacion(2) }}>
-        Actualizar estado
-      </Menu.Item>
-      <Menu.Item key="5" icon={<FilePdfTwoTone />} onClick={handleDownloadPDF}>
-        Descargar PDF
-      </Menu.Item>
-      <Menu.Item key="6" icon={<CopyTwoTone />} onClick={() => setIsDuplicarModalVisible(true)}>
-        Duplicar
-      </Menu.Item>
-      <Menu.Item key="7" icon={<CloseCircleTwoTone twoToneColor="#eb2f96"/> } onClick={() => showDeleteModal(id)}>
-        Eliminar Cotización 
-      </Menu.Item>
-    </Menu>
-  );
-  
+// Definición del menú moderno
+const menuItems = [
+  {
+    key: "1",
+    icon: <MailTwoTone />,
+    label: "Enviar por correo",
+    onClick: () => setIsModalVisible(true),
+  },
+  {
+    key: "3",
+    icon: <EditTwoTone />,
+    label: "Editar",
+    onClick: () => navigate(`/EditarCotizacion/${cifrarId(id)}`),
+  },
+  {
+    key: "4",
+    icon: <CheckCircleTwoTone />,
+    label: "Actualizar estado",
+    onClick: () => updateEstadoCotizacion(2),
+  },
+  {
+    key: "5",
+    icon: <FilePdfTwoTone />,
+    label: "Descargar PDF",
+    onClick: handleDownloadPDF,
+  },
+  {
+    key: "6",
+    icon: <CopyTwoTone />,
+    label: "Duplicar",
+    onClick: () => setIsDuplicarModalVisible(true),
+  },
+  { type: "divider" },
+  {
+    key: "7",
+    icon: <CloseCircleTwoTone twoToneColor="#eb2f96" />,
+    label: "Eliminar Cotización",
+    onClick: () => showDeleteModal(id),
+  },
+];
 
-  
   return (
     <Spin spinning={loading|| emailLoading}>
       <div className="cotizacion-detalles-container">
@@ -252,20 +266,29 @@ const CotizacionDetalles = () => {
           <h1>Detalles de la Cotización {cotizacionInfo.numero} Proyecto</h1>
         </div>
         
-        <Tabs defaultActiveKey="1">
-          <Tabs.TabPane tab="Detalles" key="1">
-            <CotizacionInfoCard 
-              cotizacionInfo={cotizacionInfo} 
-              factorConversion={factorConversion} 
-              esUSD={esUSD} 
-              menu={menu}
-            />
-            <ServiciosTable 
-              servicios={servicios} 
-              factorConversion={factorConversion} 
-            />
-          </Tabs.TabPane>
-        </Tabs>
+<Tabs
+  defaultActiveKey="1"
+  items={[
+    {
+      key: "1",
+      label: "Detalles",
+      children: (
+        <>
+          <CotizacionInfoCard 
+            cotizacionInfo={cotizacionInfo} 
+            factorConversion={factorConversion} 
+            esUSD={esUSD} 
+            menuItems={menuItems}
+          />
+          <ServiciosTable 
+            servicios={servicios} 
+            factorConversion={factorConversion} 
+          />
+        </>
+      ),
+    },
+  ]}
+/>
         
         <SendEmailModal 
           visible={isModalVisible} 

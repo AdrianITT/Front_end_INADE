@@ -32,7 +32,7 @@ const ConceptoCard = ({
           >
             <Select
               showSearch
-              dropdownMatchSelectWidth={false}
+              popupMatchSelectWidth={false}
               dropdownStyle={{ width: 'auto', minWidth: '100%' }}
               className="select-wrap-text"
               style={{ width: "100%", whiteSpace: "normal", wordWrap: "break-word" }}

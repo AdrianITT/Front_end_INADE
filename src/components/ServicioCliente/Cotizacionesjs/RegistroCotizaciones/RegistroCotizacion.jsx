@@ -229,7 +229,7 @@ if (conceptos.length === 1) {
     ivaPct: ivas.find(i => i.id === ivaSeleccionado)?.porcentaje,
   });
 
-  if (!clienteData || !empresaData) return <Spin spinning={true} tip="Cargando..." />;
+  if (!clienteData || !empresaData) return <Spin spinning={true} tip="Cargando..." ><div style={{ minHeight: "400px" }}></div></Spin>;
 
   return (
     <div className="cotizacion-container">

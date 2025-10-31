@@ -355,7 +355,9 @@ const Cliente = () => {
       <h1 className="title-center">Clientes</h1>
       {loading ? (
         <div style={{ textAlign: "center", marginTop: "20px" }}>
-          <Spin size="large" tip="Cargando clientes..." />
+           <Spin spinning={loading} tip="Cargando...">
+             <div style={{ minHeight: "200px" }}></div>
+           </Spin>
         </div>
       ) : (
         <>

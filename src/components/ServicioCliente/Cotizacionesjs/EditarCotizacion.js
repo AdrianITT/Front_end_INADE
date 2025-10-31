@@ -1,13 +1,13 @@
 import React, { useState, useEffect,useMemo  } from "react";
 import "./Crearcotizacion.css";
-import { Form, Input, Button, Row, Col, Select, Checkbox, Divider, message, DatePicker, Card, Modal, Result, Text,InputNumber,Alert, Spin } from "antd";
+import { Form, Input, Button, Row, Col, Select, Checkbox, Divider, message, DatePicker, Card, Modal, Result, InputNumber, Spin } from "antd";
 import dayjs from "dayjs";
 import { useParams, useNavigate } from "react-router-dom";
 import { getCotizacionById, updateCotizacion } from "../../../apis/ApisServicioCliente/CotizacionApi";
 import { getAllCotizacionServicio, updateCotizacionServicio, createCotizacionServicio, deleteCotizacionServicio } from "../../../apis/ApisServicioCliente/CotizacionServicioApi";
 import { getAllTipoMoneda } from "../../../apis/ApisServicioCliente/Moneda";
 import { getAllIva } from "../../../apis/ApisServicioCliente/ivaApi";
-import { getAllServicio, getServicioById,getServicioData } from "../../../apis/ApisServicioCliente/ServiciosApi";
+import { getServicioData } from "../../../apis/ApisServicioCliente/ServiciosApi";
 import { getInfoSistema } from "../../../apis/ApisServicioCliente/InfoSistemaApi";
 import {getAllMetodoData} from "../../../apis/ApisServicioCliente/MetodoApi";
 import { descifrarId, cifrarId } from "../secretKey/SecretKey";
@@ -35,8 +35,10 @@ const EditarCotizacion = () => {
      const [isModalVisible, setIsModalVisible] = useState(false);
      const [serviciosRelacionados, setServiciosRelacionados] = useState([]);
      const [metodosData, setMetodosData] = useState([]);
-     const [loading, setLoading] = useState(false);
+     const [loading, setLoading] = useState(true);
      const organizationId = useMemo(() => parseInt(localStorage.getItem("organizacion_id"), 10), []);
+
+
 
      useEffect(() => {
       const verificar = async () => {
@@ -54,132 +56,92 @@ const EditarCotizacion = () => {
       };
   
       verificar();
-    }, [organizationId, id]);
+    }, [organizationId, id, navigate]);
    
      // Obtener tipo de cambio del dólar
      useEffect(() => {
        const fetchTipoCambio = async () => {
          try {
-          setLoading(true);
+          
            const response = await getInfoSistema();
            setTipoCambioDolar(parseFloat(response.data[0].tipoCambioDolar));
          } catch (error) {
            console.error("Error al obtener el tipo de cambio del dólar", error);
-         }finally { setLoading(false); }
+         }
        };
        fetchTipoCambio();
      }, []);
 
-     useEffect(() => {
-          if (!id) return;
-        
-          const fetchCotizacion = async () => {
-            try {
-              setLoading(true);
-              const response = await getCotizacionById(id);
-              const cotizacion = response.data;
-              //console.log("Cotización obtenida:", cotizacion);
-        
-              setCotizacionData(cotizacion);
-              setFechaSolicitada(dayjs(cotizacion.fechaSolicitud));  // ✅ Asignamos fecha correctamente
-              setFechaCaducidad(dayjs(cotizacion.fechaCaducidad));
-              setTipoMonedaSeleccionada(cotizacion.tipoMoneda);  // ✅ Se asegura que la moneda se asigne correctamente
-              setIvaSeleccionado(cotizacion.iva);
-              setDescuento(cotizacion.descuento);
-        
-              // Obtener servicios relacionados con la cotización
-              const cotizacionServicios = cotizacion.servicios;
-              //console.log("Servicios de la cotización:", cotizacionServicios);
-        
-              const cotizacionServicioResponse = await getAllCotizacionServicio();
-              const cotizacionServicioRecords = cotizacionServicioResponse.data;
-              //console.log("Registros de Cotización Servicio:", cotizacionServicioRecords);
-        
-              // Filtramos los registros que pertenecen a esta cotización
-              const filteredCotizacionServicios = cotizacionServicioRecords.filter(
-                (record) => Number(record.cotizacion) === Number(id)
-              );
-        
-              //console.log("Registros filtrados de Cotización Servicio:", filteredCotizacionServicios);
-        
-              // Obtener información detallada de cada servicio en la cotización
-              const serviciosConDetalles = await Promise.all(
-                filteredCotizacionServicios.map(async (record) => {
-                  const servicioResponse = await getServicioById(record.servicio);
-                  return {
-                    id: record.id,
-                    servicio: record.servicio,
-                    nombreServicio: servicioResponse.data.nombreServicio,
-                    cantidad: record.cantidad,
-                    precio: parseFloat(servicioResponse.data.precio) || 0,
-                    descripcion: record.descripcion,
-                    cotizacion: record.cotizacion,
-                    precioFinal: record ? record.precio : parseFloat(servicioResponse.data.precio) || 0,
-                    metodoCodigo: record.metodo || servicioResponse.data.metodos,
-                  };
-                })
-              );
-              
-        
-              //console.log("Servicios con detalles:", serviciosConDetalles);
-              setConceptos(serviciosConDetalles);
-            } catch (error) {
-              console.error("Error al obtener la cotización", error);
-              message.error("Error al cargar la cotización");
-            }finally { setLoading(false); }
-          };
-        
-          fetchCotizacion();
-        }, [id]);
-        
+useEffect(() => {
+  const fetchAllData = async () => {
+    try {
+      setLoading(true);
+      const [
+        cotResp,
+        tipoMonedaResp,
+        ivaResp,
+        servicioResp,
+        metodoResp,
+        infoResp,
+        cotServResp
+      ] = await Promise.all([
+        getCotizacionById(id),
+        getAllTipoMoneda(),
+        getAllIva(),
+        getServicioData(organizationId),
+        getAllMetodoData(organizationId),
+        getInfoSistema(),
+        getAllCotizacionServicio()
+      ]);
+
+      const cotizacion = cotResp.data;
+      setCotizacionData(cotizacion);
+      setFechaSolicitada(dayjs(cotizacion.fechaSolicitud));
+      setFechaCaducidad(dayjs(cotizacion.fechaCaducidad));
+      setTipoMonedaSeleccionada(cotizacion.tipoMoneda);
+      setIvaSeleccionado(cotizacion.iva);
+      setDescuento(cotizacion.descuento);
+
+      setTiposMonedaData(tipoMonedaResp.data);
+      setIvasData(ivaResp.data);
+      setServicios(servicioResp.data);
+      setMetodosData(metodoResp.data);
+      setTipoCambioDolar(parseFloat(infoResp.data[0].tipoCambioDolar));
+
+      // Filtrar registros de cotización servicio
+      const cotServ = cotServResp.data.filter(r => Number(r.cotizacion) === Number(id));
+
+      // Obtener detalles de servicios ya cargados, SIN hacer nuevas peticiones
+      const serviciosConDetalles = cotServ.map(record => {
+        const s = servicioResp.data.find(serv => serv.id === record.servicio);
+        return {
+          id: record.id,
+          servicio: record.servicio,
+          nombreServicio: s?.nombreServicio || "Desconocido",
+          cantidad: record.cantidad,
+          precio: s?.precio || 0,
+          descripcion: record.descripcion,
+          cotizacion: record.cotizacion,
+          precioFinal: record.precio || s?.precio || 0,
+          metodoCodigo: record.metodo || s?.metodos,
+        };
+      });
+
+      setConceptos(serviciosConDetalles);
+    } catch (error) {
+      console.error("Error al cargar datos:", error);
+      message.error("Error al cargar datos de la cotización");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (id) fetchAllData();
+}, [id, organizationId]);
+
 
    
    
-     useEffect(() => {
-       const fetchTipoMoneda = async () => {
-         try {
-          setLoading(true);
-           const response = await getAllTipoMoneda();
-           setTiposMonedaData(response.data);
-         } catch (error) {
-           console.error("Error al cargar los tipos de moneda", error);
-         }finally { setLoading(false); }
-       };
-   
-       const fetchIva = async () => {
-         try {
-            setLoading(true);
-           const response = await getAllIva();
-           setIvasData(response.data);
-         } catch (error) {
-           console.error("Error al cargar el IVA", error);
-         }finally { setLoading(false); }
-       };
-   
-       const fetchServicios = async () => {
-         try {
-            setLoading(true);
-           const response = await getServicioData(organizationId);
-           setServicios(response.data);
-         } catch (error) {
-           console.error("Error al cargar los servicios", error);
-         }finally { setLoading(false); }
-       };
-
-       const fetchMetodos = async () => {
-        try {
-          setLoading(true);
-          const response = await getAllMetodoData(organizationId);
-          setMetodosData(response.data);
-        } catch (error) {
-          console.error("Error al cargar los métodos de pago", error);
-        }finally { setLoading(false); }
-       };
-       fetchMetodos();
-       fetchTipoMoneda();
-       fetchIva();
-       fetchServicios();
-     }, []);
 
      useEffect(() => {
   if (conceptos.length > 0 && servicios.length > 0) {
@@ -223,48 +185,48 @@ const EditarCotizacion = () => {
 
    
      // Calcular totales
-     const calcularTotales = () => {
-          if (!conceptos || conceptos.length === 0) {
-            return {
-              subtotal: 0,
-              descuentoValor: 0,
-              subtotalConDescuento: 0,
-              iva: 0,
-              total: 0,
-            };
-          }
+    //  const calcularTotales = () => {
+    //       if (!conceptos || conceptos.length === 0) {
+    //         return {
+    //           subtotal: 0,
+    //           descuentoValor: 0,
+    //           subtotalConDescuento: 0,
+    //           iva: 0,
+    //           total: 0,
+    //         };
+    //       }
         
-          const subtotal = conceptos.reduce((acc, curr) => {
-            const precio = parseFloat(curr.precioFinal) || 0;
-            const cantidad = parseInt(curr.cantidad, 10) || 0;
-            return acc + cantidad * precio;
-          }, 0);
+    //       const subtotal = conceptos.reduce((acc, curr) => {
+    //         const precio = parseFloat(curr.precioFinal) || 0;
+    //         const cantidad = parseInt(curr.cantidad, 10) || 0;
+    //         return acc + cantidad * precio;
+    //       }, 0);
         
-          const descuentoPorcentaje = parseFloat(descuento) || 0;
-          const descuentoValor = subtotal * (descuentoPorcentaje / 100);
-          const subtotalConDescuento = subtotal - descuentoValor;
+    //       const descuentoPorcentaje = parseFloat(descuento) || 0;
+    //       const descuentoValor = subtotal * (descuentoPorcentaje / 100);
+    //       const subtotalConDescuento = subtotal - descuentoValor;
         
-          const ivaPorcentaje = parseFloat(
-            ivasData.find(iva => iva.id === ivaSeleccionado)?.porcentaje || 16
-          );
-          const iva = subtotalConDescuento * (ivaPorcentaje);
+    //       const ivaPorcentaje = parseFloat(
+    //         ivasData.find(iva => iva.id === ivaSeleccionado)?.porcentaje || 16
+    //       );
+    //       const iva = subtotalConDescuento * (ivaPorcentaje);
         
-          const factorConversion = tipoMonedaSeleccionada === 2 ? parseFloat(tipoCambioDolar) || 1 : 1;
-          const total = subtotalConDescuento + iva;
+    //       const factorConversion = tipoMonedaSeleccionada === 2 ? parseFloat(tipoCambioDolar) || 1 : 1;
+    //       const total = subtotalConDescuento + iva;
         
-          return {
-            subtotal: subtotal ,
-            descuentoValor: descuentoValor ,
-            subtotalConDescuento: subtotalConDescuento ,
-            iva: iva ,
-            total: total ,
-            // subtotal: subtotal / factorConversion,
-            // descuentoValor: descuentoValor / factorConversion,
-            // subtotalConDescuento: subtotalConDescuento / factorConversion,
-            // iva: iva / factorConversion,
-            // total: total / factorConversion,
-          };
-        };
+    //       return {
+    //         subtotal: subtotal ,
+    //         descuentoValor: descuentoValor ,
+    //         subtotalConDescuento: subtotalConDescuento ,
+    //         iva: iva ,
+    //         total: total ,
+    //         // subtotal: subtotal / factorConversion,
+    //         // descuentoValor: descuentoValor / factorConversion,
+    //         // subtotalConDescuento: subtotalConDescuento / factorConversion,
+    //         // iva: iva / factorConversion,
+    //         // total: total / factorConversion,
+    //       };
+    //     };
 
         const handleServicioChange = (conceptoId, servicioId) => {
         
@@ -315,11 +277,35 @@ const EditarCotizacion = () => {
         setContadorId(contadorId + 1);
       };
    
-     const { subtotal, descuentoValor, subtotalConDescuento, iva, total } = calcularTotales();
+      const { subtotal, descuentoValor, subtotalConDescuento, iva, total } = useMemo(() => {
+    if (!conceptos.length) {
+      return { subtotal: 0, descuentoValor: 0, subtotalConDescuento: 0, iva: 0, total: 0 };
+    }
+
+    const subtotal = conceptos.reduce((acc, c) => {
+      const precio = parseFloat(c.precioFinal) || 0;
+      const cantidad = parseInt(c.cantidad, 10) || 0;
+      return acc + cantidad * precio;
+    }, 0);
+
+    const descuentoPorcentaje = parseFloat(descuento) || 0;
+    const descuentoValor = subtotal * (descuentoPorcentaje / 100);
+    const subtotalConDescuento = subtotal - descuentoValor;
+
+    const ivaPorcentaje = parseFloat(
+      ivasData.find((iva) => iva.id === ivaSeleccionado)?.porcentaje || 16
+    );
+    const iva = subtotalConDescuento * ivaPorcentaje;
+    const total = subtotalConDescuento + iva;
+
+    return { subtotal, descuentoValor, subtotalConDescuento, iva, total };
+  }, [conceptos, descuento, ivaSeleccionado, ivasData]);
+
    
      // Guardar cambios
      const handleSubmit = async () => {
       try {
+        setLoading(true);
         // Obtener la cotización actual
         const response = await getCotizacionById(id);
         const cotizacionActual = response.data;
@@ -361,14 +347,14 @@ const EditarCotizacion = () => {
         const serviciosExistentes = [];
         const nuevosServicios = [];
         // Convertir cotizacionData.servicios en array, como en tu código original
-        const serviciosArray = Array.isArray(cotizacionData.servicios)
-          ? cotizacionData.servicios
-          : Object.values(cotizacionData.servicios);
-        const idsServiciosEnCotizacion = serviciosArray.map((s) => parseInt(s, 10));
+        // const serviciosArray = Array.isArray(cotizacionData.servicios)
+        //   ? cotizacionData.servicios
+        //   : Object.values(cotizacionData.servicios);
+        // const idsServiciosEnCotizacion = serviciosArray.map((s) => parseInt(s, 10));
     
         conceptosNoEliminados.forEach((concepto) => {
-          const servicioId = parseInt(concepto.servicio, 10);
-          const servicioYaEnCotizacion = idsServiciosEnCotizacion.includes(servicioId);
+          // const servicioId = parseInt(concepto.servicio, 10);
+          // const servicioYaEnCotizacion = idsServiciosEnCotizacion.includes(servicioId);
     
 
             if (concepto.esNuevo) {
@@ -393,10 +379,7 @@ const EditarCotizacion = () => {
             descripcion: concepto.descripcion || "Sin Descripción..",
             cotizacion: parseInt(id, 10),
           };
-    
           try {
-            //console.log(`🔹 Actualizando servicio existente (ID: ${concepto.id})...`);
-            //console.log("Datos a enviar:", data);
             return await updateCotizacionServicio(concepto.id, data);
           } catch (error) {
             console.error(`❌ Error al actualizar servicio ${concepto.id}:`, error.response?.data || error.message);
@@ -412,7 +395,7 @@ const EditarCotizacion = () => {
     
         // Crear los nuevos servicios
         if (nuevosServicios.length > 0) {
-          const createServiciosPromises = nuevosServicios.map((concepto) => {
+          for (const [index, concepto] of nuevosServicios.entries()) {
             const data = {
               cantidad: parseInt(concepto.cantidad, 10),
               precio: parseFloat(concepto.precioFinal),
@@ -420,17 +403,14 @@ const EditarCotizacion = () => {
               descripcion: concepto.descripcion || "Sin Descripción...",
               cotizacion: parseInt(id, 10),
             };
-            //console.log("📤 Enviando nuevo servicio:", data);
-            return createCotizacionServicio(data);
-          });
-          const createServiciosResults = await Promise.allSettled(createServiciosPromises);
-          createServiciosResults.forEach((result, index) => {
-            if (result.status === "rejected") {
-              console.error(`Error al crear el servicio nuevo ${index + 1}:`, result.reason);
-            } else {
-              console.log("Servicio nuevo creado con éxito:", result.value?.data);
+
+            // console.log(`📤 [${index + 1}] Enviando nuevo servicio:`, concepto.nombreServicio);
+            try {
+              await createCotizacionServicio(data); // 👈 se espera a que termine antes del siguiente
+            } catch (error) {
+              console.error(`❌ Error al crear servicio ${concepto.nombreServicio}`, error);
             }
-          });
+          }
         }
     
         message.success("Cotización actualizada correctamente");
@@ -438,6 +418,9 @@ const EditarCotizacion = () => {
       } catch (error) {
         console.error("Error al actualizar la cotización", error);
         message.error("Error al actualizar la cotización");
+      }
+      finally {
+        setLoading(false);
       }
     };
     
@@ -450,6 +433,12 @@ const EditarCotizacion = () => {
      return (
        <div className="cotizacion-container">
          <h1 className="cotizacion-title">Editar Cotización</h1>
+         {loading ? (
+           <Spin spinning={loading} tip="Cargando...">
+             <div style={{ minHeight: "200px" }}></div>
+           </Spin>
+         ) : (
+
          <Form layout="vertical">
            <Row gutter={16}>
              <Col span={12}>
@@ -542,8 +531,9 @@ const EditarCotizacion = () => {
                               <Select
                                 placeholder="Selecciona un servicio"
                                 showSearch
-                                dropdownMatchSelectWidth={false}
-                                style={{ width: "100%" }}
+                                popupMatchSelectWidth={false}
+                                dropdownStyle={{ width: 'auto', minWidth: '100%' }}
+                                style={{ width: "100%", whiteSpace: "normal", wordWrap: "break-word" }}
                                 optionFilterProp="label"
                                 value={concepto.servicio || undefined}
                                 onChange={(value) => handleServicioChange(concepto.id, value)}
@@ -670,6 +660,7 @@ const EditarCotizacion = () => {
                    </div>
            <Divider />
          </Form>
+         )}
          <Modal
            title="Información"
            open={isModalVisible}

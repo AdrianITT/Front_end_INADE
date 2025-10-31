@@ -1,8 +1,9 @@
 // src/components/CotizacionesColumns.js
 import React, { useMemo } from "react";
 import { Link } from "react-router-dom";
-import { Button, Menu } from "antd";
+import { Button, Menu, Tag } from "antd";
 import { cifrarId } from "../secretKey/SecretKey";
+import "antd/dist/reset.css";
 
 // Custom hook para definir las columnas de la tabla de cotizaciones
 export const useCotizacionesColumns = () => {
@@ -64,7 +65,15 @@ export const useCotizacionesColumns = () => {
       title: "Estado",
       dataIndex: "Estado",
       key: "Estado",
-      render : (estado)=> estado?.nombre||"",
+      render: (estado) => {
+          const nombre = typeof estado === "object" ? estado?.nombre : estado;
+          const color =
+            nombre === "Pendiente" ? "red" :
+            nombre === "En proceso" ? "blue" :
+            nombre === "Completado" ? "green" : "default";
+
+          return <Tag color={color}>{nombre || "—"}</Tag>;
+        },
       filterDropdown: ({ setSelectedKeys, selectedKeys, confirm }) => (
         <div style={{ padding: 8 }}>
           <Menu
@@ -81,7 +90,10 @@ export const useCotizacionesColumns = () => {
           </Menu>
         </div>
       ),
-      onFilter: (value, record) => value === "all" || record.Estado?.nombre === value,
+      onFilter: (value, record) => 
+        value === "all" || 
+        record.Estado?.nombre === value || 
+        record.Estado?.nombre === value,
     },
     {
       title: "Acción",

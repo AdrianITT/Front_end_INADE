@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { Table, Button, Card, Dropdown, Menu, message, Modal } from "antd";
-import { RightCircleTwoTone, FileTextTwoTone, FilePdfTwoTone, MailTwoTone, DeleteOutlined, EditTwoTone } from "@ant-design/icons";
+import { Table, Button, Card, Dropdown, message, Modal } from "antd";
+import { RightCircleTwoTone, FilePdfTwoTone, DeleteOutlined, EditTwoTone } from "@ant-design/icons";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import "./cssOrdenTrabajo/DetallesOrdenTrabajo.css"; // Asegúrate de importar el archivo CSS
 import { getOrdenTrabajoById, deleteOrdenTrabajo, getDetalleOrdenTrabajoDataById, getAllOrdenesTrabajoData } from "../../../apis/ApisServicioCliente/OrdenTrabajoApi";
@@ -19,11 +19,11 @@ const DetalleOrdenTrabajo = () => {
   //const [receptorData, setReceptorData] = useState(null); // Datos del receptor (tabla "clientes")
   //const [companyData, setCompanyData] = useState(null); // Datos de la empresa (tabla "empresa")
   const [servicesData, setServicesData] = useState([]); // Datos de los servicios (tabla "servicio")
-  const [cotizacionData, setCotizacionData] = useState([]); // Datos de la cotización
+  // const [cotizacionData, setCotizacionData] = useState([]); // Datos de la cotización
   const [clientData, setClientData] = useState(null); // Datos del cliente (que contiene el id de la empresa)
   const [recep, setRecep] = useState(null);
   const [empresa, setEmpresa] = useState(null);
-  const [estadoEmpresa, setEstadoEmpresa] = useState(null);
+  // const [estadoEmpresa, setEstadoEmpresa] = useState(null);
   const [estadoOrden, setEstadoOrden] = useState(null);
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
   const [IdCotizacion, setIdCotizacion] = useState([]); // Datos de los servicios (tabla "servicio")
@@ -47,7 +47,7 @@ const DetalleOrdenTrabajo = () => {
         };
     
         verificar();
-      }, [organizationId, orderId]);
+      }, [organizationId, orderId, navigate]);
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -55,7 +55,7 @@ const DetalleOrdenTrabajo = () => {
         const detailResponse = await getDetalleOrdenTrabajoDataById(orderId);
         const data = detailResponse.data;
         //console.log("data: ", data);
-        const Ot= await getOrdenTrabajoById(orderId);
+        await getOrdenTrabajoById(orderId);
         
         setClientData(data.cliente);
         setEmpresa(data.empresa);
@@ -82,7 +82,7 @@ const DetalleOrdenTrabajo = () => {
       }
     };
     fetchData();
-  }, [orderId]);
+  }, [orderId, navigate]);
   
 
   const columnasServicios = [
@@ -113,8 +113,6 @@ const DetalleOrdenTrabajo = () => {
       const response = await fetch(`${Api_Host.defaults.baseURL}/ordentrabajo/${orderId}/pdf`, {
         method: "GET",
         headers: {
-          // Si necesitas autenticación, agrégala aquí
-          // "Authorization": `Bearer ${localStorage.getItem("token")}`,
         },
       });
   
@@ -164,37 +162,57 @@ const DetalleOrdenTrabajo = () => {
       message.error("Hubo un error al eliminar la orden de trabajo");
     }
   };
-  /*<Menu.Item key="2" icon={<FileTextTwoTone />}>
-        <Link to={`/CrearFactura/${orderId}`}>Detalles de Facturar</Link>
-      </Menu.Item> */
-  const menu = (
-    <Menu>
-      <Menu.Item key="1" icon={<RightCircleTwoTone />}>
-        <Link to={`/detalles_cotizaciones/${cifrarId(IdCotizacion.id)}`}>Ir a cotización</Link>
-      </Menu.Item>
+
+  // const menu = (
+  //   <Menu>
+  //     <Menu.Item key="1" icon={<RightCircleTwoTone />}>
+  //       <Link to={`/detalles_cotizaciones/${cifrarId(IdCotizacion.id)}`}>Ir a cotización</Link>
+  //     </Menu.Item>
 
       
-      <Menu.Item key="3" icon={<EditTwoTone />} >
-      <Link to={`/editarOrdenTrabajo/${cifrarId(orderId)}`}>Editar OT</Link>
-      </Menu.Item>
+  //     <Menu.Item key="3" icon={<EditTwoTone />} >
+  //     <Link to={`/editarOrdenTrabajo/${cifrarId(orderId)}`}>Editar OT</Link>
+  //     </Menu.Item>
 
-      <Menu.Item key="4" icon={<FilePdfTwoTone />} onClick={handleDownloadPDF}>
-      Descargar PDF
-      </Menu.Item>
+  //     <Menu.Item key="4" icon={<FilePdfTwoTone />} onClick={handleDownloadPDF}>
+  //     Descargar PDF
+  //     </Menu.Item>
 
-      {/* Nueva opción para eliminar la orden de trabajo */}
-      <Menu.Item key="5" icon={<DeleteOutlined style={{ color: 'red' }}/>} onClick={showDeleteModal}>
-        Eliminar Orden de Trabajo
-      </Menu.Item>
-    </Menu>
+  //     {/* Nueva opción para eliminar la orden de trabajo */}
+  //     <Menu.Item key="5" icon={<DeleteOutlined style={{ color: 'red' }}/>} onClick={showDeleteModal}>
+  //       Eliminar Orden de Trabajo
+  //     </Menu.Item>
+  //   </Menu>
 
-  );
+  // );
 
+  const menuItems = [
+    {
+      key:"1",
+      icon: <RightCircleTwoTone />,
+      label: <Link to={`/detalles_cotizaciones/${cifrarId(IdCotizacion.id)}`}>Ir a cotización</Link>
+    },
+    {
+      key:"3",
+      icon:<EditTwoTone />,
+      label:<Link to={`/editarOrdenTrabajo/${cifrarId(orderId)}`}>Editar OT</Link>
+    },
+    {
+      key:"4",
+      icon:<FilePdfTwoTone />,
+      label:<span onClick={handleDownloadPDF}>Descargar PDF</span>
+    },
+    {
+      key:"5",
+      icon:<DeleteOutlined style={{ color: 'red' }}/>,
+      label:<span onClick={showDeleteModal}>Eliminar Orden de Trabajo</span>
+    }
+  ]
   return (
     <div className="container">
       <h1 className="page-title">Detalles de la Orden de Trabajo: {orderHeader?.codigo || orderId}</h1>
       <div className="button-container">
-        <Dropdown overlay={menu} placement="bottomRight" arrow>
+        <Dropdown menu={{items:menuItems}} placement="bottomRight" arrow>
           <Button type="primary" className="action-button">
             Acciones para orden de trabajo
           </Button>

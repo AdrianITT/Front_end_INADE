@@ -132,9 +132,10 @@ const Generarorden = () => {
         dataIndex: "codigo",
         key: "codigo",
         sorter: (a, b) => a.codigo.localeCompare(b.codigo),
-        filters: ordenes.map((item) => ({
+        filters: ordenes.map((item, index) => ({
           text: item.codigo,
           value: item.codigo,
+          key: item.codigo || index,
         })),
         filterSearch: true,
         onFilter: (value, record) => record.codigo === value,
@@ -207,7 +208,9 @@ const Generarorden = () => {
       </div>
       {isLoading ? (
         <div style={{ textAlign: "center", marginTop: "20px" }}>
-          <Spin size="large" tip="Cargando órdenes de trabajo..." />
+          <Spin size="large" tip="Cargando órdenes de trabajo..." >
+            <div style={{ minHeight: "400px" }}></div>
+          </Spin>
         </div>
       ) : (
         <>

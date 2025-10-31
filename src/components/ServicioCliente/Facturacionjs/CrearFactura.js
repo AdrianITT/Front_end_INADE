@@ -1,6 +1,6 @@
 import React, {useState, useEffect, useMemo} from "react";
 import moment from 'moment';
-import { Form, Input, Button, Select, Row, Col,DatePicker, message, Table, Spin, Modal ,InputNumber} from "antd";
+import { Form, Input, Button, Select, Row, Col,DatePicker, message, Table, Spin, Modal ,InputNumber, Alert} from "antd";
 import { useParams, useNavigate, data } from "react-router-dom";
 import "./crearfactura.css";
 import { NumericInput } from "../../NumericInput/NumericInput";
@@ -586,6 +586,11 @@ const CrearFactura = () => {
             </Form.Item>
           </div>
         </div>
+        <Alert 
+        message="Seleccione el servicio que no quiera en la factura, los servicios no seleccionados serán los que se facturen." 
+        type="info"
+        showIcon
+        />
 
         <Table
               rowSelection={{rowSelection,onChange: onSelectChange}}

@@ -5,7 +5,7 @@ import { ExclamationCircleOutlined } from "@ant-design/icons";
 import './Empresa.css';
 
 
-const DeleteConfirmModal = ({ visible, onCancel, onConfirm }) => {
+const DeleteConfirmModal = ({ open, onCancel, onConfirm }) => {
   return (
     <Modal
       title={
@@ -14,7 +14,7 @@ const DeleteConfirmModal = ({ visible, onCancel, onConfirm }) => {
           <p style={{ marginTop: "8px" }}>¿Estás seguro?</p>
         </div>
       }
-      open={visible}
+      open={open}
       onCancel={onCancel}
       footer={[
         <Button key="cancel" onClick={onCancel} style={{ backgroundColor: "#f5222d", color: "#fff" }}>

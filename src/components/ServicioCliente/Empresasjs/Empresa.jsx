@@ -217,7 +217,7 @@ const Empresa = () => {
 
       {/* MODAL CREAR */}
       <CreateEmpresaModal
-        visible={isModalOpen}
+        open={isModalOpen}
         onCancel={() => setIsModalOpen(false)}
         onCreate={handleCreateEmpresa}
         regimenFiscal={regimenFiscal}
@@ -226,7 +226,7 @@ const Empresa = () => {
 
       {/* MODAL EDITAR */}
       <EditEmpresaModal
-        visible={isEditModalOpen}
+        open={isEditModalOpen}
         onCancel={() => setIsEditModalOpen(false)}
         onEdit={handleEditEmpresa}
         regimenFiscal={regimenFiscal}
@@ -236,7 +236,7 @@ const Empresa = () => {
 
       {/* MODAL CONFIRMACIÓN BORRADO */}
       <DeleteConfirmModal
-        visible={isDeleteModalOpen}
+        open={isDeleteModalOpen}
         onCancel={() => setIsDeleteModalOpen(false)}
         onConfirm={handleDelete}
       />

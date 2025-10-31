@@ -240,9 +240,8 @@ const receptorSeleccionado = receptor.find(r => r.id === ordenFormValues?.recept
         >
           <Descriptions
             column={1}
-            labelStyle={{}}
-            contentStyle={{}}
             colon={false}
+            style={{ fontSize: '16px' }}
           >
             
             <Descriptions.Item 
@@ -281,7 +280,7 @@ const receptorSeleccionado = receptor.find(r => r.id === ordenFormValues?.recept
           </Descriptions>
         </Card>
       ) : (
-        <Spin tip="Cargando información del cliente..." />
+        <Spin tip="Cargando información del cliente..." ><div style={{ minHeight: '100px' }}></div></Spin>
       )}
     </div>
 

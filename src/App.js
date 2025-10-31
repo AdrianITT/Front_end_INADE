@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 //import "./index.css";
 import "./App.css";
-import { Card, Col, Row, Badge, Space, Progress } from "antd";
+import { Card, Col, Row, Badge, Space, Progress, Spin } from "antd";
 import { getAllCotizacion } from "./apis/ApisServicioCliente/CotizacionApi";
 import { getAllCliente } from "./apis/ApisServicioCliente/ClienteApi";
 import { getAllEmpresas } from "./apis/ApisServicioCliente/EmpresaApi";
@@ -93,6 +93,8 @@ const App = () => {
 
   return (
     <div className="App">
+      <Spin spinning={loading} tip="Cargando...">
+      
       <div className="justi-card">
         {/* Barra de carga */}
         <Card className="custom-card-bar">
@@ -110,7 +112,7 @@ const App = () => {
         <br />
         <Space size ={0}>
           <Row gutter={[0, 0]} justify="center">
-            <Col xs={24} sm={12} md={8} lg={6} xl={4} className="col-style">
+            <Col key="empresa" xs={24} sm={12} md={8} lg={6} xl={4} className="col-style">
               <div>
                 <Link to="/empresa">
                   <Card className="card-custom" title="Empresas" bordered={false}>
@@ -121,7 +123,7 @@ const App = () => {
                 </Link>
               </div>
             </Col>
-            <Col xs={24} sm={12} md={8} lg={6} xl={4} className="col-style">
+            <Col key="cliente" xs={24} sm={12} md={8} lg={6} xl={4} className="col-style">
               <div>
                 <Link to="/cliente">
                   <Card className="card-custom" title="Clientes" bordered={false}>
@@ -132,7 +134,7 @@ const App = () => {
                 </Link>
               </div>
             </Col>
-            <Col xs={24} sm={12} md={8} lg={6} xl={4} className="col-style">
+            <Col key="servicio" xs={24} sm={12} md={8} lg={6} xl={4} className="col-style">
               <div>
                 <Link to="/servicio">
                   <Card className="card-custom" title="Servicios" bordered={false}>
@@ -143,7 +145,7 @@ const App = () => {
                 </Link>
               </div>
             </Col>
-            <Col xs={24} sm={12} md={8} lg={6} xl={4} className="col-style">
+            <Col key="cotizar" xs={24} sm={12} md={8} lg={6} xl={4} className="col-style">
               <div>
                 <Link to="/cotizar">
                   <Card className="card-custom" title="Cotizaciones" bordered={false}>
@@ -157,7 +159,7 @@ const App = () => {
                 </Link>
               </div>
             </Col>
-            <Col xs={24} sm={12} md={8} lg={6} xl={4} className="col-style">
+            <Col key="generar_orden" xs={24} sm={12} md={8} lg={6} xl={4} className="col-style">
               <div>
                 <Link to="/generar_orden">
                   <Card
@@ -173,19 +175,7 @@ const App = () => {
               </div>
             </Col>
 
-            {/* <Col xs={24} sm={12} md={8} lg={6} xl={4} className="col-style">
-              <div>
-                <Link to="/Receptores">
-                  <Card className="card-custom" title="Receptor" bordered={false}>
-                    <div className="icon-container">
-                      <UserSwitchOutlined />
-                    </div>
-                  </Card>
-                </Link>
-              </div>
-            </Col> */}
-
-            <Col xs={24} sm={12} md={8} lg={6} xl={4} className="col-style">
+            <Col key="usuario" xs={24} sm={12} md={8} lg={6} xl={4} className="col-style">
               <div>
                 <Link to="/usuario">
                   <Card className="card-custom" title="Usuarios" bordered={false}>
@@ -196,17 +186,19 @@ const App = () => {
                 </Link>
               </div>
             </Col>
-            <Col xs={24} sm={12} md={8} lg={6} xl={4} className="col-style">
+            <Col key="configuracion" xs={24} sm={12} md={8} lg={6} xl={4} className="col-style">
               <div>
                 <Link to="/configuracionorganizacion">
                   <Card
                     className="card-custom"
                     title="Configuración"
                     bordered={false}
-                    headStyle={{
-                      whiteSpace: "normal",
-                      overflow: "visible",
-                      textOverflow: "clip"
+                    styles={{
+                      header: {
+                        whiteSpace: "normal",
+                        overflow: "visible",
+                        textOverflow: "clip",
+                      },
                     }}
                   >
                     <div className="icon-container">
@@ -217,7 +209,7 @@ const App = () => {
               </div>
             </Col>
 
-            <Col xs={24} sm={12} md={8} lg={6} xl={4} className="col-style">
+            <Col key="factura" xs={24} sm={12} md={8} lg={6} xl={4} className="col-style">
               <div>
                 <Link to="/factura">
                   <Card className="card-custom" title="Facturas" bordered={false}>
@@ -228,7 +220,7 @@ const App = () => {
                 </Link>
               </div>
             </Col>
-            <Col xs={24} sm={12} md={8} lg={6} xl={4} className="col-style">
+            <Col key="precotizacion" xs={24} sm={12} md={8} lg={6} xl={4} className="col-style">
               <div>
                 <Link to="/preCotizacion">
                   <Card className="card-custom" title="Pre-Cotizaciones" bordered={false}>
@@ -239,7 +231,7 @@ const App = () => {
                 </Link>
               </div>
             </Col>
-            <Col xs={24} sm={12} md={8} lg={6} xl={4} className="col-style">
+            <Col key="pagos" xs={24} sm={12} md={8} lg={6} xl={4} className="col-style">
               <div>
                 <Link to="/Pagos">
                   <Card className="card-custom" title="Pagos" bordered={false}>
@@ -253,6 +245,7 @@ const App = () => {
           </Row>
         </Space>
       </div>
+      </Spin>
     </div>
   );
 };

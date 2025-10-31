@@ -10,12 +10,17 @@ const ClienteInfoCard = ({ clienteData, empresaData }) => {
         borderRadius: 8,
         boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
       }}
-      bodyStyle={{ background: "#fff", padding: "24px" }}
-      headStyle={{
-        background: "#e6f7ff",
-        borderRadius: "8px 8px 0 0",
-        fontSize: 16,
-        fontWeight: 600,
+      styles={{ 
+        body:{
+          background: "#fff",
+          padding: "24px" 
+        },
+        header: {
+          background: "#e6f7ff",
+          borderRadius: "8px 8px 0 0",
+          fontSize: 16,
+          fontWeight: 600,
+        },
       }}
       title="Información del Cliente"
     >

@@ -11,7 +11,7 @@ const CotizacionInfoCard = ({
   cotizacionInfo,
   factorConversion,
   esUSD,
-  menu,
+  menuItems,
 }) => {
   const valores = cotizacionInfo?.valores || {};
   const moneda = cotizacionInfo?.tipoMoneda?.codigo || (esUSD ? "USD" : "MXN");
@@ -107,7 +107,11 @@ const CotizacionInfoCard = ({
           title="Cuenta"
           bordered
           extra={
-            <Dropdown overlay={menu}>
+            <Dropdown
+              menu={{ items: menuItems }}
+              placement="bottomRight"
+              arrow
+            >
               <Button type="primary">Acciones para cotización</Button>
             </Dropdown>
           }
