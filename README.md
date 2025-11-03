@@ -18,7 +18,7 @@ En este repositorio se desarrolla **todo el diseño del sistema web de cotizaci�
 
 El sistema abarca desde la **creación de empresas y clientes**, hasta la **generación de cotizaciones y facturas**, permitiendo agregar servicios personalizados, editar cotizaciones existentes y mantener un flujo dinámico adaptable ante cualquier cambio por parte del cliente.
 
-**Este cotizador se llama [Simplaxi](https://www.simplaxi.com/)**  
+**Este cotizador se llama Simplaxi**  
 
 ---
 
