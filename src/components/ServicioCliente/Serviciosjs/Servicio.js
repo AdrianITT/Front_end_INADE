@@ -492,8 +492,6 @@ const handleConfirmDeleteService = async () => {
                     onSearch={(value) => handleSearchServicios(value)} // Solo busca cuando se presiona el botón
                     onChange={(e) => handleSearchServicios(e.target.value)} // Actualiza el estado del texto
                   />
-                </center>
-                
                 <Button
                   type="primary"
                   style={{ float: "right", marginBottom: "16px" }}
@@ -501,6 +499,7 @@ const handleConfirmDeleteService = async () => {
                 >
                   Añadir Servicio
                 </Button>
+                </center>
                 <Spin spinning={loadings} tip="Cargando...">
                 <Table
                   dataSource={filteredServicios}
@@ -531,8 +530,6 @@ const handleConfirmDeleteService = async () => {
                     onSearch={(value) => handleSearchServicios(value)} // Solo busca cuando se presiona el botón
                     onChange={(e) => handleSearchServicios(e.target.value)} // Actualiza el estado del texto
                   />
-                </center>
-                
                 <Button
                   type="primary"
                   className="button-add"
@@ -540,6 +537,8 @@ const handleConfirmDeleteService = async () => {
                 >
                   Añadir Método
                 </Button>
+                </center>
+                
                 <Spin spinning={loadings} tip="Cargando...">
                 <Table
                   dataSource={metodos}

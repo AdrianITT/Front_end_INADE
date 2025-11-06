@@ -951,16 +951,16 @@ const montoRestante =hasPagos
                       >
                         Eliminar Factura
                       </Button>
-                      <Button
+                      {/* <Button
                         onClick={()=> setIsRespaldoModalVisible(true)}
                       >
                         Sustitución de una factura
-                      </Button>
-                      {/* <Button
+                      </Button> */}
+                      <Button
                       loading={loading}
                       onClick={()=>setNotaCredito(true)}>
                         Crear Factura con Relacion
-                      </Button> */}
+                      </Button>
                 </div>
                   </Flex>
               ) : (

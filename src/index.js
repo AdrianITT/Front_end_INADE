@@ -41,6 +41,7 @@ import EditarPreCotizacion from "./components/ServicioCliente/preCotizacion/Edit
 import VerificarExpiracionLocalStorage from "./components/DataLocalStorage/LocalStorage";
 import NoAutorizado from "./components/FetchProtected/NoAutorizado";
 import RegistroCotizacion from "./components/ServicioCliente/Cotizacionesjs/RegistroCotizaciones/RegistroCotizacion";
+import RegistroWizard from "./components/ServicioCliente/Register/RegistroWizard";
 // import TestCotizar from "./components/ServicioCliente/Cotizacionesjs/TestCotizacion";
 // import ReceptoresPage from "./components/ServicioCliente/Receptor/ReceptoresPage";
 
@@ -99,6 +100,7 @@ const AppRouter = () => {
         <Route path="/RegistroUsuarios" element={<RegistroUsuarios />} />
         <Route path="*" element={<NoAutorizado />} />
         <Route path="/no-autorizado" element={<NoAutorizado />} />
+        <Route path="/register" element={<RegistroWizard/>} />
         {/* Rutas envueltas con Layout */}
         <Route path="/" element={
             <PageWrapper>
@@ -138,7 +140,7 @@ const AppRouter = () => {
           <Route path="/Pagos" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><Pagos/></ProtectedRoute>} />
           <Route path="/CrearPagos" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><CrearPagos/></ProtectedRoute>} />
           <Route path="/CrearPagos/:ids" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><CrearPagos/></ProtectedRoute>} />
-          {/* <Route path="/Receptores" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><ReceptoresPage/></ProtectedRoute>} /> */}
+          {/* <Route path="/Receptores" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><ReceptoresPage/></ProtectedRoute>} /> RegistroWizard*/}
           {/* <Route path="/TestCotizar" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><TestCotizar/></ProtectedRoute>} /> */}
         </Route>
       </Routes>

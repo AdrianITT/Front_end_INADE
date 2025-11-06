@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Form, Input, Button, Alert, Card, Spin } from "antd";
+import { Form, Input, Button, Alert, Card, Spin} from "antd";
+import { Link } from "react-router-dom";
 import { LockOutlined, UserOutlined } from '@ant-design/icons';
 import { useNavigate } from "react-router-dom";
 import Login_Api from "../../apis/ApisServicioCliente/LoginApi";
@@ -96,6 +97,7 @@ const Login = () => {
             </Form.Item>
           </Form>
         )}
+        <Link to="/register" block>¿No tienes una cuenta? Regístrate aquí</Link>
       </Card>
     </div>
     </div>

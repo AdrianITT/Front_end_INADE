@@ -29,7 +29,7 @@ const Usuario = () => {
       ]);
 
       // Filtrar roles (id 2 o 3)
-      const filteredRoles = rolesResponse.data.filter(role => role.id === 1 || role.id === 2 || role.id === 3);
+      const filteredRoles = rolesResponse.data.filter(role => role.id === 2 || role.id === 3);
       setRoles(filteredRoles);
 
       // Filtrar usuarios por organización y mapear con nombres de rol

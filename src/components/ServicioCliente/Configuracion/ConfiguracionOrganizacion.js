@@ -15,6 +15,14 @@ import { getAllTipoMoneda } from "../../../apis/ApisServicioCliente/Moneda";
 import { getAllIva } from "../../../apis/ApisServicioCliente/ivaApi";
 import { Api_Host } from "../../../apis/api";
 import {getIdCotizacionBy } from "../../../apis/ApisServicioCliente/CotizacionApi";
+import DOMPurify from "dompurify";
+DOMPurify.setConfig({
+  ALLOWED_TAGS: [
+    "b", "i", "em", "strong", "p", "br", "center", "ul", "ol", "li", "u", "h1", "h2", "h3", "h4", "h5"
+  ],
+  ALLOWED_ATTR: ["style"], // opcional si necesitas centrado o fuente personalizada
+  KEEP_CONTENT: true // evita eliminar contenido interno al limpiar etiquetas no permitidas
+});
 
 const { TextArea } = Input;
 
@@ -332,9 +340,9 @@ useEffect(() => {
   
       // Construir el payload con la imagen de marca de agua
       const payload = {
-        nombreFormato: values.nombreFormato,
-        version: values.version,
-        fechaEmision: values.fechaEmision,
+        nombreFormato: values.nombreFormato||null,
+        version: values.version||null,
+        fechaEmision: values.fechaEmision||null,
         tituloDocumento: values.tituloDocumento,
         imagenMarcaAgua: marcaDeAguaId,
         prefijo: values.prefijo,
@@ -377,8 +385,48 @@ useEffect(() => {
 
   const handleGuardarCotizacion = async (values) => {
     try {
-      console.log("Valores recibidos para la cotización:", values);
+      // console.log("Valores recibidos para la cotización:", values);
         setLoading(true);
+
+        // 🧼 1️⃣ Sanitizar y validar datos antes de cualquier acción
+        let isMalicious = false;
+
+        const clean = (obj) =>
+          Object.fromEntries(
+            Object.entries(obj).map(([key, value]) => {
+              if (typeof value === "string") {
+                const sanitized = DOMPurify.sanitize(value.trim());
+
+                // Detectar solo si hay <script> o atributos "on*"
+                const lower = value.toLowerCase();
+                const containsDangerous =
+                  lower.includes("<script") ||
+                  lower.includes("onerror=") ||
+                  lower.includes("onload=") ||
+                  lower.includes("javascript:");
+
+                if (containsDangerous) {
+                  console.warn(`🚫 Contenido bloqueado por seguridad: ${key}`);
+                  isMalicious = true;
+                }
+
+                return [key, sanitized];
+              }
+              return [key, value];
+            })
+          );
+
+
+        const cleanValues = clean(values);
+
+        if (isMalicious) {
+          message.error(
+            "Se detectó contenido inseguro (HTML o scripts) en algunos campos. Revise la información antes de guardar."
+          );
+          setLoading(false);
+          return; // 🚫 Detiene completamente el guardado
+        }
+
         let marcaDeAguaId = null; 
 
         // Obtener cotización actual si existe
@@ -389,8 +437,8 @@ useEffect(() => {
 
 
         // 📌 **Extraer la imagen correctamente**
-        if (values.marcaDeAgua && values.marcaDeAgua.length > 0) {
-            const fileObj = values.marcaDeAgua[0].originFileObj || values.marcaDeAgua[0];
+        if (cleanValues.marcaDeAgua && cleanValues.marcaDeAgua.length > 0) {
+            const fileObj = cleanValues.marcaDeAgua[0].originFileObj || cleanValues.marcaDeAgua[0];
 
             if (fileObj instanceof File) {
                 const formData = new FormData();
@@ -410,16 +458,16 @@ useEffect(() => {
 
         // Construir payload con `imagenMarcaAgua`
         const payload = {
-            nombreFormato: values.nombreFormato,
-            version: values.version,
-            fechaEmision: values.fechaEmision,
-            tituloDocumento: values.tituloDocumento,
-            mensajePropuesta: values.mensajePropuesta,
-            termino: values.termino,
-            avisos: values.avisos,
+            nombreFormato: cleanValues.nombreFormato||null,
+            version: cleanValues.version||null,
+            fechaEmision: cleanValues.fechaEmision||null,
+            tituloDocumento: cleanValues.tituloDocumento,
+            mensajePropuesta: cleanValues.mensajePropuesta,
+            termino: cleanValues.termino,
+            avisos: cleanValues.avisos,
             imagenMarcaAgua: marcaDeAguaId,
         };
-
+        console.log("Payload para cotización:", payload); 
 
         if (!organizaciones?.infoCotizacion) {
             // Crear nueva cotización
@@ -461,7 +509,7 @@ const handleGuardarConfiguracionSistema = async (values) => {
   try {
     setLoading(true);
     let nuevaConfiguracion;
-
+    console.log("Valores recibidos para la configuración del sistema:", values);
     // Si la organización no tiene una infoConfiguracionSistema, la creamos
     if (!organizaciones?.infoSistema) {
       nuevaConfiguracion = await updateInfoSistema(values);
@@ -618,6 +666,7 @@ const CotizacionPureva= async ()=>{
          <Button type="primary" htmlType="submit" loading={loading}>Guardar configuración</Button>
        </div>
        </div>
+       <Alert message="Nuca dejar sin imagen marca de agua" type="info" showIcon />
        <Alert
       message="Advertencia"
       description="Solo Imagenes con la extencion PNG."
@@ -712,15 +761,15 @@ const CotizacionPureva= async ()=>{
          initialValues={infConfiguracion || {}}>
           <Row gutter={24}><Col xs={24} md ={12}>
             <Form.Item label="Nombre formato:" name="nombreFormato" 
-            rules={[{ required: true, message: 'Ingrese el nombredel formato.' }]}>
+            rules={[{  message: 'Ingrese el nombredel formato.' }]}>
               <Input placeholder="Ingrese el nombre del formato." />
             </Form.Item>
             <Form.Item label="Versión de formato:" name="version" 
-            rules={[{ required: true, message: 'Ingrese la versión del formato.' }]}>
+            rules={[{  message: 'Ingrese la versión del formato.' }]}>
               <Input placeholder="Ingrese la versión del formato." />
             </Form.Item>
             <Form.Item label="Fecha de Emisión:" name="fechaEmision" 
-            rules={[{ required: true, message: 'Ingrese la fecha de emisión.' }]}>
+            rules={[{ message: 'Ingrese la fecha de emisión.' }]}>
               <Input placeholder="Ingrese la fecha de emisión." />
             </Form.Item>
             <Form.Item label="Título del documento:" name="tituloDocumento"
@@ -803,15 +852,15 @@ const CotizacionPureva= async ()=>{
         onFinish={handleGuardarOrdenTrabajo}
       >
         <Form.Item label="Nombre del formato:" name="nombreFormato" 
-        rules={[{ required: true, message: 'Ingrese el nombre del formato de orden de trabajo.' }]}>
+        rules={[{message: 'Ingrese el nombre del formato de orden de trabajo.' }]}>
           <Input placeholder="Ingrese el nombre del formato de orden de trabajo." />
         </Form.Item>
         <Form.Item label="Versión del formato:" name="version" 
-        rules={[{ required: true, message: 'Ingrese la versión del formato.' }]}>
+        rules={[{message: 'Ingrese la versión del formato.' }]}>
           <Input placeholder="Ingrese la versión del formato." />
         </Form.Item>
         <Form.Item label="Fecha de Emisión:" name="fechaEmision"
-        rules={[{ required: true, message: 'Ingrese la fecha de emisión.' }]}>
+        rules={[{ message: 'Ingrese la fecha de emisión.' }]}>
           <Input placeholder="Ingrese la fecha de emisión." />
         </Form.Item>
         <Form.Item label="Título del documento:" name="tituloDocumento"
