@@ -1,166 +1,201 @@
-    
-def get_factura_relacion_x(request, factura_idR, factura_idA, related):
+from rest_framework.decorators import api_view, parser_classes, permission_classes, throttle_classes
+from rest_framework.permissions import AllowAny
+from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.throttling import AnonRateThrottle
+from django.db import transaction
+from django.core.exceptions import ValidationError
+from django.conf import settings
+from ...models import (
+    Organizacion, User, InfoSistema, InfoOrdenTrabajo,
+    InfoCotizacion, ImagenMarcaAgua, Iva, TipoMoneda
+)
+import os, json, imghdr, bleach, logging
+
+# ============================================================
+# ⚙️ CONFIGURACIÓN GENERAL DE SEGURIDAD
+# ============================================================
+
+logger = logging.getLogger("registro_wizard")
+
+# 🔒 Límite de peticiones por IP (anti-bot / anti-flood)
+class RegistroWizardThrottle(AnonRateThrottle):
+    rate = "3/hour"  # máximo 3 intentos por IP por hora
+
+
+# ============================================================
+# 🧩 Funciones auxiliares
+# ============================================================
+
+def limpiar_texto(texto):
+    """Evita inyección HTML o scripts."""
+    if not texto:
+        return ""
+    return bleach.clean(texto, strip=True)
+
+
+def validar_archivo(imagen):
+    """Valida tipo y tamaño de archivo."""
+    valid_types = ['png', 'jpeg']
+    ext = imghdr.what(imagen)
+    if ext not in valid_types:
+        raise ValidationError(f"Tipo de archivo no permitido ({ext}). Solo PNG o JPEG.")
+    if imagen.size > 2 * 1024 * 1024:
+        raise ValidationError("La imagen supera el tamaño permitido (2MB).")
+    if os.path.splitext(imagen.name)[1].lower() not in ['.png', '.jpg', '.jpeg']:
+        raise ValidationError("Extensión de archivo no permitida.")
+
+
+# ============================================================
+# 🧱 Vista principal: registro de organización y usuario
+# ============================================================
+
+@api_view(["POST"])
+@parser_classes([MultiPartParser, FormParser])
+@permission_classes([AllowAny])
+@throttle_classes([RegistroWizardThrottle])
+def registro_wizard(request):
     """
-    Vista para crear una factura con relación a otra (nota de crédito, sustitución, etc.)
-    Compatible con CFDI tipo E y otros tipos (I, P, etc.)
+    Crea todos los registros iniciales (organización + usuario + info).
+    Esta es la única vista pública, protegida con throttling y validación estricta.
     """
+    try:
+        # ===============================================================
+        # 🧠 HONEYPOT ANTI-BOT (campo invisible en frontend)
+        # ===============================================================
+        if request.data.get("apellidoExtra"):  # si un bot llena este campo
+            logger.warning("Intento de bot detectado (honeypot activado).")
+            return Response({"error": "Petición sospechosa detectada."}, status=status.HTTP_400_BAD_REQUEST)
 
-    # --- Obtención de facturas base ---
-    factura = get_object_or_404(
-        Factura.objects.select_related(
-            'cotizacion__cliente__empresa__organizacion__RegimenFiscal',
-            'cotizacion__cliente__empresa__regimenFiscal',
-            'cotizacion__cliente__empresa__organizacion__infoSistema',
-            'tipoCfdi',
-            'formaPago',
-            'metodoPago',
-            'cotizacion__iva',
-            'cotizacion__tipoMoneda',
-        ),
-        pk=factura_idA
-    )
-    facturaR = get_object_or_404(Factura, pk=factura_idR)
+        # ===============================================================
+        # 🔍 VALIDACIÓN DE ORGANIZACIÓN
+        # ===============================================================
+        nombre_org = limpiar_texto(request.data.get("nombre"))
+        if not nombre_org:
+            return Response({"error": "Falta el nombre de la organización."}, status=status.HTTP_400_BAD_REQUEST)
 
-    factura_facturama = FacturaFacturama.objects.filter(factura=factura_idR).first()
-    uuid_facturama = factura_facturama.uuid if factura_facturama else None
+        if len(nombre_org) > 255:
+            return Response({"error": "El nombre de la organización es demasiado largo."}, status=status.HTTP_400_BAD_REQUEST)
 
-    cotizacion   = factura.cotizacion
-    cliente      = cotizacion.cliente
-    empresa      = cliente.empresa
-    organizacion = empresa.organizacion
+        if Organizacion.objects.filter(nombre__iexact=nombre_org).exists():
+            return Response({"error": "Organización ya registrada."}, status=status.HTTP_400_BAD_REQUEST)
 
-    # --- RFC del certificado ---
-    cert = CertificadoSelloDigital.objects.filter(Organizacion=organizacion).first()
-    organizacion_rfc = cert.rfc if cert else ''
+        # ===============================================================
+        # ⚙️ TRANSACCIÓN SEGURA
+        # ===============================================================
+        with transaction.atomic():
+            # -----------------------------------------------------------
+            # 🖼️ Marca de Agua
+            # -----------------------------------------------------------
+            marca_agua = None
+            if "marcaAgua" in request.FILES:
+                archivo = request.FILES["marcaAgua"]
+                validar_archivo(archivo)
+                marca_agua = ImagenMarcaAgua.objects.create(imagen=archivo)
+            else:
+                default_img = "marca_agua/white.png"
+                if os.path.exists(os.path.join(settings.MEDIA_ROOT, default_img)):
+                    marca_agua = ImagenMarcaAgua.objects.create(imagen=default_img)
 
-    # --- Tipo de cambio ---
-    tipo_cambio = (
-        organizacion.infoSistema.tipoCambioDolar
-        if cotizacion.tipoMoneda.id == 2
-        else Decimal('1')
-    )
+            # -----------------------------------------------------------
+            # 📄 Info Cotización
+            # -----------------------------------------------------------
+            cotizacion_data = json.loads(request.data.get("cotizacion", "{}"))
+            info_cotizacion = InfoCotizacion.objects.create(
+                nombreFormato=limpiar_texto(cotizacion_data.get("nombreFormato")),
+                version=limpiar_texto(cotizacion_data.get("version")),
+                fechaEmision=cotizacion_data.get("fechaEmision"),
+                tituloDocumento=limpiar_texto(cotizacion_data.get("tituloDocumento")),
+                mensajePropuesta=limpiar_texto(cotizacion_data.get("mensajePropuesta")),
+                termino=limpiar_texto(cotizacion_data.get("termino")),
+                avisos=limpiar_texto(cotizacion_data.get("avisos")),
+                imagenMarcaAgua=marca_agua,
+            )
 
-    # --- Fecha actual en zona horaria de Tijuana ---
-    tijuana_tz = pytz.timezone("America/Tijuana")
-    today = datetime.now(tijuana_tz).date()
-    hora_fija = time(0, 0, 0)
-    fecha_iso = datetime.combine(today, hora_fija).isoformat()
+            # -----------------------------------------------------------
+            # 🧾 Info Orden de Trabajo
+            # -----------------------------------------------------------
+            orden_data = json.loads(request.data.get("orden", "{}"))
+            info_orden = InfoOrdenTrabajo.objects.create(
+                nombreFormato=limpiar_texto(orden_data.get("nombreFormato")),
+                version=limpiar_texto(orden_data.get("version")),
+                fechaEmision=orden_data.get("fechaEmision"),
+                tituloDocumento=limpiar_texto(orden_data.get("tituloDocumento")),
+                prefijo=limpiar_texto(orden_data.get("prefijo")),
+                imagenMarcaAgua=marca_agua,
+            )
 
-    regimen_fiscal = organizacion.RegimenFiscal
-    nameid = "2" if factura.tipoCfdi.codigo == "E" else "1"
+            # -----------------------------------------------------------
+            # ⚙️ Info Sistema
+            # -----------------------------------------------------------
+            sistema_data = json.loads(request.data.get("configuracion", "{}"))
+            iva = Iva.objects.filter(id=1).first()
+            moneda = TipoMoneda.objects.filter(id=1).first()
+            info_sistema = InfoSistema.objects.create(
+                tipoCambioDolar=sistema_data.get("tipoCambioDolar"),
+                tipoMoneda=moneda,
+                iva=iva,
+            )
 
-    # --- Base del CFDI ---
-    facturamulti = {
-        "NameId": str(nameid),
-        "LogoUrl": f"https://test.simplaxi.com{organizacion.logo.url if organizacion.logo else ''}",
-        "Currency": cotizacion.tipoMoneda.codigo,
-        "Folio": factura.numero,
-        "CfdiType": factura.tipoCfdi.codigo,
-        "PaymentForm": factura.formaPago.codigo,
-        "PaymentMethod": factura.metodoPago.codigo,
-        "OrderNumber": factura.ordenCompra,
-        "ExpeditionPlace": organizacion.codigoPostal,
-        "Date": fecha_iso,
-        "Exportation": "01",
-        "CurrencyExchangeRate": float(tipo_cambio) if tipo_cambio != 1 else None,
-        "Receiver": {
-            "Rfc": empresa.rfc,
-            "CfdiUse": getattr(empresa, 'UsoCfdi').codigo if hasattr(empresa, 'UsoCfdi') and empresa.UsoCfdi else '',
-            "Name": empresa.nombre,
-            "FiscalRegime": empresa.regimenFiscal.codigo if empresa.regimenFiscal else '',
-            "TaxZipCode": empresa.codigoPostal,
-        },
-        "Issuer": {
-            "FiscalRegime": regimen_fiscal.codigo,
-            "Rfc": organizacion_rfc,
-            "Name": organizacion.nombre,
-        },
-        "Items": [],
-        "Observations": factura.notas,
-    }
+            # -----------------------------------------------------------
+            # 🏢 Organización
+            # -----------------------------------------------------------
+            logo = request.FILES.get("logo_organizacion")
+            validar_archivo(logo)
 
-    # --- Serie y relaciones solo si NO es tipo E ---
-    if factura.tipoCfdi.codigo != "E":
-        facturamulti["Serie"] = "FAC"
+            organizacion = Organizacion.objects.create(
+                nombre=nombre_org,
+                ciudad=limpiar_texto(request.data.get("ciudad")),
+                colonia=limpiar_texto(request.data.get("colonia")),
+                numero=limpiar_texto(request.data.get("numero")),
+                calle=limpiar_texto(request.data.get("calle")),
+                codigoPostal=limpiar_texto(request.data.get("codigoPostal")),
+                estado=limpiar_texto(request.data.get("estado")),
+                slogan=limpiar_texto(request.data.get("slogan")),
+                telefono=limpiar_texto(request.data.get("telefono")),
+                pagina=limpiar_texto(request.data.get("pagina")),
+                RegimenFiscal_id=request.data.get("regimenFiscal"),
+                logo=logo,
+                infoCotizacion=info_cotizacion,
+                infoOrdenTrabajo=info_orden,
+                infoSistema=info_sistema,
+            )
 
-    # --- Relaciones (si aplica) ---
-    if factura_idR != 0 and uuid_facturama:
-        facturamulti["Relations"] = {
-            "Type": str(related),
-            "Cfdis": [{"Uuid": str(uuid_facturama)}],
-        }
+            # -----------------------------------------------------------
+            # 👤 Usuario
+            # -----------------------------------------------------------
+            username = request.data.get("username")
+            password = request.data.get("password")
+            email = request.data.get("email")
 
-    # --- Construcción de Items ---
-    pct_factura = Decimal(factura.porcentaje or 0)
-    factor_factura = (Decimal(100) - pct_factura) / Decimal(100)
-    rounding = Decimal('0.000001')
+            if not username or not password:
+                raise ValidationError("Usuario o contraseña faltantes.")
+            if len(password) < 8:
+                raise ValidationError("La contraseña debe tener al menos 8 caracteres.")
+            if User.objects.filter(username=username).exists():
+                return Response({"error": "Usuario ya existe."}, status=status.HTTP_400_BAD_REQUEST)
 
-    fs_qs = FacturaServicio.objects.select_related(
-        'servicio__claveCfdi',
-        'servicio__unidadCfdi',
-        'servicio__metodos'
-    ).filter(factura=factura)
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                first_name=limpiar_texto(request.data.get("first_name")),
+                last_name=limpiar_texto(request.data.get("last_name")),
+                password=password,
+                rol_id=3,  # Administradororganizacion
+                organizacion=organizacion,
+            )
 
-    for fs in fs_qs:
-        servicio = fs.servicio
-        cantidad = Decimal(fs.cantidad)
-        precio_desc = (Decimal(fs.precio) * factor_factura).quantize(rounding, ROUND_HALF_UP)
-        subtotal_linea = (precio_desc * cantidad).quantize(rounding, ROUND_HALF_UP)
-        pct_cot = Decimal(cotizacion.descuento or 0) / Decimal(100)
-        valor_desc = (subtotal_linea * pct_cot).quantize(rounding, ROUND_HALF_UP)
-        subc_desc = (subtotal_linea - valor_desc).quantize(rounding, ROUND_HALF_UP)
-        pct_iva = (Decimal(cotizacion.iva.porcentaje or 0) / Decimal(1)).quantize(rounding, ROUND_HALF_UP)
-        iva_val = (subc_desc * pct_iva).quantize(rounding, ROUND_HALF_UP)
-        total_linea = (subc_desc + iva_val).quantize(rounding, ROUND_HALF_UP)
-
-        # Código de producto dinámico según tipo CFDI
-        productco = "84111506" if factura.tipoCfdi.codigo == "E" else servicio.claveCfdi.codigo
-        unit_code = "ACT" if factura.tipoCfdi.codigo == "E" else servicio.unidadCfdi.codigo
-        unit_name = "Servicio" if factura.tipoCfdi.codigo == "E" else servicio.unidadCfdi.descripcion if hasattr(servicio.unidadCfdi, 'descripcion') else "Servicio"
-
-        facturamulti["Items"].append({
-            "IdProduct": None,
-            "ProductCode": str(productco),
-            "Description": fs.servicio.nombreServicio,
-            "Unit": str(unit_name),
-            "UnitCode": str(unit_code),
-            "UnitPrice": float(precio_desc),
-            "Quantity": float(cantidad),
-            "Subtotal": float(subtotal_linea),
-            "Discount": float(valor_desc),
-            "TaxObject": "02",
-            "Taxes": [{
-                "Total": float(iva_val),
-                "Name": "IVA",
-                "Base": float(subc_desc),
-                "Rate": float(pct_iva),
-                "IsRetention": False
-            }],
-            "Total": float(total_linea),
-        })
-
-    # --- Validaciones previas ---
-    if str(factura_idA) == str(factura_idR):
-        return JsonResponse({"error": "factura_idA y factura_idR no pueden ser iguales."}, status=400)
-
-    rt = RelationTypes.objects.filter(codigo=str(related)).first()
-    if not rt:
-        return JsonResponse({"error": f"RelationTypes '{related}' no existe."}, status=400)
-
-    response = crear_cfdi_api(facturamulti)
-    comp = response.get("Complement", {}) or {}
-    uuid_new = (comp.get("TaxStamp") or {}).get("Uuid")
-
-    credit_note.facturaidA = str(uuid_new)
-    credit_note.save(update_fields=['facturaidA'])
-
-    if response.get("Id") and uuid_new:
-        FacturaFacturama.objects.create(
-            uuid=uuid_new,
-            idfactura=response["Id"],
-            factura_id=factura.id
+        # ===============================================================
+        # ✅ RESPUESTA FINAL
+        # ===============================================================
+        return Response(
+            {"mensaje": "Registro completado correctamente.", "usuario": user.username},
+            status=status.HTTP_201_CREATED,
         )
-        return JsonResponse({"success": True, "cfdi": response})
 
-    return JsonResponse({"error": "Error creando CFDI", "response": response}, status=400)
-
+    except ValidationError as e:
+        return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        logger.error(f"❌ Error en registro_wizard: {e}")
+        return Response({"error": "Error inesperado en el registro."}, status=status.HTTP_400_BAD_REQUEST)

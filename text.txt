@@ -1,0 +1,194 @@
+from rest_framework.decorators import api_view, parser_classes
+from django.core.exceptions import ValidationError
+from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.response import Response
+from rest_framework import status
+from django.db import transaction
+from ...models import (
+    Organizacion,
+    User,
+    InfoSistema,
+    InfoOrdenTrabajo,
+    InfoCotizacion,
+    ImagenMarcaAgua,
+    Iva,
+    TipoMoneda,
+)
+import json
+import os
+from django.conf import settings
+
+def validar_archivo(imagen):
+    valid_types = ['image/png', 'image/jpeg']
+    if imagen.content_type not in valid_types:
+        raise ValidationError(f"Tipo de archivo no permitido: {imagen.content_type}")
+    if imagen.size > 2 * 1024 * 1024:  # 2MB máximo
+        raise ValidationError("La imagen supera el tamaño permitido (2MB).")
+
+@api_view(["POST"])
+@parser_classes([MultiPartParser, FormParser])
+def registro_wizard(request):
+    """
+    Crea todos los registros del flujo de configuración inicial:
+    ImagenMarcaAgua -> InfoCotizacion -> InfoOrdenTrabajo -> InfoSistema -> Organizacion -> Usuario
+    """
+
+    try:
+        # ===============================================================
+        # 🔍 VALIDACIÓN DE ORGANIZACIÓN EXISTENTE
+        # ===============================================================
+        nombre_org = request.data.get("nombre")
+        if not nombre_org:
+            return Response(
+                {"error": "El campo 'nombre' es obligatorio."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if Organizacion.objects.filter(nombre__iexact=nombre_org).exists():
+            return Response(
+                {
+                    "error": "ORGANIZACION_EXISTE",
+                    "mensaje": f"La organización '{nombre_org}' ya está registrada.",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # ===============================================================
+        # ⚙️ TRANSACCIÓN ATÓMICA
+        # ===============================================================
+        with transaction.atomic():
+            # -----------------------------------------------------------
+            # 1️⃣ Crear Imagen Marca de Agua
+            # -----------------------------------------------------------
+            marca_agua = None
+            # 1️⃣ Crear Imagen Marca de Agua (con imagen por defecto si no se envía)
+            if "marcaAgua" in request.FILES:
+                archivo = request.FILES["marcaAgua"]
+                validar_archivo(archivo)
+                marca_agua = ImagenMarcaAgua.objects.create(imagen=archivo)
+            else:
+                default_path = os.path.join(settings.MEDIA_ROOT, "marca_agua/white.png")
+                if not os.path.exists(default_path):
+                    raise FileNotFoundError("No se encontró la imagen por defecto: marca_agua/white.png")
+                # Usa la imagen por defecto almacenada en /media/marcas_agua/default.png
+                marca_agua = ImagenMarcaAgua.objects.create(imagen="marca_agua/white.png")
+
+
+            # -----------------------------------------------------------
+            # 2️⃣ Crear InfoCotizacion
+            # -----------------------------------------------------------
+            cotizacion_data = json.loads(request.data.get("cotizacion", "{}"))
+            info_cotizacion = InfoCotizacion.objects.create(
+                nombreFormato=cotizacion_data.get("nombreFormato"),
+                version=cotizacion_data.get("version"),
+                fechaEmision=cotizacion_data.get("fechaEmision"),
+                tituloDocumento=cotizacion_data.get("tituloDocumento"),
+                mensajePropuesta=cotizacion_data.get("mensajePropuesta"),
+                termino=cotizacion_data.get("termino"),
+                avisos=cotizacion_data.get("avisos"),
+                imagenMarcaAgua=marca_agua,
+            )
+
+            # -----------------------------------------------------------
+            # 3️⃣ Crear InfoOrdenTrabajo
+            # -----------------------------------------------------------
+            orden_data = json.loads(request.data.get("orden", "{}"))
+            info_orden = InfoOrdenTrabajo.objects.create(
+                nombreFormato=orden_data.get("nombreFormato"),
+                version=orden_data.get("version"),
+                fechaEmision=orden_data.get("fechaEmision"),
+                tituloDocumento=orden_data.get("tituloDocumento"),
+                prefijo=orden_data.get("prefijo"),
+                imagenMarcaAgua=marca_agua,
+            )
+
+            # -----------------------------------------------------------
+            # 4️⃣ Crear InfoSistema
+            # -----------------------------------------------------------
+            sistema_data = json.loads(request.data.get("configuracion", "{}"))
+            # Obtiene las instancias (o usa un valor por defecto)
+            iva_instance = Iva.objects.filter(id=1).first()
+            tipo_moneda_instance = TipoMoneda.objects.filter(id=1).first()
+
+            if not iva_instance or not tipo_moneda_instance:
+               return Response(
+                    {"error": "No se encontró el registro base de IVA o TipoMoneda"},
+                    status=status.HTTP_400_BAD_REQUEST,
+               )
+            info_sistema = InfoSistema.objects.create(
+                tipoCambioDolar=sistema_data.get("tipoCambioDolar"),
+                tipoMoneda=tipo_moneda_instance,
+                iva=iva_instance,
+            )
+
+            # -----------------------------------------------------------
+            # 5️⃣ Crear Organizacion (referenciando los anteriores)
+            # -----------------------------------------------------------
+            archivo = request.FILES.get("logo_organizacion")
+            validar_archivo(archivo)
+            logo_organizacion = archivo
+            
+            organizacion = Organizacion.objects.create(
+                nombre=nombre_org,
+                ciudad=request.data.get("ciudad"),
+                colonia=request.data.get("colonia"),
+                numero=request.data.get("numero"),
+                calle=request.data.get("calle"),
+                codigoPostal=request.data.get("codigoPostal"),
+                estado=request.data.get("estado"),
+                slogan=request.data.get("slogan"),
+                telefono=request.data.get("telefono"),
+                pagina=request.data.get("pagina"),
+                RegimenFiscal_id=request.data.get("regimenFiscal"),
+                logo=logo_organizacion,
+                infoCotizacion=info_cotizacion,
+                infoOrdenTrabajo=info_orden,
+                infoSistema=info_sistema,
+            )
+
+            # -----------------------------------------------------------
+            # 6️⃣ Crear Usuario asociado a la organización
+            # -----------------------------------------------------------
+            username = request.data.get("username")
+            password = request.data.get("password")
+
+            if not username or not password:
+                raise ValueError("Faltan campos obligatorios del usuario.")
+           
+            if User.objects.filter(username=username).exists():
+               return Response(
+                    {
+                         "error": "USUARIO_EXISTE",
+                         "mensaje": f"El nombre de usuario '{username}' ya está en uso. Elige otro."
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+               )
+
+            user = User.objects.create_user(
+                username=username,
+                email=request.data.get("email"),
+                first_name=request.data.get("first_name"),
+                last_name=request.data.get("last_name"),
+                password=password,
+                rol_id=request.data.get("rol"),
+                organizacion_id=organizacion.id,
+            )
+
+        # ===============================================================
+        # ✅ RESPUESTA FINAL
+        # ===============================================================
+        return Response(
+            {
+                "mensaje": "Registro completado correctamente.",
+                "organizacion": organizacion.nombre,
+                "usuario": user.username,
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
+    except Exception as e:
+        print("❌ Error en registro_wizard:", str(e))
+        return Response(
+            {"error": "Error en el registro", "detalle": str(e)},
+            status=status.HTTP_400_BAD_REQUEST,
+        )

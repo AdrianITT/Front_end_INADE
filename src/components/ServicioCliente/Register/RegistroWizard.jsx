@@ -95,7 +95,7 @@ const navigate = useNavigate();
 
       setCurrent(current + 1);
     } catch (error) {
-      console.error("❌ Error de validación en el paso", current, error);
+      //console.error("❌ Error de validación en el paso", current, error);
       message.warning("Por favor completa todos los campos requeridos antes de continuar.");
     }
   };
@@ -188,7 +188,7 @@ const navigate = useNavigate();
 
       // 🔹 5️⃣ Mostrar éxito
       message.success(response.mensaje || "Registro completado correctamente 🎉");
-      console.log("✅ Respuesta del servidor:", response);
+
       return navigate("/");
     } catch (error) {
       // 🔹 6️⃣ Manejo de errores conocidos
@@ -197,7 +197,7 @@ const navigate = useNavigate();
       } else if (error?.error === "USUARIO_EXISTE") {
         message.warning("Ya existe un usuario con ese nombre de usuario.");
       } else {
-        console.error("❌ Error general en finish:", error);
+        // console.error("❌ Error general en finish:", error);
         message.error("Error al registrar. Verifique los datos e intente de nuevo.");
       }
     }

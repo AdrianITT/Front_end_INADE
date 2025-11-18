@@ -16,6 +16,8 @@ import { getAllIva } from "../../../apis/ApisServicioCliente/ivaApi";
 import { Api_Host } from "../../../apis/api";
 import {getIdCotizacionBy } from "../../../apis/ApisServicioCliente/CotizacionApi";
 import DOMPurify from "dompurify";
+import html2pdf from "html2pdf.js";
+import { generarPlantillaHTML } from "./platillaPreVisualizacionCotizacion/platillaPreVisualizacionCotizacion";
 DOMPurify.setConfig({
   ALLOWED_TAGS: [
     "b", "i", "em", "strong", "p", "br", "center", "ul", "ol", "li", "u", "h1", "h2", "h3", "h4", "h5"
@@ -575,10 +577,68 @@ const showErrorModal = (error) => {
   setIsErrorModalVisible(true);
 };
 
+
 const CotizacionPureva= async ()=>{
-  const idCoti=await getIdCotizacionBy(organizationId);
-  const user_id = localStorage.getItem("user_id");
-  window.open(`${Api_Host.defaults.baseURL}/cotizacion/${idCoti.data.id}/pdf/?user_id=${user_id}`);
+  try{
+    // const idCoti=await getIdCotizacionBy(organizationId);
+    // const user_id = localStorage.getItem("user_id");
+    // window.open(`${Api_Host.defaults.baseURL}/cotizacion/${idCoti.data.id}/pdf/?user_id=${user_id}`);
+
+    //Tomar datos del formulario actual
+    const valores = formCotizacion.getFieldsValue();
+
+    const data={
+      org:organizaciones.nombre,
+      logo_url: organizaciones.logo,
+      marca: marcaAgua,
+      tituloDocumento: valores.tituloDocumento,
+      formato: {
+        nombreFormato: valores.nombreFormato,
+        version: valores.version,
+        fechaEmision: valores.fechaEmision,
+      },
+      cotizacion: {
+        subtotal: "3000.00",
+        iva: "480.00",
+        total: "3480.00",
+      },
+      terminos: valores.termino,
+      avisos: valores.avisos,
+      usuario: "Administrador",
+    };
+    const html = generarPlantillaHTML(data);
+
+    // Crear un contenedor temporal
+    const element = document.createElement("div");
+    element.innerHTML = html;
+    document.body.appendChild(element);
+
+    // Configuración del PDF
+    const options = {
+      margin: 0.5,
+      filename: `${data.tituloDocumento || "Cotizacion"}_Prueba.pdf`,
+      image: { type: "jpeg", quality: 0.98 },
+      html2canvas: {
+        scale: 2, // mejora la resolución
+        useCORS: true, // permite usar imágenes externas
+        logging: false,
+      },
+      jsPDF: {
+        unit: "in",
+        format: "letter",
+        orientation: "portrait",
+      },
+      pagebreak: { mode: ["avoid-all", "css", "legacy"] },
+    };
+
+    // Generar y descargar el PDF
+    await html2pdf().set(options).from(element).save();
+
+    // Eliminar el elemento temporal
+    document.body.removeChild(element);
+  } catch (error) {
+    console.error("Error al generar la cotización de prueba", error);
+  }
 }
 
   
@@ -953,7 +1013,7 @@ const CotizacionPureva= async ()=>{
      return(
           <div className="main-container">
           <Tabs activeKey={activeTab}
-  onChange={(key) => setActiveTab(key)}>
+            onChange={(key) => setActiveTab(key)}>
             <Tabs.TabPane tab="Organización" key="1">
               {activeTab==="1"&&renderOrganizacion()}
             </Tabs.TabPane>

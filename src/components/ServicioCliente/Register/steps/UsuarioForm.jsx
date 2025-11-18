@@ -24,7 +24,7 @@ const UsuarioForm = ({
     <div style={{ maxWidth: 700, margin: "0 auto", padding: 24 }}>
               <Alert
           message="Usuario"
-          description="Tendra que iniciar sesión con este Nombre de usuario una vez que se complete el registro."
+          description="Tendra que iniciar sesión con este Nombre de usuario, una vez que se complete el registro."
           type="info"
           showIcon
         />
@@ -90,7 +90,7 @@ const UsuarioForm = ({
 
           {/* === COLUMNA DERECHA === */}
           <Col span={12}>
-            <Form.Item
+            {/* <Form.Item
               label="Rol"
               name="rol"
               rules={[{ required: true, message: "Por favor selecciona un rol" }]}
@@ -102,14 +102,14 @@ const UsuarioForm = ({
                   </Option>
                 ))}
               </Select>
-            </Form.Item>
+            </Form.Item> */}
 
             <Form.Item
               label="Contraseña"
               name="password"
               rules={[
                 { required: true, message: "Por favor ingresa una contraseña" },
-                { min: 6, message: "La contraseña debe tener al menos 6 caracteres" },
+                { min: 8, message: "La contraseña debe tener al menos 8 caracteres" },
               ]}
             >
               <Input.Password placeholder="Contraseña" />

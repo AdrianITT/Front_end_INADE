@@ -218,7 +218,7 @@ export default function Header() {
           style={{ borderInlineEnd: "none" }}
           items={[
             ...navItems,
-            { type: "divider" },
+
             {
               key: "logout_inline",
               icon: <LogoutOutlined />,
