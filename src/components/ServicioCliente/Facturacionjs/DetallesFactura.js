@@ -1,6 +1,28 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Card, Row, Col, Button, Table, Tabs, Dropdown, Menu, Modal, Select, Input, Form, 
-  DatePicker, Flex, Alert, Checkbox,message,Descriptions, Result, Spin, Space  } from "antd";
+import { 
+  Card, 
+  Row, 
+  Col, 
+  Button, 
+  Table, 
+  Tabs, 
+  Dropdown, 
+  Menu, 
+  Modal, 
+  Select, 
+  Input, 
+  Form, 
+  DatePicker, 
+  Flex, 
+  Alert, 
+  Checkbox, 
+  message, 
+  Descriptions, 
+  Result, 
+  Spin, 
+  Space,
+  Popover  
+} from "antd";
 import { useParams, Link ,useNavigate } from "react-router-dom";
 import { Text} from '@react-pdf/renderer';
 import{FileTextTwoTone,MailTwoTone,FilePdfTwoTone,CloseCircleTwoTone, FileAddTwoTone, FileTwoTone} from "@ant-design/icons";
@@ -31,6 +53,12 @@ import AddendaModal from "./AddendaModal";
 
 const { Option } = Select;
 
+const text = (
+  <div>
+    <p>Solo disponible para facturas con relación.</p>
+    <p>La cancelación puede tardar hasta 3 días en reflejarse en el SAT.</p>
+  </div>
+);
 const DetallesFactura = () => {
   const { ids } = useParams();
   const id=descifrarId(ids);
@@ -87,6 +115,19 @@ const DetallesFactura = () => {
   const organizationId = useMemo(() => parseInt(localStorage.getItem("organizacion_id"), 10), []);
   const esUSD = moneda.codigo === "USD";
   const factorConversion = esUSD ? tipoCambioDolar : 1;
+
+  const [arrow, setArrow] = useState('Show');
+  const mergedArrow = useMemo(() => {
+    if (arrow === 'Hide') {
+      return false;
+    }
+    if (arrow === 'Show') {
+      return true;
+    }
+    return {
+      pointAtCenter: true,
+    };
+  }, [arrow]);
 
   useEffect(() => {
     const verificar = async () => {
@@ -348,6 +389,7 @@ const DetallesFactura = () => {
       const refreshed = await getAllDataFactura(id);
       const det = refreshed.data;
       setFactura(det);
+      setDataFactura(det);
       setMoneda({ 
         codigo: det.monedaCodigo.includes("USD") ? "USD" : "MXN",
         descripcion: det.monedaCodigo 
@@ -620,7 +662,7 @@ const DetallesFactura = () => {
       // Crear enlace para la descarga
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", `Acuse_Factura_${factura.numerofactura}.pdf`);
+      link.setAttribute("download", `Acuse_Factura.pdf`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -804,11 +846,12 @@ const handleConfirmCrearFactura = () => {
       <Menu.Item key="1" onClick={() => showModalCorreo(true)} icon={<MailTwoTone />}>Enviar por correo</Menu.Item>
       <Menu.Item key="3" onClick={() => handleDownloadPDF(id)} icon={<FilePdfTwoTone />}>Descargar PDF</Menu.Item>
       <Menu.Item key="4" onClick={() => handleDownloadXML(id)}icon={<FileTextTwoTone />}>Descargar XML</Menu.Item>
-      <Menu.Item key="5" onClick={() => setModalOpen(true)} icon={<FileAddTwoTone />}>
+      {/* <Menu.Item key="5" onClick={() => setModalOpen(true)} icon={<FileAddTwoTone />}>
         Generar Comprobante de Pago
-      </Menu.Item>
+      </Menu.Item> */}
       <Menu.Item key="6" onClick={() => setVisibleCancelModal(true)} icon={<CloseCircleTwoTone />}>Cancelar factura</Menu.Item>
-      <Menu.Item key="7" onClick={() => handleDownloadAcuse(id)}icon={<FileTextTwoTone />}>Descargar Acuse</Menu.Item>
+      <Popover placement="right" content={text} arrow={mergedArrow}>
+      <Menu.Item key="7" onClick={() => handleDownloadAcuse(id)} icon={<FileTextTwoTone />}>Descargar Acuse</Menu.Item></Popover>
       <Menu.Item key="8" onClick={abrirModal}icon={<FileTextTwoTone />}>Crear o editar Addenda</Menu.Item>
       {/* getdescargaAcuse */}
     </Menu>

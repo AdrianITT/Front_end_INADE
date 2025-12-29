@@ -590,11 +590,16 @@ const CrearPreCotizaciones = () => {
                       <Select
                         placeholder="Selecciona un servicio"
                         showSearch
-                        value={concepto.servicio || undefined}
-                        onChange={(value) => handleServicioChange(concepto.id, value)}
+                        //value={concepto.servicio || undefined}
+                        optionFilterProp="label"
                         filterOption={(input, option) =>
-                          option.children.toLowerCase().includes(input.toLowerCase())
+                          (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
                         }
+                        options={servicios.map((serv) => ({
+                          value: serv.id,
+                          label: serv.nombreServicio,
+                        }))}
+                        onChange={(value) => handleServicioChange(concepto.id, value)}
                       >
                         {servicios.map(serv => (
                           <Select.Option key={serv.id} value={serv.id}>

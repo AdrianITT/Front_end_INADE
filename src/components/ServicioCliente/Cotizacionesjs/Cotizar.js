@@ -1,5 +1,5 @@
 // src/pages/Cotizar.js
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Table, Input, Spin, Button, Card, Row, Col, Tag, Space } from "antd";
 import { Link } from "react-router-dom";
@@ -11,8 +11,44 @@ import { descifrarId, cifrarId } from "../secretKey/SecretKey";
 import CotizacionesPorServicioModal from "../Cotizacionesjs/ModalFiltroServicio/CotizacionesPorServicioModal";
 import CotizacionDetalleExpand from "./CotizacionDetalleExpand/CotizacionDetalleExpand";
 
+const LOCAL_STORAGE_KEY = "cotizacion_state";
+const TIEMPO_EXPIRACION_CT = 1 * 60 * 1000; // 1 minutos
+
+// Guardar con timestamp
+const guardarEstadoEnLocalStorage = (data) => {
+  const payload = {
+    valor: data,
+    timestamp: Date.now(),
+  };
+  localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(payload));
+};
+
+// Leer y verificar expiración
+const obtenerEstadoConExpiracion = () => {
+  const savedItem = localStorage.getItem(LOCAL_STORAGE_KEY);
+  if (!savedItem) return null;
+
+  try {
+    const { valor, timestamp } = JSON.parse(savedItem);
+    const ahora = Date.now();
+
+    if (ahora - timestamp < TIEMPO_EXPIRACION_CT) {
+      return valor; // todavía válido
+    } else {
+      localStorage.removeItem(LOCAL_STORAGE_KEY); // expirado
+      return null;
+    }
+  } catch (error) {
+    console.error("Error al leer localStorage:", error);
+    localStorage.removeItem(LOCAL_STORAGE_KEY);
+    return null;
+  }
+};
+
 const Cotizar = () => {
-  const [searchText, setSearchText] = useState("");
+  //estado guardado
+  const estadoGuardado = obtenerEstadoConExpiracion() || {searchText:""};
+  const [searchText, setSearchText] = useState(estadoGuardado.searchText ?? "");
   const [filteredData, setFilteredData] = useState([]);
   const navigate = useNavigate();
   const [expandedData, setExpandedData] = useState({});
@@ -31,14 +67,32 @@ const Cotizar = () => {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     })}`;
+    
 
   const organizationId = useMemo(
     () => parseInt(localStorage.getItem("organizacion_id"), 10),
     []
   );
 
-  const { cotizaciones, isLoading } = useCotizacionesData(organizationId);
+  const { cotizaciones, isLoading, fetchData } = useCotizacionesData(organizationId);
   const columnsCotizaciones = useCotizacionesColumns();
+
+  useEffect(() => {
+  if (!isLoading && searchText) {
+    const filtered = cotizaciones.filter((item) =>
+      Object.values(item).some(
+        (field) =>
+          field !== null &&
+          field !== undefined &&
+          String(field).toLowerCase().includes(searchText.toLowerCase())
+      )
+    );
+    setFilteredData(filtered);
+  } else if (!isLoading && !searchText) {
+    setFilteredData([]);
+  }
+}, [cotizaciones, searchText, isLoading]);
+
 
   const handleSearch = (value) => {
     setSearchText(value);
@@ -53,6 +107,7 @@ const Cotizar = () => {
         )
       : [];
     setFilteredData(filtered);
+    guardarEstadoEnLocalStorage({ searchText: value });
   };
 
   const dataSource = useMemo(

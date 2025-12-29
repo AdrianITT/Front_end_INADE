@@ -12,6 +12,7 @@ import {
   MenuOutlined,
   UserOutlined,
   LogoutOutlined,
+  DollarTwoTone,
 } from "@ant-design/icons";
 import {
   Layout,
@@ -50,6 +51,7 @@ const navItems = [
       { key: "configuracion", label: <Link to="/configuracionorganizacion">Configuración de la organización</Link>, icon: <SettingOutlined /> },
       { key: "facturas", label: <Link to="/factura">Facturas</Link>, icon: <FileTextOutlined /> },
       { key: "Pre-Cotizaciones", label: <Link to="/PreCotizacion">Pre-Cotizaciones</Link>, icon: <FileTextOutlined /> },
+      { key: "Pagos", label: <Link to="/Pagos">Pagos</Link>, icon: <DollarTwoTone /> },
     ],
   },
 ];
@@ -129,9 +131,9 @@ export default function Header() {
       //   ),
       //   icon: <UserOutlined />,
       // },
-      {
-        type: "divider",
-      },
+      // {
+      //   type: "divider",
+      // },
       {
         key: "logout",
         label: <span onClick={onLogout}>Cerrar sesión</span>,

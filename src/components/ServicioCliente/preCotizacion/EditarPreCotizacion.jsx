@@ -199,14 +199,13 @@ const EditarPreCotizacion = () => {
       // await updatePrecotizacionById(id, {
       //   nombre, apellido, correo, empresa, tipoMonedaSeleccionada, ivaSeleccionado, fechaSolicitada, etc.
       // });
-  
       // Actualizar servicios existentes
       const updatePromises = existentes.map((serv) =>
         updateServicioPreCotizacionById(serv.id, {
           precio: serv.precio,
           cantidad: serv.cantidad,
           descripcion: serv.descripcion,
-          servicioId: serv.servicio,
+          servicio: serv.servicio,
         })
       );
   
@@ -423,7 +422,17 @@ const EditarPreCotizacion = () => {
                           label="Servicio"
                           rules={[{ required: true, message: "Seleccione un servicio" }]}
                         >
-                          <Select placeholder="Seleccione un servicio" showSearch >
+                          <Select placeholder="Seleccione un servicio" 
+                          showSearch 
+                          optionFilterProp="label"
+                          filterOption={(input, option) =>
+                            (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
+                          }
+                          options={serviciosDisponibles.map((s) => ({
+                            value: s.id,
+                            label: s.nombreServicio
+                          }))}
+                          >
                             {serviciosDisponibles.map((s) => (
                               <Select.Option key={s.id} value={s.id}>
                                 {s.nombreServicio || s.nombre}

@@ -80,6 +80,7 @@ const EditarOrdenTrabajo = () => {
         const response = await EditOrdenTrabajoData(id);
         //console.log("Orden de trabajo data:", response.data);
         const data = response.data;
+        
         setOrdenData(data.ordenTrabajo);
         console.log("Orden de trabajo:", data);
         //const resCot = await getDetallecotizaciondataById(data);
@@ -105,6 +106,9 @@ const EditarOrdenTrabajo = () => {
         form.setFieldsValue({
           servicios: serviciosMapped,
           receptor: data.receptor.id || null, // ✅ Aquí lo asignas
+          nombreRazonSocial: data.ordenTrabajo.nombreRazonSocial || "",
+          giroComercial: data.ordenTrabajo.giroComercial || "",
+          descripcionActividad: data.ordenTrabajo.descripcionActividad || "",
         });
       } catch (error) {
         console.error("Error al obtener la orden de trabajo:", error);
@@ -149,6 +153,9 @@ const EditarOrdenTrabajo = () => {
       // 👉 ACTUALIZAR RECEPTOR DE LA ORDEN
       await updateOrdenTrabajo(id, {
         receptor: values.receptor,
+        nombreRazonSocial: values.nombreRazonSocial,
+        giroComercial: values.giroComercial,
+        descripcionActividad: values.descripcionActividad,
       });
   
       // Separar servicios marcados para eliminar
@@ -214,6 +221,7 @@ const EditarOrdenTrabajo = () => {
       </Title>
       <Card>
         <Form form={form} layout="vertical" onFinish={onFinish}>
+          <Row gutter={16}>
           <Col span={20}>
                       <Form.Item
                         name="receptor"
@@ -228,7 +236,33 @@ const EditarOrdenTrabajo = () => {
                           ))}
                         </Select>
                       </Form.Item>
-                    </Col>
+                  </Col>
+                  <Col span={24}>
+                    <Form.Item
+                      name="nombreRazonSocial"
+                      label="Nombre o Razón Social de la Empresa"
+                      // rules={[{ required: true, message: "Por favor ingresa el nombre del proyecto." }]}
+                    >
+                      <Input placeholder="Nombre o Razón Social de la Empresa" />
+                    </Form.Item>
+                  </Col>
+                  <Col span={24}>
+                    <Form.Item
+                      name="giroComercial"
+                      label="Giro Comercial"
+                    >
+                      <Input placeholder="Giro Comercial" />
+                    </Form.Item>
+                  </Col>
+                  <Col span={24}>
+                    <Form.Item
+                      name="descripcionActividad"
+                      label="Descripción de la Actividad"
+                    >
+                      <Input placeholder="Descripción de la Actividad" />
+                    </Form.Item>
+                  </Col>
+            </Row>
           <Divider>Servicios</Divider>
           <Form.List name="servicios">
             {(fields, { add, remove }) => (

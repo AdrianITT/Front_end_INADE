@@ -152,8 +152,8 @@ const ReceptoresPage=()=> {
   ], []);
 
   return (
-    <div className="p-6">
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+    <div className="p-6" style={{padding: 20}}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 25 }}>
         <div>
           <h2 style={{ margin: 0 }}>Receptores</h2>
           {/* <div style={{ color: "#888" }}>Organización ID: {organizacionId}</div> */}

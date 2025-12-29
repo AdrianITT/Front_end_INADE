@@ -1,5 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Row, Col, Button, Dropdown, Menu, Modal, Input, message } from 'antd';
+import { 
+  Card,
+  Row,
+  Col, 
+  Button, 
+  Dropdown, 
+  Menu, 
+  Modal, 
+  Input, 
+  message, 
+  notification,
+ } from 'antd';
 import { 
   CalendarOutlined, 
   DollarOutlined, 
@@ -16,6 +27,7 @@ const PaymentCards = ({ idFactura, correoCliente,refreshPagos }) => {
   const [pagos, setPagos] = useState([]);
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
   const [pagoToDelete, setPagoToDelete] = useState(null);
+  const [api, contextHolder] = notification.useNotification();
   
   // Estados para envío de correo (solo para correos adicionales)
   const [isEmailModalVisible, setIsEmailModalVisible] = useState(false);
@@ -24,6 +36,22 @@ const PaymentCards = ({ idFactura, correoCliente,refreshPagos }) => {
   const [loading, setLoading] = useState(false);
   // Estado para el modal de confirmación de correo enviado
   const [isConfirmationModalVisible, setIsConfirmationModalVisible] = useState(false);
+
+const openNotificationWithIcon = (text) => {
+  api.error({
+    message: "Error al realizar el pago",
+    description: text,
+    placement: "topRight",
+  });
+};
+
+  const formatDetails = (details) => {
+  if (!details || typeof details !== "object") return "";
+
+  return Object.values(details)
+    .flat()
+    .join(" • ");
+};
 
   // Función para obtener los pagos desde el backend
   const fetchPagos = async () => {
@@ -55,17 +83,33 @@ const PaymentCards = ({ idFactura, correoCliente,refreshPagos }) => {
     try {
 
       const reponse =await getAllFacturaPagosFacturama(pagoId);
-
-    } catch (error) {
-      console.log("Se recibió un error del servidor (500), pero se ignora:", error);
-    } finally {
-      setPagos((prevPagos) =>
+      console.log("Respuesta al realizar el pago:", reponse);
+      if (reponse.status === 200) {
+        setPagos((prevPagos) =>
         prevPagos.map((pago) =>
           pago.id === pagoId ? { ...pago, isPDFVisible: true } : pago
         )
       );
-      //await fetchPagos();
-    }
+ 
+      }
+    } catch (error) {
+      const data = error?.response?.data;
+
+      console.error("Error al realizar el pago:", error);
+      console.log("Respuesta del servidor:", data);
+      // Mensaje principal
+      const mainError = data?.error || "La solicitud no es válida";
+
+      // Detalles (ModelState)
+      const detailsText = formatDetails(data?.details);
+
+      // Texto final
+      const finalMessage = detailsText
+        ? `${mainError}: ${detailsText}`
+        : mainError;
+
+      openNotificationWithIcon(finalMessage);
+    } 
   };
 
   // Función para descargar el PDF
@@ -250,6 +294,7 @@ const PaymentCards = ({ idFactura, correoCliente,refreshPagos }) => {
     } else {
       return (
         <>
+        {contextHolder}
         <Button
           type="primary"
           style={{

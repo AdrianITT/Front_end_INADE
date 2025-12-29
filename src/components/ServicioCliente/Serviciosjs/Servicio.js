@@ -28,6 +28,7 @@ const Servicio = () => {
   const [filteredServicios, setFilteredServicios] = useState(servicio);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [metodos, setMetodos] = useState([]);
+  const [filtrometodos, setFiltroMetodos] = useState([]);
   const [currentServiceId, setCurrentServiceId] = useState(null);
   const [isModalOpenServiciosEdit, setIsModalOpenServiciosEdit] = useState(false); // Modal de edición
   const [currentMethodId, setCurrentMethodId] = useState(null);
@@ -40,9 +41,9 @@ const Servicio = () => {
   const [metodoSeleccionado, setMetodoSeleccionado] = useState(null);
   const organizationId = useMemo(() => parseInt(localStorage.getItem("organizacion_id"), 10), []);
 
-    const [searchText, setSearchText] = useState('');
-    const [searchedColumn, setSearchedColumn] = useState('');
-    const searchInput = useRef(null);
+  const [searchText, setSearchText] = useState('');
+  const [searchedColumn, setSearchedColumn] = useState('');
+  const searchInput = useRef(null);
   
     // Lógica de búsqueda
     const handleSearch = (selectedKeys, confirm, dataIndex) => {
@@ -174,6 +175,7 @@ const handleMetodoChange = (value) => {
       //console.log("Servicios:", serviciosRes.data);
       setFilteredServicios(serviciosRes.data);
       setMetodos(metodosRes.data);
+      setFiltroMetodos(metodosRes.data);
       //console.log("Métodos:", metodosRes.data);
       setClaveCDFI(claveCDFIRes.data);
       setUnidadCDFI(unidadCDFIRes.data);
@@ -207,6 +209,16 @@ const handleMetodoChange = (value) => {
     );
     setFilteredServicios(filtered);
   };
+
+  const handleSearchMetodos = (value) => {
+    const filtered = metodos.filter((item) =>
+      Object.values(item).some((field) =>
+        String(field).toLowerCase().includes(value.toLowerCase())
+      )
+    );
+    setFiltroMetodos(filtered);
+  };
+
 
   const handleDeleteServicio = async (id) => {
     try {
@@ -524,11 +536,11 @@ const handleConfirmDeleteService = async () => {
                 <center>
                   
                   <Input.Search
-                    placeholder="Buscar servicios..."
+                    placeholder="Buscar metodo..."
                     enterButton="Buscar"
                     style={{ marginBottom: "16px", maxWidth: "300px" }}
-                    onSearch={(value) => handleSearchServicios(value)} // Solo busca cuando se presiona el botón
-                    onChange={(e) => handleSearchServicios(e.target.value)} // Actualiza el estado del texto
+                    onSearch={(value) => handleSearchMetodos(value)} // Solo busca cuando se presiona el botón
+                    onChange={(e) => handleSearchMetodos(e.target.value)} // Actualiza el estado del texto
                   />
                 <Button
                   type="primary"
@@ -541,7 +553,7 @@ const handleConfirmDeleteService = async () => {
                 
                 <Spin spinning={loadings} tip="Cargando...">
                 <Table
-                  dataSource={metodos}
+                  dataSource={filtrometodos}
                   columns={columnsMetodos}
                   bordered
                   pagination={{

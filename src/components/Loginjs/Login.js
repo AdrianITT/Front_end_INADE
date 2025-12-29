@@ -10,6 +10,7 @@ import "./Login.css";
 const Login = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false); // estado para controlar el loading
+  const [ disable, setDisable] = useState(false);
   const navigate = useNavigate();
 
   const onFinish = async (values) => {
@@ -97,7 +98,15 @@ const Login = () => {
             </Form.Item>
           </Form>
         )}
-        <Link to="/register" block>¿No tienes una cuenta? Regístrate aquí</Link>
+        {/* {!loading && (
+          <Link to="/register" block>¿No tienes una cuenta? Regístrate aquí</Link>
+        )} */}
+          <Link 
+          to={loading ? "#" : "/register"} 
+          onClick={loading ? (e) => e.preventDefault() : null}
+          style={{ pointerEvents: loading ? 'none' : 'auto', opacity: disable ? 0.5 : 1 }}
+          >¿No tienes una cuenta? Regístrate aquí
+          </Link>
       </Card>
     </div>
     </div>

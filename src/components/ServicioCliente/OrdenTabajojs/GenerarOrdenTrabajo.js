@@ -123,6 +123,9 @@ const GenerarOrdenTrabajo = () => {
         cotizacion: cotizacionId,
         estado: 2,
         nombreusuario: usrNameData,
+        nombreRazonSocial: ordenFormValues.nombreRazonSocial,
+        giroComercial: ordenFormValues.giroComercial,
+        descripcionActividad: ordenFormValues.descripcionActividad,
       };
       const ordenResponse = await createOrdenTrabajo(ordenData);
       const ordenTrabajoId = ordenResponse.data.id;
@@ -329,6 +332,31 @@ const receptorSeleccionado = receptor.find(r => r.id === ordenFormValues?.recept
           >
             Agregar Receptor
           </Button>
+          </Col>
+          <Col span={24}>
+            <Form.Item
+              name="nombreRazonSocial"
+              label="Nombre o Razón Social de la Empresa"
+              // rules={[{ required: true, message: "Por favor ingresa el nombre del proyecto." }]}
+            >
+              <Input placeholder="Nombre o Razón Social de la Empresa" />
+            </Form.Item>
+          </Col>
+          <Col span={24}>
+            <Form.Item
+              name="giroComercial"
+              label="Giro Comercial"
+            >
+              <Input placeholder="Giro Comercial" />
+            </Form.Item>
+          </Col>
+          <Col span={24}>
+            <Form.Item
+              name="descripcionActividad"
+              label="Descripción de la Actividad"
+            >
+              <Input placeholder="Descripción de la Actividad" />
+            </Form.Item>
           </Col>
         </Row>
 

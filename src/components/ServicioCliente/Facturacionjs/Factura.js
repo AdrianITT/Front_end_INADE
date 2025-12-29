@@ -6,13 +6,49 @@ import { Link } from "react-router-dom";
 import "./crearfactura.css"
 import { cifrarId } from "../secretKey/SecretKey";
 
+//Contains local storage logic
+  const LOCAL_STORAGE_KEY = "factura_state";
+  const TIEMPO_EXPIRACION_CT = 1 * 60 * 1000; // 1 minutos
+  
+// Leer y verificar expiración
+  const obtenerEstadoConExpiracion = () => {
+    const savedItem = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (!savedItem) return null;
+
+    try {
+      const { valor, timestamp } = JSON.parse(savedItem);
+      const ahora = Date.now();
+
+      if (ahora - timestamp < TIEMPO_EXPIRACION_CT) {
+        return valor; // todavía válido
+      } else {
+        localStorage.removeItem(LOCAL_STORAGE_KEY); // expirado
+        return null;
+      }
+    } catch (error) {
+      console.error("Error al leer localStorage:", error);
+      localStorage.removeItem(LOCAL_STORAGE_KEY);
+      return null;
+    }
+  };
+
+  // Guardar con timestamp
+  const guardarEstadoEnLocalStorage = (data) => {
+      const payload = {
+        valor: data,
+        timestamp: Date.now(),
+      };
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(payload));
+  };
+
 const Factura = () => {
-  const [searchTerm, setSearchTerm] = useState("");
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [filteredData, setFilteredData] = useState([]);
   const [expandedData, setExpandedData]=useState({});
   const [loadingExpanded,setLoadingExpanded]=useState({});
+  const estadoGuardado = obtenerEstadoConExpiracion() || {searchText:""};
+  const [searchTerm, setSearchTerm] = useState(estadoGuardado.searchText ?? "");
   //const { token } = theme.useToken();
 
   // ID de la organización actual
@@ -111,21 +147,36 @@ const Factura = () => {
 };
 
 
-  // Función para manejar la búsqueda en tiempo real
-  const handleSearch = (value) => {
-    setSearchTerm(value);
-    if (!value) {
-      setFilteredData(data);
-      return;
-    }
+//Evalue si hay searchTerm para filtrar los datos que se buscarin hace 1 minuto
+  useEffect(() => {
+  if (!loading && searchTerm) {
     const filtered = data.filter((item) =>
       Object.values(item).some(
         (field) =>
-          field &&
-          field.toString().toLowerCase().includes(value.toLowerCase())
+          field !== null &&
+          field !== undefined &&
+          String(field).toLowerCase().includes(searchTerm.toLowerCase())
       )
     );
     setFilteredData(filtered);
+  } else if (!loading && !searchTerm) {
+    console.log("No search term, showing all data");
+    setFilteredData(data);
+  }
+}, [data, searchTerm, loading]);
+  // Función para manejar la búsqueda en tiempo real
+  const handleSearch = (value) => {
+    setSearchTerm(value);
+    const filtered = data.filter((item) =>
+      Object.values(item).some(
+        (field) =>
+          field !== null &&
+          field !== undefined &&
+          String(field).toLowerCase().includes(value.toLowerCase())
+      )
+    );
+    setFilteredData(filtered);
+    guardarEstadoEnLocalStorage({ searchText: value })
   };
 
   // Columnas de la tabla con filtros
@@ -210,8 +261,10 @@ const Factura = () => {
           <Input.Search
             placeholder="Buscar por código de orden de trabajo..."
             style={{ width: "300px" }}
+            onChange={(e) => handleSearch(e.target.value)}
             onSearch={handleSearch}
             allowClear
+            value={searchTerm}
           />
         </Space>
       </div>

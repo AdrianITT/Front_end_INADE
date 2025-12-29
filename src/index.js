@@ -43,7 +43,7 @@ import NoAutorizado from "./components/FetchProtected/NoAutorizado";
 import RegistroCotizacion from "./components/ServicioCliente/Cotizacionesjs/RegistroCotizaciones/RegistroCotizacion";
 import RegistroWizard from "./components/ServicioCliente/Register/RegistroWizard";
 // import TestCotizar from "./components/ServicioCliente/Cotizacionesjs/TestCotizacion";
-// import ReceptoresPage from "./components/ServicioCliente/Receptor/ReceptoresPage";
+import ReceptoresPage from "./components/ServicioCliente/Receptor/ReceptoresPage";
 
 // Hook para cambiar el título de la pestaña
 const usePageTitle = () => {
@@ -108,7 +108,7 @@ const AppRouter = () => {
             </PageWrapper>
           }
         >
-          <Route path="/Homeadmin" element={<ProtectedRoute allowedRoles={['Administrador']}><HomeAdmin /></ProtectedRoute>} />
+          <Route path="/Homeadmin" element={<ProtectedRoute allowedRoles={['Administradororganizacion']}><HomeAdmin /></ProtectedRoute>} />
           <Route path="/RegistroCotizacion/:clienteIds" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><RegistroCotizacion /></ProtectedRoute>} />
           <Route path="/home" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><Home /></ProtectedRoute>} />
           <Route path="/empresa" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><Empresa /></ProtectedRoute>} />
@@ -140,7 +140,7 @@ const AppRouter = () => {
           <Route path="/Pagos" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><Pagos/></ProtectedRoute>} />
           <Route path="/CrearPagos" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><CrearPagos/></ProtectedRoute>} />
           <Route path="/CrearPagos/:ids" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><CrearPagos/></ProtectedRoute>} />
-          {/* <Route path="/Receptores" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><ReceptoresPage/></ProtectedRoute>} /> RegistroWizard*/}
+          <Route path="/Receptores" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><ReceptoresPage/></ProtectedRoute>} />
           {/* <Route path="/TestCotizar" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><TestCotizar/></ProtectedRoute>} /> */}
         </Route>
       </Routes>
