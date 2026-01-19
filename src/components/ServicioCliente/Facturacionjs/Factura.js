@@ -5,6 +5,7 @@ import { Table, Input, Button, message, Tag, theme, Space, Card, Col, Row } from
 import { Link } from "react-router-dom";
 import "./crearfactura.css"
 import { cifrarId } from "../secretKey/SecretKey";
+import ModalBuscarPorEstatusYFolio from "./ModalBuscarPorEstatusYFolio";
 
 //Contains local storage logic
   const LOCAL_STORAGE_KEY = "factura_state";
@@ -50,6 +51,7 @@ const Factura = () => {
   const estadoGuardado = obtenerEstadoConExpiracion() || {searchText:""};
   const [searchTerm, setSearchTerm] = useState(estadoGuardado.searchText ?? "");
   //const { token } = theme.useToken();
+  const [open, setOpen] = useState(false);
 
   // ID de la organización actual
   const organizationId = parseInt(localStorage.getItem("organizacion_id"), 10);
@@ -268,6 +270,13 @@ const Factura = () => {
           />
         </Space>
       </div>
+      <div style = {{ display: "flex" }}>
+        <div style={{ justifyContent: "space-between", display:"flex" }}>
+      <Button type="primary" onClick={() => setOpen(true)}>
+        Buscar facturas(SAT)
+      </Button>
+        </div>
+      </div>
       <div style={{ display: "flex",justifyContent: "center",marginBottom: "20px"  }}>
         <Link to="/cotizar">
         <Button type="primary">
@@ -394,6 +403,10 @@ const Factura = () => {
           },
           rowExpandable: () => true,
         }}
+      />
+        <ModalBuscarPorEstatusYFolio
+        open={open}
+        onClose={() => setOpen(false)}
       />
     </div>
   );

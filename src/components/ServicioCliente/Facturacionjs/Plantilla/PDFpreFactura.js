@@ -302,13 +302,20 @@ const FacturaPDF = ({ dataFactura, dataLogo, centavo,centavotext }) => {
           </View>
 
           {/* Filas de esta página */}
-          {grupo.map((serv, index) => (
+          {(Array.isArray(grupo) ? [...grupo].reverse() : []).map((serv, index) => (
             <View key={index} style={styles.tableRow} >
               <Text style={styles.colProducto}>{serv.servicio?.claveCfdi?.codigo ?? 'sin datos'}</Text>
               <Text style={styles.colCantidad}>{serv.cantidad}</Text>
               <Text style={styles.colUnidad}>{serv?.unidadCfdi?.codigo ?? 'sin datos'} - {serv?.unidadCfdi?.nombre ?? 'sin datos'}</Text>
               <Text style={styles.colConcepto}>
                 {serv.servicio.nombre}
+                {serv.descripcion &&(
+                  <Text>
+                    {'\n'}
+                    {serv.descripcion && `${serv.descripcion}`}
+                  </Text>
+
+                )}
                 {'\n'}
                 2 - Con objeto de impuesto{'\n'}
                 Traslados:{'\n'}

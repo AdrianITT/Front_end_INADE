@@ -129,6 +129,14 @@ const DetallesFactura = () => {
     };
   }, [arrow]);
 
+  const razonDelete=[
+    {id:"01", descripcion:"Comprobantes emitidos con errores con relación."},
+    {id:"02", descripcion: "Comprobantes emitidos con errores sin relación."},
+    {id:"03", descripcion: "No se llevó a cabo la operación."},
+    {id:"04", descripcion: "Operación nominativa relacionada en una factura global."},
+  ]
+  const [razonDeleteId, setRazonDeleteId]= useState(null); 
+
   useEffect(() => {
     const verificar = async () => {
       // console.log(id);
@@ -779,10 +787,10 @@ const confirmNotaCredito = async (idA,idB,related) => {
   }
 };
 
-const EliminarFacturaRemplazo = async (idA,idB) => {
+const EliminarFacturaRemplazo = async (idA,idB, razonDeleteId) => {
   setLoading(true);
   try {
-    const data2= await deleteFacturRenplasar(idA,idB);
+    const data2= await deleteFacturRenplasar(idA,idB, razonDeleteId);
     // console.log("PDF base64:", data2?.data.acuse_pdf_base64?.slice(0, 30));
     // console.log("data2: ",data2);
 
@@ -1088,7 +1096,7 @@ const montoRestante =hasPagos
                   danger
                   disabled={!facturaReemplazoId}
                   loading={loading}
-                  onClick={() => EliminarFacturaRemplazo(id, facturaReemplazoId)}
+                  onClick={() => EliminarFacturaRemplazo(id, facturaReemplazoId, razonDeleteId)}
                 >
                   Eliminar y Reemplazar Factura
                 </Button>
@@ -1134,6 +1142,22 @@ const montoRestante =hasPagos
             options={facturas.map(f => ({
               label: `Factura #${f.folio} - ${f.empresa || 'Empresa desconocida'}`,
               value: f.id,
+            }))}
+          />
+          <Select
+            style={{ width: "100%" }}
+            placeholder="Selecciona una razon"
+            value={razonDeleteId}
+            onChange={setRazonDeleteId}
+            disabled={loading}
+            showSearch
+            optionFilterProp="children"
+            filterOption={(input, option) =>
+              (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
+            }
+            options={razonDelete.map(r => ({
+              label: ` ${r.id} - ${r.descripcion|| 'Empresa desconocida'}`,
+              value: r.id,
             }))}
           />
         </>
@@ -1303,6 +1327,7 @@ const montoRestante =hasPagos
             value: f.id,
           }))}
         />
+
       </Modal>
 
           {/*Nota de Credito */}

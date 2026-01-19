@@ -12,6 +12,7 @@ import { getAllcotizacionesdata } from "../../../apis/ApisServicioCliente/Cotiza
 import {getUserById}from "../../../apis/ApisServicioCliente/UserApi";
 import { validarAccesoPorOrganizacion } from "../validacionAccesoPorOrganizacion";
 import { cifrarId, descifrarId } from "../secretKey/SecretKey";
+import { Api_Host } from "../../../apis/api";
 const { TextArea } = Input;
 const { Option } = Select;
 
@@ -37,6 +38,9 @@ const GenerarOrdenTrabajo = () => {
   
     // Obtener el ID de la organización una sola vez
     const organizationId = useMemo(() => parseInt(localStorage.getItem("organizacion_id"), 10), []);
+
+  // Validar acceso por organización
+
     useEffect(() => {
           const verificar = async () => {
 
@@ -73,7 +77,6 @@ const GenerarOrdenTrabajo = () => {
       
   // }
 
-
   useEffect(() => {
     
     const fetchReceptor= async () =>{
@@ -86,12 +89,12 @@ const GenerarOrdenTrabajo = () => {
       try {
         const response = await getAllOrdenTrabajoById(id); // <-- usa id directamente desde useParams
         const data = response.data;
-        //console.log("data: ", data);
+        // console.log("data: ", data);
         setCotizacionData(data);           // info general
         setCliente(data.cliente);          // info cliente
         setEmpresa(data.empresa);          // info empresa
         setServicios(data.servicios);      // lista de servicios
-  
+        
       } catch (error) {
         console.error("Error al obtener la información de la orden de trabajo", error);
       }
@@ -100,6 +103,37 @@ const GenerarOrdenTrabajo = () => {
     fetchOrdenData();
     fetchReceptor();
   }, [id, form,cotizacionId]);
+
+  useEffect(() => {
+  if (!empresas?.id) return;
+
+  // si ya había valores escritos (ej. edit), puedes decidir NO pisarlos
+  const current = form.getFieldsValue(["nombreRazonSocial", "giroComercial", "descripcionActividad"]);
+  const yaTieneAlgo = Object.values(current).some(v => (v ?? "").toString().trim().length > 0);
+  if (yaTieneAlgo) return;
+  onSelectEmpresa(empresas.id);
+}, [empresas?.id]);
+
+    const onSelectEmpresa = async (empresaId) => {
+      try {
+            const {data} = await Api_Host.get("ot/prefill/ultima-por-empresa/", {
+                params: { empresa_id: empresaId }
+            });
+            form.setFieldsValue({
+                nombreRazonSocial: data.nombreRazonSocial,
+                giroComercial: data.giroComercial,
+                descripcionActividad: data.descripcionActividad,
+            });
+
+      }catch (e) {
+      // Si no hay OTs, no pasa nada: dejas que el usuario capture
+      form.setFieldsValue({
+        nombreRazonSocial: "",
+        giroComercial: "",
+        descripcionActividad: "",
+      });
+  }
+  };
   
 
   const onFinish = async (values) => {

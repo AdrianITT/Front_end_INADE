@@ -109,7 +109,7 @@ const CrearFactura = () => {
   
         // SERVICIOS
         setServiciosCot(d.servicios);    // JSON viene en "servicios"
-        console.log("Servicios: ", d.servicios);
+        // console.log("Servicios: ", d.servicios);
         // RESUMEN
         setResumenCot({
           subtotal:      parseFloat(d.valores.subtotalRedondeado),
@@ -370,7 +370,7 @@ const CrearFactura = () => {
   
     // 6) Aplicar IVA
     const totalConIva = subtotalConPctFactura * (1 + tasaIVA);
-    console.log("Tasa elegida: ", tipoCambio);
+    // console.log("Tasa elegida: ", tipoCambio);
     // 7) Armar payload
     const datosFactura = {
       notas:           values.notas || "",

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
-import { Modal, Table, Input, Select, Space, message, Empty } from "antd";
+import { Modal, Table, Input, Select, Space, message, Empty, Button } from "antd";
 import debounce from "lodash/debounce";
 import { getCotizacionesByServicioOrg, getDetallecotizaciondataById} from "../../../../apis/ApisServicioCliente/CotizacionApi";
 import {getServicioData} from "../../../../apis/ApisServicioCliente/ServiciosApi";
@@ -52,6 +52,13 @@ const CotizacionesPorServicioModal = ({
     { title: "Expiración", dataIndex: "fechaCaducidad", sorter: true },
     { title: "Cliente ID", dataIndex: "cliente" },
     { title: "Empresa", dataIndex: "empresa" },
+    { title: "Acciones", dataIndex:"acciones",
+      render: (_,record) =>(
+        <Button onClick={()=>{
+          onRowClick?.(record)
+        }}> Ver</Button>
+      )
+    }
   ]), []);
 
   // Carga de servicios (si no vienen por props)
@@ -271,10 +278,10 @@ const CotizacionesPorServicioModal = ({
             showSizeChanger: true,
           }}
           onChange={handleTableChange}
-          onRow={(record) => ({
-            onClick: () => onRowClick?.(record),
-            style: { cursor: onRowClick ? "pointer" : "default" },
-          })}
+          // onRow={(record) => ({
+          //   onClick: () => onRowClick?.(record),
+          //   style: { cursor: onRowClick ? "pointer" : "default" },
+          // })}
 
           expandable={{
             expandedRowKeys,
