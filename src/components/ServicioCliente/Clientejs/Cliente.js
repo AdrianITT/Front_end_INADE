@@ -1,6 +1,6 @@
 // src/components/Cliente.js
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { Tabs, Input, Button, Modal, Form, Spin, Table, Checkbox, Result, Row, Col, Select, Divider, message} from "antd";
+import { Tabs, Input, Button, Modal, Form, Spin, Table, Checkbox, Result, Row, Col, Select, Divider, message, Alert} from "antd";
 import StickyBox from "react-sticky-box";
 import { useNavigate } from "react-router-dom";
 import {ExclamationCircleOutlined } from "@ant-design/icons";
@@ -350,6 +350,9 @@ const Cliente = () => {
     </StickyBox>
   );
 
+const descriptionAlert = "Eliminar un cliente eliminará también sus cotizaciones, órdenes de trabajo y facturas. Esta acción no se puede deshacer.";
+
+
   return (
     <div className="container-center">
       <h1 className="title-center">Clientes</h1>
@@ -368,6 +371,9 @@ const Cliente = () => {
             </Button>
           </div>
           <div className="tab-center">
+            <div style={{padding:"1%"}}>
+              <Alert type="warning" title="Warning" showIcon description={descriptionAlert}/>
+            </div>
             <Tabs
               defaultActiveKey="1"
               renderTabBar={renderTabBar}

@@ -1,6 +1,6 @@
 // Empresa.jsx
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Button, Modal, message, Spin } from 'antd';
+import { Button, Modal, message, Spin, Alert } from 'antd';
 import { ExclamationCircleOutlined } from '@ant-design/icons';
 import './Empresa.css';
 
@@ -197,6 +197,10 @@ const Empresa = () => {
       message.error("Error al eliminar la empresa");
     }
   };
+   
+  //Descripcion del Alert
+  const descriptionAlert ="Eliminar una empresa eliminará también sus clientes ,cotizaciones, órdenes de trabajo y facturas. Esta acción no se puede deshacer.";
+
 
   return (
     <div><Spin spinning={loading} tip="Cargando datos...">
@@ -209,6 +213,9 @@ const Empresa = () => {
 
       {/* TABLA */}
       <div className="table-center">
+      <div style={{padding: "1%"}}>
+      <Alert title="Warning" showIcon type="warning" description={descriptionAlert} />
+      </div>
       <EmpresaTable
         dataSource={empresas}
         onEdit={handleOpenEdit}

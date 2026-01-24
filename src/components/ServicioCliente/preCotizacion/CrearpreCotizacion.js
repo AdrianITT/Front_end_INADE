@@ -673,7 +673,7 @@ const CrearPreCotizaciones = () => {
             Añadir Concepto
           </Button>
           <Alert
-              message="Pro favor de verificar que los datos sean correctos"
+              message="Por favor de verificar que los datos sean correctos"
               banner
               closable
             />
@@ -687,7 +687,7 @@ const CrearPreCotizaciones = () => {
               <p>Total: {total.toFixed(4)} {tipoMonedaSeleccionada === 2 ? "USD" : "MXN"}</p>
             </div>
             <Alert
-              message="Pro favor de verificar que los datos sean correctos"
+              message="Por favor de verificar que los datos sean correctos"
               banner
               closable
             />

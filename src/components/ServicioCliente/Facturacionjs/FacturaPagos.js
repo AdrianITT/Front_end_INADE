@@ -39,7 +39,7 @@ const PaymentCards = ({ idFactura, correoCliente,refreshPagos }) => {
 
 const openNotificationWithIcon = (text) => {
   api.error({
-    message: "Error al realizar el pago",
+    message: "Error al realizar el pago, si el error no es detectado hable a IT",
     description: text,
     placement: "topRight",
   });

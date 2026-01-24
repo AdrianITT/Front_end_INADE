@@ -47,3 +47,5 @@ export const createNotaCredito=async(data)=>Api_Host.post('/creditNote/', data);
 export const getRelationTypes= async () => Api_Host.get('/relationTypes/')
 
 export const searchFacturaStatusFolio = async (status,folio) => Api_Host.get(`searchFactura/${status}/${folio}`);
+
+export const downloadExcelFacturas = async (org, from, to) => Api_Host.get(`organizacion/${org}/facturas/excel/?from=${from}&to=${to}`,{ responseType: "blob" });

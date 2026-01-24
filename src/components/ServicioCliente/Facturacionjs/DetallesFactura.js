@@ -847,6 +847,7 @@ const handleConfirmCrearFactura = () => {
 
   const abrirModal = () => setModalAddenda(true);
   const cerrarModal = () => setModalAddenda(false);
+  const puedoCancelar = factura?.estado !== "Cancelado" ;
 
 
   const menu = (
@@ -857,7 +858,7 @@ const handleConfirmCrearFactura = () => {
       {/* <Menu.Item key="5" onClick={() => setModalOpen(true)} icon={<FileAddTwoTone />}>
         Generar Comprobante de Pago
       </Menu.Item> */}
-      <Menu.Item key="6" onClick={() => setVisibleCancelModal(true)} icon={<CloseCircleTwoTone />}>Cancelar factura</Menu.Item>
+      <Menu.Item key="6" disabled={!puedoCancelar} onClick={() => setVisibleCancelModal(true)} icon={<CloseCircleTwoTone />}>Cancelar factura</Menu.Item>
       <Popover placement="right" content={text} arrow={mergedArrow}>
       <Menu.Item key="7" onClick={() => handleDownloadAcuse(id)} icon={<FileTextTwoTone />}>Descargar Acuse</Menu.Item></Popover>
       <Menu.Item key="8" onClick={abrirModal}icon={<FileTextTwoTone />}>Crear o editar Addenda</Menu.Item>

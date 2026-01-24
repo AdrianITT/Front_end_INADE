@@ -383,6 +383,7 @@ const CrearFactura = () => {
       porcentaje:      porcentajeFactura,
       importe:         totalConIva.toFixed(2),
       tipoMoneda:      tipoMoneda.codigo,
+      estado:           2,
       // tipoCambio:      tipoCambio,
       cotizacion:      id,
     };

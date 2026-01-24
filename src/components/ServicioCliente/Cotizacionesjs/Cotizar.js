@@ -1,7 +1,7 @@
 // src/pages/Cotizar.js
 import React, { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Table, Input, Spin, Button, Card, Row, Col, Tag, Space } from "antd";
+import { Table, Input, Spin, Button, Card, Row, Col, Tag, Space, Alert } from "antd";
 import { Link } from "react-router-dom";
 import "./cotizar.css";
 import { useCotizacionesData } from "../Cotizacionesjs/usoCotizacionesData";
@@ -130,7 +130,8 @@ const Cotizar = () => {
       }
     }
   };
-
+//Mensaje de Alert
+  const descriptionAlert ="Eliminar una cotización eliminará también sus órdenes de trabajo y facturas. Esta acción no se puede deshacer.";
 
   return (
     <div className="cotizar-container">
@@ -167,6 +168,9 @@ const Cotizar = () => {
         </div>
       ) : (
         <>
+        <div style={{padding: "1%"}}>
+          <Alert title="Warning" showIcon type="warning" description={descriptionAlert} />
+        </div>
           <Table
             className="cotizar-table"
             dataSource={dataSource}

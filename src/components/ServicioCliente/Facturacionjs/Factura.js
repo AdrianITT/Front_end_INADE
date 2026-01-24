@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import "./crearfactura.css"
 import { cifrarId } from "../secretKey/SecretKey";
 import ModalBuscarPorEstatusYFolio from "./ModalBuscarPorEstatusYFolio";
+import ModalExcelDate from "./ModalExcelDate";
 
 //Contains local storage logic
   const LOCAL_STORAGE_KEY = "factura_state";
@@ -52,6 +53,7 @@ const Factura = () => {
   const [searchTerm, setSearchTerm] = useState(estadoGuardado.searchText ?? "");
   //const { token } = theme.useToken();
   const [open, setOpen] = useState(false);
+  const [Excel, setOpenExcel] = useState(false);
 
   // ID de la organización actual
   const organizationId = parseInt(localStorage.getItem("organizacion_id"), 10);
@@ -103,18 +105,17 @@ const Factura = () => {
         });
         const hasRecentMissing = facturasProcesadas.some(item => item.missing && item.recent);
 
-        if (hasRecentMissing) {
-          facturasProcesadas.sort((a, b) => {
-            const getPriority = (item) => {
-              if (item.missing) return item.recent ? 0 : 1;
-              return 2;
-            };
-            const priorityA = getPriority(a);
-            const priorityB = getPriority(b);
 
-            return priorityA - priorityB || (a.expedicionDate - b.expedicionDate);
-          });
-        }
+        facturasProcesadas.sort((a, b) => {
+          const getPriority = (item) => {
+            if (item.missing) return item.recent ? 0 : 1;
+            return 2;
+          };
+          const priorityA = getPriority(a);
+          const priorityB = getPriority(b);
+
+          return priorityA - priorityB || (a.expedicionDate - b.expedicionDate);
+        });
   
         setData(facturasProcesadas);
         setFilteredData(facturasProcesadas);
@@ -270,13 +271,22 @@ const Factura = () => {
           />
         </Space>
       </div>
-      <div style = {{ display: "flex" }}>
-        <div style={{ justifyContent: "space-between", display:"flex" }}>
+      <div   style={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        width: "100%",
+        gap: 24, // separación mínima si la pantalla es chica
+      }}>
+
       <Button type="primary" onClick={() => setOpen(true)}>
         Buscar facturas(SAT)
       </Button>
-        </div>
+        <Button type="primary" onClick={() => setOpenExcel(true)}>
+        Descarga de Excel
+      </Button>
       </div>
+
       <div style={{ display: "flex",justifyContent: "center",marginBottom: "20px"  }}>
         <Link to="/cotizar">
         <Button type="primary">
@@ -396,6 +406,14 @@ const Factura = () => {
                     <Col xs={24} sm={12} md={8}>
                       <strong>Importe total:</strong> ${detalle.valores.totalFinal}
                     </Col>
+                    { detalle.estado ? (
+                     <Col xs={24} sm={12} md={8}>
+                      <strong>estado:</strong> {detalle.estado}
+                    </Col>
+
+                    ):(
+                      <></>
+                    )}
                   </Row>
                   </Card>
               </div>
@@ -407,6 +425,12 @@ const Factura = () => {
         <ModalBuscarPorEstatusYFolio
         open={open}
         onClose={() => setOpen(false)}
+      />
+
+      <ModalExcelDate
+      openExcel={Excel}
+      onClose={()=>setOpenExcel(false)}
+      org={organizationId}
       />
     </div>
   );
