@@ -9,6 +9,7 @@ export const useCotizacionesData = (organizationId) => {
     try {
       setIsLoading(true);
       const response = await getAllcotizacionesdata(organizationId);
+      // console.log("response: ",response);
       const cotizacionesValidadas = (response.data || [])
         .map((c) => {
           const clienteIncompleto = !c["Correo"] || !c["CodigoPostal"];

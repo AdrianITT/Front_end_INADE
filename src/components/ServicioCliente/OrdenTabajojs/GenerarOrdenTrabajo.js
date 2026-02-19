@@ -38,6 +38,7 @@ const GenerarOrdenTrabajo = () => {
   
     // Obtener el ID de la organización una sola vez
     const organizationId = useMemo(() => parseInt(localStorage.getItem("organizacion_id"), 10), []);
+    const [creatingQuote, setCreatingQuote] = useState(false);
 
   // Validar acceso por organización
 
@@ -147,6 +148,8 @@ const GenerarOrdenTrabajo = () => {
   };
 
   const handleConfirmCrearOrden = async () => {
+    if (creatingQuote) return;          // <- anti spam en el padre también
+    setCreatingQuote(true);
     setLoadings(true);
     const idLocalUser = localStorage.getItem("user_id")
     const userResponse = await getUserById(idLocalUser);
@@ -188,6 +191,8 @@ const GenerarOrdenTrabajo = () => {
     } catch (error) {
       console.error("Error al crear la orden de trabajo o los servicios", error);
       message.error("Error al crear la orden de trabajo o los servicios");
+    }finally {
+      setCreatingQuote(false);
     }
   };
   
@@ -569,9 +574,14 @@ const receptorSeleccionado = receptor.find(r => r.id === ordenFormValues?.recept
         title="¿Crear orden de trabajo?"
         open={isOrdenConfirmModalVisible}
         onOk={handleConfirmCrearOrden}
-        onCancel={() => setIsOrdenConfirmModalVisible(false)}
+        onCancel={creatingQuote ? undefined : () => setIsOrdenConfirmModalVisible(false)}
         okText="Crear"
         cancelText="Cancelar"
+        confirmLoading={creatingQuote}                  // ✅ loading + bloquea OK
+        okButtonProps={{ disabled: creatingQuote }}     // ✅ extra seguro
+        cancelButtonProps={{ disabled: creatingQuote }} // ✅ no cancelar mientras crea
+        maskClosable={!creatingQuote}                   // opcional
+        keyboard={!creatingQuote}                       // opcional
       >
         <p>¿Estás seguro de crear esta orden de trabajo?</p>
         <p><strong>Receptor:</strong> {receptorSeleccionado ? `${receptorSeleccionado.nombrePila} ${receptorSeleccionado.apPaterno} ${receptorSeleccionado.apMaterno}` : "N/A"}</p>

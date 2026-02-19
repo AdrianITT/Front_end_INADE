@@ -1,21 +1,28 @@
 // CreateEmpresaModal.jsx
-import React from 'react';
+import React,{useRef, useState} from 'react';
 import { Modal, Form, Input, Select, Row, Col } from 'antd';
 import './Empresa.css';
 
 
 const CreateEmpresaModal = ({ open, onCancel, onCreate, regimenFiscal,usosCfdi }) => {
   const [form] = Form.useForm();
-
-  
-    
+  const [submitting, setSubmitting] = useState(false);
 
   const handleOk = async () => {
+    if (submitting) return; // <- anti spam
+    setSubmitting(true);
+
     try {
       const values = await form.validateFields();
-      onCreate(values, form); 
+
+      // IMPORTANTE: esperar a que el padre termine (tu handleCreateEmpresa es async ✅)
+      await onCreate(values, form);
+
     } catch (error) {
-      console.log("Error en validación:", error);
+      // si falla validateFields también cae aquí (normal)
+      console.log("Error:", error);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -24,10 +31,15 @@ const CreateEmpresaModal = ({ open, onCancel, onCreate, regimenFiscal,usosCfdi }
       title="Registro de Empresa"
       open={open}
       onOk={handleOk}
-      onCancel={onCancel}
+      onCancel={submitting ? undefined : onCancel}
       okText="Crear Empresa"
       cancelText="Cancelar"
       width={800}
+      confirmLoading={submitting}                 // <- loading + deshabilita OK
+      okButtonProps={{ disabled: submitting }}    // <- extra seguro
+      cancelButtonProps={{ disabled: submitting }}
+      maskClosable={!submitting}                  // opcional: no cerrar clic fuera mientras envía
+      keyboard={!submitting}  
     >
       <Form
         form={form}

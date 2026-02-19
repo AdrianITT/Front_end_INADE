@@ -24,6 +24,7 @@ const Cliente = () => {
   const [createCompany, setCreateCompany] = useState(false);
   const [titulos, setTitulos] = useState([]);
   const [empresaExistentes, setEmpresaExistentes] = useState([]);
+  const [submitting, setSubmitting] = useState(false);
   const norm = (v) => (v || "").trim().toLowerCase();
   const isEmail = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
   
@@ -296,6 +297,8 @@ const Cliente = () => {
 
   // Handler para el modal de creación de cliente
   const handleOk = async () => {
+    if (submitting) return; // Evitar múltiples envíos
+    setSubmitting(true);
     try {
       const formValues = await form.validateFields();
       const newClientId = await createClientAndReturnId(formValues, createCompany);
@@ -310,11 +313,15 @@ const Cliente = () => {
       }
     } catch (error) {
       console.error("Error al crear cliente", error);
+    }finally{
+      setSubmitting(false);
     }
   };
 
   // Handler para crear cliente y redirigir a cotización
   const handleCreateAndCotizar = async () => {
+    if (submitting) return; // Evitar múltiples envíos
+    setSubmitting(true);
     try {
       const formValues = await form.validateFields();
       const newClientId = await createClientAndReturnId(formValues, createCompany);
@@ -331,6 +338,8 @@ const Cliente = () => {
       }
     } catch (error) {
       console.error("Error al crear y cotizar", error);
+    }finally {
+      setSubmitting(false);
     }
   };
 
@@ -391,28 +400,30 @@ const descriptionAlert = "Eliminar un cliente eliminará también sus cotizacion
       )}
 
       {/* Modal para añadir cliente */}
-      <Modal
-        title="Añadir Cliente"
-        open={isModalOpen}
-        onCancel={handleCancel}
-        width={800}
-        footer={[
-          <Button key="cancel" onClick={handleCancel}>
-            Cancelar
-          </Button>,
-          <Button key="create" type="primary" onClick={handleOk}>
-            Crear Cliente
-          </Button>,
-          <Button
-            key="create-quote"
-            type="primary"
-            style={{ backgroundColor: "#1890ff" }}
-            onClick={handleCreateAndCotizar}
-          >
-            Crear y Cotizar
-          </Button>,
-        ]}
+  <Modal
+    title="Añadir Cliente"
+    open={isModalOpen}
+    onCancel={submitting ? undefined : handleCancel}
+    width={800}
+    footer={[
+      <Button key="cancel" onClick={handleCancel} disabled={submitting}>
+        Cancelar
+      </Button>,
+      <Button key="create" type="primary" onClick={handleOk} loading={submitting} disabled={submitting}>
+        Crear Cliente
+      </Button>,
+      <Button
+        key="create-quote"
+        type="primary"
+        style={{ backgroundColor: "#1890ff" }}
+        onClick={handleCreateAndCotizar}
+        loading={submitting}
+        disabled={submitting}
       >
+        Crear y Cotizar
+      </Button>,
+    ]}
+  >
         <Form name="clienteForm" form={form} layout="vertical">
           <Row gutter={16}>
             <Col span={12}>

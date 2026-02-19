@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, { useRef, useState, useMemo } from "react";
 import { Modal, message } from "antd";
 
 const ModalConfirmacion = ({
@@ -9,23 +9,42 @@ const ModalConfirmacion = ({
   clienteData,
   tipoMonedaSeleccionada,
   ivaSeleccionado,
-  ivasData,
+  ivasData = [],
 }) => {
-    const [confirming, setConfirming] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+
+  // 🔒 Lock inmediato (evita doble click ultra rápido antes del re-render)
+  const lockRef = useRef(false);
+
+  const moneda = useMemo(
+    () => (tipoMonedaSeleccionada === 2 ? "USD" : "MXN"),
+    [tipoMonedaSeleccionada]
+  );
+
+  const ivaPorcentaje = useMemo(() => {
+    const found = ivasData.find((iva) => iva.id === ivaSeleccionado);
+    return found?.porcentaje ?? 16;
+  }, [ivasData, ivaSeleccionado]);
 
   const handleOk = async () => {
-    if (confirming) return;     // evita doble clic
+    // bloquea spam (por estado y por lock)
+    if (confirming || lockRef.current) return;
+
+    lockRef.current = true;
     setConfirming(true);
+
     try {
-      await onConfirm?.();      // el padre cierra el modal si todo sale bien
+      // ⚠️ IMPORTANTE: onConfirm debe ser async y retornar Promise (con await en el padre)
+      await onConfirm?.();
+      // el padre normalmente cerrará el modal al terminar OK
     } catch (e) {
+      console.error(e);
       message.error("No se pudo crear la cotización.");
     } finally {
-      setConfirming(false);     // si el padre no cerró, re-habilita el botón
+      setConfirming(false);
+      lockRef.current = false;
     }
   };
-  const moneda = tipoMonedaSeleccionada === 2 ? "USD" : "MXN";
-  const ivaPorcentaje = ivasData.find((iva) => iva.id === ivaSeleccionado)?.porcentaje || 16;
 
   return (
     <Modal
@@ -35,19 +54,36 @@ const ModalConfirmacion = ({
       onCancel={confirming ? undefined : onCancel}
       okText="Crear"
       cancelText="Cancelar"
-      confirmLoading={confirming}     // <-- spinner en botón OK
-      maskClosable={!confirming}      // evita cerrar con click en el fondo
-      keyboard={!confirming}          // evita cerrar con Esc durante confirmación
+      confirmLoading={confirming}
+      okButtonProps={{ disabled: confirming }}
+      cancelButtonProps={{ disabled: confirming }}
+      maskClosable={!confirming}
+      keyboard={!confirming}
+      destroyOnClose
     >
       <p>¿Estás seguro de crear esta cotización?</p>
+
       {data && (
         <>
-          <p><strong>Cliente:</strong> {clienteData.nombrePila} {clienteData.apPaterno}</p>
-          <p><strong>Fecha Solicitud:</strong> {data.fechaSolicitud}</p>
-          <p><strong>Fecha Caducidad:</strong> {data.fechaCaducidad}</p>
-          <p><strong>Moneda:</strong> {moneda}</p>
-          <p><strong>Descuento:</strong> {data.descuento}%</p>
-          <p><strong>IVA:</strong> {ivaPorcentaje}%</p>
+          <p>
+            <strong>Cliente:</strong>{" "}
+            {clienteData?.nombrePila || ""} {clienteData?.apPaterno || ""}
+          </p>
+          <p>
+            <strong>Fecha Solicitud:</strong> {data?.fechaSolicitud || ""}
+          </p>
+          <p>
+            <strong>Fecha Caducidad:</strong> {data?.fechaCaducidad || ""}
+          </p>
+          <p>
+            <strong>Moneda:</strong> {moneda}
+          </p>
+          <p>
+            <strong>Descuento:</strong> {data?.descuento ?? 0}%
+          </p>
+          <p>
+            <strong>IVA:</strong> {ivaPorcentaje}%
+          </p>
         </>
       )}
     </Modal>

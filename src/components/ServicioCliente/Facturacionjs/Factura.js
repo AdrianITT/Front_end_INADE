@@ -151,35 +151,54 @@ const Factura = () => {
 
 
 //Evalue si hay searchTerm para filtrar los datos que se buscarin hace 1 minuto
-  useEffect(() => {
-  if (!loading && searchTerm) {
-    const filtered = data.filter((item) =>
-      Object.values(item).some(
-        (field) =>
-          field !== null &&
-          field !== undefined &&
-          String(field).toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    );
-    setFilteredData(filtered);
-  } else if (!loading && !searchTerm) {
-    console.log("No search term, showing all data");
-    setFilteredData(data);
-  }
+useEffect(() => {
+  if (loading) return;
+  const filtered = filtrarFacturas(data, searchTerm);
+  setFilteredData(filtered);
 }, [data, searchTerm, loading]);
+
+
+
+  const filtrarFacturas = (rows, term) => {
+    const q = (term ?? "").trim();
+    if (!q) return rows;
+
+    const qLower = q.toLowerCase();
+    const isOnlyDigits = /^\d+$/.test(q);
+
+    // Campos donde tiene sentido buscar números exactos
+    const numericKeys = ["id", "IdFactura", "numeroCotizacion"];
+
+    return rows.filter((item) => {
+      // Si el término es SOLO número, intenta match EXACTO en campos numéricos
+      if (isOnlyDigits) {
+        const matchExactNumeric = numericKeys.some((k) => {
+          const v = item?.[k];
+          if (v === null || v === undefined) return false;
+          return String(v).trim() === q; // exacto: "37" === "37"
+        });
+
+        if (matchExactNumeric) return true;
+
+        // Si no matcheó exacto en numéricos, NO hagas includes global,
+        // para evitar que "37" encuentre "737", "1370", etc.
+        return false;
+      }
+
+      // Si NO es sólo dígitos, tu búsqueda normal (includes en todos los campos)
+      return Object.values(item).some((field) => {
+        if (field === null || field === undefined) return false;
+        return String(field).toLowerCase().includes(qLower);
+      });
+    });
+  };
+
   // Función para manejar la búsqueda en tiempo real
   const handleSearch = (value) => {
     setSearchTerm(value);
-    const filtered = data.filter((item) =>
-      Object.values(item).some(
-        (field) =>
-          field !== null &&
-          field !== undefined &&
-          String(field).toLowerCase().includes(value.toLowerCase())
-      )
-    );
+    const filtered = filtrarFacturas(data, value);
     setFilteredData(filtered);
-    guardarEstadoEnLocalStorage({ searchText: value })
+    guardarEstadoEnLocalStorage({ searchText: value });
   };
 
   // Columnas de la tabla con filtros
