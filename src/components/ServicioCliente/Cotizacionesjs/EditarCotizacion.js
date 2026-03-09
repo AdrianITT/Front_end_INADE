@@ -607,17 +607,29 @@ useEffect(() => {
 
                         <Row gutter={24}>
                           <Col span={8}>
-                            <Form.Item
-                              label="Precio final"
-                              rules={[{ required: true, message: 'Por favor ingresa el precio.' }]}
-                            >
-                              <InputNumber
-                                min={0}
-                                style={{ width: "100%" }}
-                                value={concepto.precioFinal}
-                                onChange={(e) => handleInputChange(concepto.id, "precioFinal", e)}
-                              />
-                            </Form.Item>
+                          <Form.Item
+                            label="Precio final"
+                            rules={[{ required: true, message: "Por favor ingresa el precio." }]}
+                          >
+                            <InputNumber
+                              min={0}
+                              style={{ width: "100%" }}
+                              value={concepto.precioFinal}
+                              parser={(value) => {
+                                if (!value) return "";
+                                return String(value).replace(",", ".").replace(/[^\d.]/g, "");
+                              }}
+                              onChange={(value) => {
+                                handleInputChange(concepto.id, "precioFinal", value);
+                              }}
+                              onBlur={(e) => {
+                                const raw = e?.target?.value ?? "";
+                                if (raw.includes(",")) {
+                                  message.warning("No se permite usar coma (,). Usa punto (.) para decimales.");
+                                }
+                              }}
+                            />
+                          </Form.Item>
                           </Col>
 
                           <Col span={16}>

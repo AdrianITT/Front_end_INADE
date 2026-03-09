@@ -1,6 +1,6 @@
 // ConceptoCard.jsx
 import React from "react";
-import { Row, Col, Form, Input, Select, Checkbox, Card, Tooltip } from "antd";
+import { Row, Col, Form, Input, Select, Checkbox, Card, Tooltip, message } from "antd";
 import "./ConceptoCa.css";
 
 const { TextArea } = Input;
@@ -86,7 +86,14 @@ const ConceptoCard = ({
             <Input
               min={0}
               value={concepto.precioFinal}
-              onChange={(e) => onChange(concepto.id, "precioFinal", e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value;
+
+                if(value.includes(",")){
+                  message.warning('No se permite usar coma (,). Usa punto (.) para decimales.');
+                  return;
+                }
+                onChange(concepto.id, "precioFinal", e.target.value)}}
             />
           </Form.Item>
         </Col>

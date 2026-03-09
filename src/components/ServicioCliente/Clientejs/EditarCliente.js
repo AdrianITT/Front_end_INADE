@@ -8,6 +8,7 @@ import { getAllUsoCDFI } from '../../../apis/ApisServicioCliente/UsocfdiApi'; //
 import {descifrarId}  from "../secretKey/SecretKey";
 import { validarAccesoPorOrganizacion } from "../validacionAccesoPorOrganizacion";
 import { ControlOutlined } from "@ant-design/icons";
+import { getAllEmpresasData } from "../../../apis/ApisServicioCliente/EmpresaApi";
 
 const EditarCliente = () => {
   const { clienteIds } = useParams();  // Obtén el id desde la URL
@@ -16,6 +17,7 @@ const EditarCliente = () => {
   const [loading, setLoading] = useState(true);  // Estado de carga
   const [form] = Form.useForm();
   const [titulos, setTitulos] = useState([]);
+  const [empresas, setEmpresa] = useState([]);
   const [usoCfdiOptions, setUsoCfdiOptions] = useState([]);  // Opciones de UsoCfdi
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false); // Estado del modal de éxito
   const organizationId = useMemo(() => parseInt(localStorage.getItem("organizacion_id"), 10), []);
@@ -89,6 +91,7 @@ useEffect(() => {
             ciudadCliente: direccion.cliente.empresa.ciudad || "",
             estadoCliente: direccion.cliente.empresa.estado || "",
             codigoPostalCliente: direccion.cliente.empresa.codigoPostal || "",
+            empresa: cliente.empresa || "",
           });
         }
         const otherEmailResponse = await getOtherEmailById(clienteId);
@@ -111,6 +114,9 @@ useEffect(() => {
           });
         }
 
+        form.setFieldsValue({
+          idEmpresa: cliente.empresa || "",
+        })
         // console.log("imprime: ", form.getFieldsValue());
   
       } catch (error) {
@@ -130,6 +136,21 @@ useEffect(() => {
         console.error("Error al cargar los títulos:", error);
       }
     };
+    const fetchEmpresa = async () => {
+      try{
+        const userOrganizationId = parseInt(localStorage.getItem("organizacion_id"), 10);
+        const res = await getAllEmpresasData(userOrganizationId); // NUEVO ENDPOINT
+        // console.log("Organización: ",res);
+        setEmpresa(
+          res.data.map(emp =>({
+            id:emp.id,
+            label: `${emp.numero} - ${emp.nombre}`
+          }))
+        );
+      }catch(error){
+        console.error("Erro al cargar Empresa: ", error);
+      }
+    }
   
     const fetchUsoCfdi = async () => {
       try {
@@ -144,6 +165,7 @@ useEffect(() => {
     fetchCliente();      // 🔐 ahora con validación
     fetchTitulos();
     fetchUsoCfdi();
+    fetchEmpresa();
   }, [clienteId]);
   
 
@@ -180,12 +202,12 @@ useEffect(() => {
   // Maneja la actualización del cliente
   const handleSave = async (values) => {
     try {
-      // console.log("Valores del formulario a guardar:", values);
+      console.log("Valores del formulario a guardar:", values);
       // Preservamos los valores originales y añadimos la empresa
       const updatedValues = { ...values };
 
       // Añadimos el campo UsoCfdi
-      updatedValues.empresa = clienteData.empresa;  // Aseguramos que el id de empresa no cambie
+      // updatedValues.empresa = clienteData.empresa;  // Aseguramos que el id de empresa no cambie
       updatedValues.UsoCfdi = values.UsoCfdi || clienteData.UsoCfdi || 3;  // Si no se proporciona, se usa el valor original o por defecto
 
       await updateCliente(clienteId, updatedValues);  // Llama a la API para actualizar los datos
@@ -376,6 +398,20 @@ useEffect(() => {
           </Form.Item>
           </Col>
         </Row>
+            <Col span={12}>
+            <Form.Item
+              label="Empresa:"
+              name="empresa"
+            >
+              <Select placeholder="Selecciona Empresa">
+                {empresas.map((empresa) => (
+                  <Select.Option key={empresa.id} value={empresa.id}>
+                    {empresa.label}
+                  </Select.Option>
+                ))}
+              </Select>
+            </Form.Item>
+          </Col>
         <Row gutter={30}>
             <Divider>Direccion del cliente<Alert message="se muestra la misma direccion de la empresa cuando el cliente es nuevo" type="warning" /></Divider>
             

@@ -586,8 +586,29 @@ const handleConfirmDeleteService = async () => {
                 <Input placeholder="Nombre del servicio o concepto" />
               </Form.Item>
               
-              <Form.Item label="Precio unitario:" name="precio" rules={[{ required: true, message: "Por favor ingrese un precio" }]}>
-                <Input placeholder="Precio sugerido" />
+              <Form.Item label="Precio unitario:" name="precio" 
+              rules={[
+                { required: true, message: "Por favor ingrese un precio" },
+                {
+                  validator: (_, value) =>{
+                    if(value && String(value).includes(",")){
+                      return Promise.reject(new Error('No se permite coma (,). Usa Punto (.)'));
+                    }
+                    return Promise.resolve();
+                  }
+                }]}>
+                <Input placeholder="Precio sugerido" 
+                    onChange={(e) => {
+      let value = e.target.value;
+
+      if (value.includes(",")) {
+        message.destroy();
+        message.warning("La coma (,) fue reemplazada por punto (.)");
+        value = value.replace(/,/g, ".");
+        form.setFieldsValue({ precio: value }); // actualiza el form
+      }
+    }}
+                />
               </Form.Item>
               <Form.Item label="Unidad cfdi:" 
               name="unidadCfdi" 
@@ -756,8 +777,31 @@ const handleConfirmDeleteService = async () => {
               <Form.Item label="Nombre servicio:" name="nombreServicio" rules={[{ required: true, message: "Por favor ingrese un nombre" }]}>
                 <Input placeholder="Nombre del servicio o concepto" />
               </Form.Item>
-              <Form.Item label="Precio unitario:" name="precio" rules={[{ required: true, message: "Por favor ingrese un precio" }]}>
-                <Input placeholder="Precio sugerido" />
+              <Form.Item label="Precio unitario:" name="precio" 
+              rules={[
+                { required: true, message: "Por favor ingrese un precio" },
+                {validator: (_, value) => {
+                        if (value && String(value).includes(",")) {
+                          return Promise.reject(
+                            new Error("No se permite usar coma (,). Usa punto (.) para decimales.")
+                          );
+                        }
+                        return Promise.resolve();
+                      },
+                    },
+                ]}>
+                <Input placeholder="Precio sugerido" 
+                    onChange={(e) => {
+                      let value = e.target.value;
+
+                      if (value.includes(",")) {
+                        message.destroy();
+                        message.warning("No se permite usar coma (,). Usa punto (.) para decimales.");
+                        value = value.replace(/,/g, ".");
+                        form.setFieldsValue({ precio: value }); // actualiza el form
+                      }
+                    }}
+                    />
               </Form.Item>
               <Form.Item label="Unidad cfdi:" name="unidadCfdi" rules={[{ required: true, message: 'Por favor selecciona una unidad CFDI.' }]}>
                 <Select
