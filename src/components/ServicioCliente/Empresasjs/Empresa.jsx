@@ -6,7 +6,7 @@ import './Empresa.css';
 
 
 import { getAllEmpresas, createEmpresas, deleteEmpresa, updateEmpresa, getEmpresaById, getAllEmpresasData } from '../../../apis/ApisServicioCliente/EmpresaApi';
-import { getAllRegimenFiscal } from '../../../apis/ApisServicioCliente/Regimenfiscla';
+import { getAllRegimenFiscal, createRegimenFiscal } from '../../../apis/ApisServicioCliente/Regimenfiscla';
 import { getAllUsoCDFI } from '../../../apis/ApisServicioCliente/UsocfdiApi';
 
 
@@ -15,6 +15,7 @@ import EmpresaTable from './EmpresaTable';
 import CreateEmpresaModal from './CrearEmpresaModal';
 import EditEmpresaModal from './EditarEmpresaModal';
 import DeleteConfirmModal from './DeleteConfirmModal';
+import CreateRFModal from './CreateRegimenFiscalModal';
 
 const Empresa = () => {
   const [empresas, setEmpresas] = useState([]);
@@ -29,6 +30,9 @@ const Empresa = () => {
 
   // Para el modal de éxito (opcional)
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+
+  //para el modal de regimen fiscal
+  const [OpenRegimenFis, setOpenRegimenFis] = useState(false);
 
   // Estados para formulario
   const [regimenFiscal, setRegimenFiscal] = useState([]);
@@ -98,7 +102,7 @@ const Empresa = () => {
     loadEmpresas();
     loadRegimenFiscal();
     loadUsosCfdi();
-  }, [loadEmpresas, loadRegimenFiscal,loadUsosCfdi]);
+  }, [loadEmpresas, loadRegimenFiscal,loadUsosCfdi,OpenRegimenFis]);
 
   // 1. ABRIR modal de crear
   const handleOpenCreate = () => {
@@ -201,13 +205,26 @@ const Empresa = () => {
   //Descripcion del Alert
   const descriptionAlert ="Eliminar una empresa eliminará también sus clientes ,cotizaciones, órdenes de trabajo y facturas. Esta acción no se puede deshacer.";
 
+  const handleOpenCreateRF= async ( data ) => {
+    console.log("data: ", data);
+    try{
+      let status = await createRegimenFiscal(data);
+      if(status.status===200 || 201){
+        message.success("Se creo el regimen fiscal")
+      }
+    }catch(error){
+      console.message("Ocurrrio un error")
+    }
+  }
 
   return (
     <div><Spin spinning={loading} tip="Cargando datos...">
       <div className="content-center">
         <h1>Empresas</h1>
       </div>
-      <div className="button-ends">
+
+      <div className='buttons-row'>
+      <Button type="default" onClick={()=>setOpenRegimenFis(true)}>Añadir Regimenfiscla</Button>
       <Button type="primary" onClick={handleOpenCreate}>Añadir Empresa</Button>
       </div>
 
@@ -246,6 +263,12 @@ const Empresa = () => {
         open={isDeleteModalOpen}
         onCancel={() => setIsDeleteModalOpen(false)}
         onConfirm={handleDelete}
+      />
+      {/* MODAL DE CREACION DE REGIMEN FISCAL */}
+      <CreateRFModal
+      openRF={OpenRegimenFis}
+      onClose={()=> setOpenRegimenFis(false)}
+      onCreate={handleOpenCreateRF}
       />
 
       {/* MODAL ÉXITO */}

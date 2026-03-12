@@ -257,7 +257,7 @@ const App = () => {
             </Col>
 
 
-              {/* <Col key="Receptores" xs={24} sm={12} md={8} lg={6} xl={4} className="col-style">
+              <Col key="Receptores" xs={24} sm={12} md={8} lg={6} xl={4} className="col-style">
               <div>
                 <Link to="/Receptores">
                   <Card className="card-custom" title="Receptores" bordered={false}>
@@ -267,7 +267,7 @@ const App = () => {
                   </Card>
                 </Link>
               </div>
-            </Col> */}
+            </Col>
 
           </Row>
         </Space>

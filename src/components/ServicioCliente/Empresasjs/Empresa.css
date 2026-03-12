@@ -20,6 +20,24 @@
      max-width: 1300px;
      margin: auto; 
    }
+    .button-start {
+     display: flex;
+     justify-content: flex-start;
+     align-items: center;
+     padding: 20px;
+     margin-right: 10px;
+     max-width: 1300px;
+     margin: auto; 
+   }
+  .buttons-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    max-width: 1300px;
+    margin: 0 auto;
+    width: 100%;
+  }
    
    .fila-incompleta {
      background-color: #fff3cd !important;

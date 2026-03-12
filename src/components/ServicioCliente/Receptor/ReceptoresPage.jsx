@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Table, Button, Space, Popconfirm, message, Tag, Flex } from "antd";
 import CreateEditReceptorModal from "./CrearEditReceptorModal";
-import RelateUserModal from "./RelateUseModal";
+// import RelateUserModal from "./RelateUseModal";
 import { ReceptoresAPI, getReceptores } from "../../../apis/ApisServicioCliente/ReceptorApi"; // ajusta la ruta si usas alias
 
 const ReceptoresPage=()=> {
@@ -13,8 +13,8 @@ const ReceptoresPage=()=> {
   const [createEditLoading, setCreateEditLoading] = useState(false);
   const [editingRow, setEditingRow] = useState(null);
 
-  const [relateOpen, setRelateOpen] = useState(false);
-  const [relateLoading, setRelateLoading] = useState(false);
+  // const [relateOpen, setRelateOpen] = useState(false);
+  // const [relateLoading, setRelateLoading] = useState(false);
   const [receptorToRelate, setReceptorToRelate] = useState(null);
 
   const loadData = async () => {
@@ -30,8 +30,8 @@ const ReceptoresPage=()=> {
         apMaterno: r.apMaterno,
         correo: r.correo,
         celular: r.celular,
-        organizacion: r.organizacion?.nombre ?? r.organizacion_nombre ?? "",
-        user: r.user || (r.user_username ? { username: r.user_username, email: r.user_email, id: r.user_id } : null),
+        // organizacion: r.organizacion?.nombre ?? r.organizacion_nombre ?? "",
+        // user: r.user || (r.user_username ? { username: r.user_username, email: r.user_email, id: r.user_id } : null),
       }));
       setData(normalized);
     } catch (e) {
@@ -87,26 +87,26 @@ const ReceptoresPage=()=> {
     }
   };
 
-  const handleOpenRelate = (row) => {
-    setReceptorToRelate(row);
-    setRelateOpen(true);
-  };
+  // const handleOpenRelate = (row) => {
+  //   setReceptorToRelate(row);
+  //   setRelateOpen(true);
+  // };
 
-  const handleSubmitRelate = async (userId) => {
-    if (!receptorToRelate) return;
-    setRelateLoading(true);
-    try {
-      await ReceptoresAPI.relateUserToReceptor(receptorToRelate.id, userId);
-      message.success("Usuario relacionado correctamente");
-      setRelateOpen(false);
-      setReceptorToRelate(null);
-      await loadData();
-    } catch (e) {
-      message.error(e.message || "No se pudo relacionar el usuario");
-    } finally {
-      setRelateLoading(false);
-    }
-  };
+  // const handleSubmitRelate = async (userId) => {
+  //   if (!receptorToRelate) return;
+  //   setRelateLoading(true);
+  //   try {
+  //     await ReceptoresAPI.relateUserToReceptor(receptorToRelate.id, userId);
+  //     message.success("Usuario relacionado correctamente");
+  //     setRelateOpen(false);
+  //     setReceptorToRelate(null);
+  //     await loadData();
+  //   } catch (e) {
+  //     message.error(e.message || "No se pudo relacionar el usuario");
+  //   } finally {
+  //     setRelateLoading(false);
+  //   }
+  // };
 
   const columns = useMemo(() => [
     {
@@ -119,20 +119,20 @@ const ReceptoresPage=()=> {
     { title: "Correo", dataIndex: "correo", key: "correo" },
     { title: "Celular", dataIndex: "celular", key: "celular" },
     // { title: "Organización", dataIndex: "organizacion", key: "organizacion" },
-    {
-      title: "Usuario",
-      dataIndex: "user",
-      key: "user",
-      render: (u) => {
-        if (!u) return <Tag color="default">Sin usuario</Tag>;
-        return (
-          <Space size={4}>
-            <Tag>{u.username}</Tag>
-            <span style={{ color: "#888" }}>{u.email}</span>
-          </Space>
-        );
-      },
-    },
+    // {
+    //   title: "Usuario",
+    //   dataIndex: "user",
+    //   key: "user",
+    //   render: (u) => {
+    //     if (!u) return <Tag color="default">Sin usuario</Tag>;
+    //     return (
+    //       <Space size={4}>
+    //         <Tag>{u.username}</Tag>
+    //         <span style={{ color: "#888" }}>{u.email}</span>
+    //       </Space>
+    //     );
+    //   },
+    // },
     {
       title: "Acciones",
       key: "actions",
@@ -140,9 +140,9 @@ const ReceptoresPage=()=> {
       render: (_, row) => (
         <Space>
           <Button size="small" onClick={() => handleEdit(row)}>Editar</Button>
-          <Button size="small" type="default" onClick={() => handleOpenRelate(row)}>
+          {/* <Button size="small" type="default" onClick={() => handleOpenRelate(row)}>
             Relacionar usuario
-          </Button>
+          </Button> */}
           <Popconfirm title="¿Eliminar receptor?" onConfirm={() => handleDelete(row)}>
             <Button size="small" danger>Eliminar</Button>
           </Popconfirm>
@@ -182,14 +182,14 @@ const ReceptoresPage=()=> {
         loading={createEditLoading}
       />
 
-      <RelateUserModal
+      {/* <RelateUserModal
         open={relateOpen}
         onCancel={() => { setRelateOpen(false); setReceptorToRelate(null); }}
         onSubmit={handleSubmitRelate}
         organizacionId={organizacionId}
         loading={relateLoading}
         idReceptor={receptorToRelate?.id}
-      />
+      /> */}
     </div>
   );
 }

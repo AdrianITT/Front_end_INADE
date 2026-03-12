@@ -13,6 +13,8 @@ import {getUserById}from "../../../apis/ApisServicioCliente/UserApi";
 import { validarAccesoPorOrganizacion } from "../validacionAccesoPorOrganizacion";
 import { cifrarId, descifrarId } from "../secretKey/SecretKey";
 import { Api_Host } from "../../../apis/api";
+import CreateReceptor from "./CreateReceptor";
+
 const { TextArea } = Input;
 const { Option } = Select;
 
@@ -498,8 +500,12 @@ const receptorSeleccionado = receptor.find(r => r.id === ordenFormValues?.recept
 
 
       <div>
+        <CreateReceptor
+        open={isModalOpen}
+        onCreate={handleCreateReceptor}
+        onClose={()=>setIsModalOpen(false)}/>
       {/* Modal con el formulario reseptor*/}
-      <Modal
+      {/* <Modal
         title="Agregar Receptor"
         open={isModalOpen}
         onOk={handleOk}
@@ -548,7 +554,7 @@ const receptorSeleccionado = receptor.find(r => r.id === ordenFormValues?.recept
             <Input placeholder="Celular" />
           </Form.Item>
         </Form>
-      </Modal>
+      </Modal> */}
 
       {/* Modal de éxito */}
       <Modal

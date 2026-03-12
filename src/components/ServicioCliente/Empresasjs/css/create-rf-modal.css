@@ -1,0 +1,29 @@
+.rf-modal {
+  padding-top: 4px;
+}
+
+.rf-modal__help {
+  display: block;
+  margin-bottom: 16px;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.rf-modal__form .ant-form-item {
+  margin-bottom: 18px;
+}
+
+.rf-modal__form .ant-input {
+  height: 42px;
+  border-radius: 10px;
+}
+
+.rf-modal__form .ant-input:focus,
+.rf-modal__form .ant-input-focused {
+  box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.12);
+}
+
+.rf-modal__form .ant-form-item-label > label {
+  font-weight: 600;
+  color: #0f172a;
+}
