@@ -224,7 +224,7 @@ const Empresa = () => {
       </div>
 
       <div className='buttons-row'>
-      <Button type="default" onClick={()=>setOpenRegimenFis(true)}>Añadir Regimenfiscla</Button>
+      <Button type="default" onClick={()=>setOpenRegimenFis(true)}>Añadir Régimen fiscal</Button>
       <Button type="primary" onClick={handleOpenCreate}>Añadir Empresa</Button>
       </div>
 

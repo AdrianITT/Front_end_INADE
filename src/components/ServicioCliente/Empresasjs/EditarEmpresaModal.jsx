@@ -75,7 +75,7 @@ const EditEmpresaModal = ({ open, onCancel, onEdit, regimenFiscal, empresa,usosC
               <Input />
             </Form.Item>
             <Form.Item 
-            label="Regimen fiscal:" 
+            label="Régimen fiscal:" 
             name="regimenFiscal"
             rules={[{ required: true, message: 'Régimen requerido' }]}>
               <Select

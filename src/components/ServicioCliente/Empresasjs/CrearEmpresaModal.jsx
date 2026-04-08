@@ -70,7 +70,7 @@ const CreateEmpresaModal = ({ open, onCancel, onCreate, regimenFiscal,usosCfdi }
               <Input />
             </Form.Item>
             <Form.Item 
-            label="Regimen fiscal:" 
+            label="Régimen fiscal:" 
             name="regimenFiscal"
             rules={[{ required: true, message: 'Régimen requerido' }]}>
               <Select

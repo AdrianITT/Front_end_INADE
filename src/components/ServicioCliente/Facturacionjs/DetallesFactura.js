@@ -93,7 +93,8 @@ const DetallesFactura = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [facturaPagos, setFacturaPagos] = useState([]);
   const [isSuccessModalVisible, setIsSuccessModalVisible] = useState(false);
-  const [confirmLoading, setConfirmLoading] = useState(false);
+
+  const [ showErrores, setShowErrors] = useState(false);
   const [dataFactura, setDataFactura] = useState(null);
   const [dataLogo, setDataLogo] = useState(null);
   const [centavos, setCentavos] = useState("");
@@ -768,7 +769,7 @@ const confirmNotaCredito = async (idA,idB,related) => {
   try {
 
     const data =await getFacturaRelacionX(idB,idA, related);
-
+    console.log(data);
     message.success("Factura eliminada correctamente.");
     setNotaCredito(false);
     // navigate("/factura");
@@ -1010,7 +1011,11 @@ const montoRestante =hasPagos
                       </Button> */}
                       <Button
                       loading={loading}
-                      onClick={()=>setNotaCredito(true)}>
+                      onClick={()=>setNotaCredito(true)}
+                      style={{
+                        backgroundColor: '#ffc400ff',
+                      }}
+                      >
                         Crear Factura con Relacion
                       </Button>
                 </div>
@@ -1344,47 +1349,78 @@ const montoRestante =hasPagos
           <Button key="cancelar" onClick={() => setNotaCredito(false)}>
             Cancelar
           </Button>,
-          <Button key="eliminar" type="primary" 
-          disabled={!facturaReemplazoId} 
-          loading={loading}
-          onClick={()=>confirmNotaCredito(id,facturaReemplazoId, relationtypeId)}>
-             Crear Factura
+          <Button
+            key="eliminar"
+            type="primary"
+            disabled={!facturaReemplazoId || !relationtypeId}
+            loading={loading}
+            onClick={() => {
+              setShowErrors(true);
+
+              // if(!facturaReemplazoId || ! relationtypeId) return;
+
+              confirmNotaCredito(id, facturaReemplazoId, relationtypeId);
+            }}
+          >
+            Crear Factura
           </Button>,
         ]}
       >
         <p>Esta acción no se puede deshacer.</p>
         <p> Selecciona la factura. No se puede desacer.</p>
+        <Alert 
+        message="Advertencia"
+        description="Por favor de llenar todos los campos que se muestran a continuación"
+        type="warning" 
+        showIcon
+        />
 
-        <Select
-          style={{ width: "100%" }}
-          placeholder="Selecciona una factura para reemplazar"
-          value={facturaReemplazoId}
-          onChange={setFacturaReemplazoId}
-          showSearch
-          optionFilterProp="children"
-          filterOption={(input, option)=>
-          (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
-          }
-          options={facturas.map(f => ({
-            label: `Factura #${f.folio} - ${f.empresa || 'Empresa desconocida'}`,
-            value: f.id,
-          }))}
-        />
-        <Select
-          style={{ width: "100%" }}
-          placeholder="Tipo de Relación"
-          value={relationtypeId}
-          onChange={setRelationTypeId}
-          showSearch
-          optionFilterProp="children"
-          filterOption={(input, option)=>
-          (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
-          }
-          options={relationtype.map(f => ({
-            label: `${f.codigo} - ${f.descripcion || 'Descripcion desconocida'}`,
-            value: f.codigo,
-          }))}
-        />
+        <Form layout="vertical">
+          <Form.Item
+            label="Factura a reemplazar"
+            required
+            rules={[{ required: true, message: "Selecciona una factura" }]}
+          >
+            <Select
+              style={{ width: "100%" }}
+              placeholder="Selecciona una factura para reemplazar"
+              value={facturaReemplazoId}
+              onChange={setFacturaReemplazoId}
+              showSearch
+              optionFilterProp="children"
+              filterOption={(input, option) =>
+                (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
+              }
+              options={facturas.map((f) => ({
+                label: `Factura #${f.folio} - ${f.empresa || "Empresa desconocida"}`,
+                value: f.id,
+              }))}
+            />
+          </Form.Item>
+
+          <Form.Item
+            label="Tipo de relación"
+            required
+            validateStatus={ showErrores && !relationtypeId ? "error" : "" }
+            help={ showErrores && !relationtypeId ? "Selecciona el tipo de relación" : "" }
+          >
+            <Select
+              style={{ width: "100%" }}
+              placeholder="Tipo de Relación"
+              value={relationtypeId}
+              onChange={setRelationTypeId}
+              showSearch
+              optionFilterProp="children"
+              filterOption={(input, option) =>
+                (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
+              }
+              options={relationtype.map((f) => ({
+                label: `${f.codigo} - ${f.descripcion || "Descripción desconocida"}`,
+                value: f.codigo,
+              }))}
+            />
+          </Form.Item>
+        </Form>
       </Modal>
             {/* elimnar factura para el reemplazarlo */}
         {/* <Modal
