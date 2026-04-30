@@ -63,6 +63,7 @@ const CrearFactura = () => {
     const [selectedRows, setSelectedRows] = useState([]);
     const [descuentoGlobal, setDescuentoGlobal] = useState(0);
     const [totalServicios, setTotalServicios] = useState(0);
+    const [porcentajeFactura, setPorcentajeFactura] = useState(0);
     //const factorConversion = esUSD ? tipoCambioDolar : 1;
     // Obtener el ID de la organización una sola vez
         const organizationId = useMemo(() => parseInt(localStorage.getItem("organizacion_id"), 10), []);
@@ -124,7 +125,7 @@ const CrearFactura = () => {
   
         // Fecha del picket
 
-        form.setFieldsValue({ poresentajeFactura: 0 });
+        form.setFieldsValue({ porcentajeFactura: 0 });
   
       } catch (err) {
         console.error(err);
@@ -343,7 +344,7 @@ const CrearFactura = () => {
   //   tipoCambio = rate;
   // }
     setLoading(true);
-    const porcentajeFactura = values.poresentajeFactura ?? 0;    // e.g. 50
+    const porcentajeFactura = values.porcentajeFactura ?? 0;    // e.g. 50
     const tasaIVA = tasaIva;                                    // e.g. 0.16
   
     // 1) Servicios que ELIMINAMOS (los seleccionados) y por tanto facturamos los NO seleccionados
@@ -361,6 +362,8 @@ const CrearFactura = () => {
   
     // 3) Porcentaje de descuento original de la cotización
     const descuentoCotPct = parseFloat(dataID.valores.descuentoPorcentaje) / 100;
+    console.log(`Descuento original: ${descuentoCotPct * 100}%`);
+    console.log(dataID.valores.descuentoPorcentaje);
     
     // 4) Aplicar descuento original
     const subtotalConDescOriginal = ((subtotal) * (1 - descuentoCotPct));
@@ -610,13 +613,37 @@ const CrearFactura = () => {
           <Form.Item label="Orden de compra:" name="ordenCompra">
             <Input />
             </Form.Item>
-            <Form.Item label="Porcentaje a pagar:" name="poresentajeFactura">
-              <NumericInput
-                value={form.getFieldValue("poresentajeFactura")}
-                onChange={(val) => form.setFieldsValue({ poresentajeFactura: val })}
-                style={{ width: '100%' }}
-              />
+            <Form.Item
+            label="Porcentaje de descuento a aplicar:"
+            name="porcentajeFactura"
+            tooltip='0 = pagar el 100% de la factura, 50 = pagar solo el 50%.'
+            rules={[
+              {required: true, message: "Ingresa un porcentaje"},
+              {type: "number", min: 0, max: 99, message: "Debe ser entre 0 y 99"}
+            ]}
+            >
+              <InputNumber
+              min={0}
+              max={100}
+              step={1}
+              precision={2}
+              addonAfter="%"
+              style={{ width: '100%' }}
+              placeholder="0"
+              onChange={(val) => setPorcentajeFactura(val ?? 0)}
+              ></InputNumber>
             </Form.Item>
+            {resumenCot.importe > 0 &&(
+              <Alert
+              type="info"
+              showIcon
+              message={(()=>{
+                const pct = porcentajeFactura ?? 0;
+                const montoFinal = resumenCot.importe * (1 - pct / 100);
+                return `Monto a facturar: $${montoFinal.toFixed(2)} ${tipoMoneda.codigo} (${100 - pct}% del total)`;
+              })()}
+              style={{ marginBottom: 8 }}></Alert>
+            )}
 
         </div>
           </Col>

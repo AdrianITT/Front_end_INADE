@@ -62,23 +62,7 @@ const GenerarOrdenTrabajo = () => {
       
           verificar();
         }, [organizationId, id]);
-  //const [selectedServicios, setSelectedServicios] = useState([]); // Servicios seleccionados por el usuario
-  // const fetchValue=async()=>{
-  //   console.log("organizationId",organizationId);
-  //   const OrdenT = await getAllOrdenesTrabajoData(organizationId);  // 👈 trae todos los clientes
 
-  //   console.log("OrdenT",OrdenT);
-    
-  //   const idsPermitidos = OrdenT.data.map((c) => String(c.orden));  // 👈 importante: convertir a string para comparación con URL
-  //   console.log("idsPermitidos",idsPermitidos);
-
-  //   if (idsPermitidos.length > 0 && !idsPermitidos.includes(id)) {
-  //     message.error("No tienes autorización para editar este cliente.");
-  //     navigate("/no-autorizado");
-  //     return;
-  //   }
-      
-  // }
 
   useEffect(() => {
     
@@ -488,11 +472,11 @@ const receptorSeleccionado = receptor.find(r => r.id === ordenFormValues?.recept
         ))}
 
         <div className="form-buttons">
-          <Button type="primary" htmlType="submit" className="register-button">
-            Registrar
-          </Button>
           <Button type="primary" danger onClick={() => navigate(`/detalles_cotizaciones/${cifrarId(cotizacionId)}`)}>
             Cancelar
+          </Button>
+          <Button type="primary" htmlType="submit" className="register-button">
+            Registrar
           </Button>
         </div>
       </Form>
@@ -504,57 +488,6 @@ const receptorSeleccionado = receptor.find(r => r.id === ordenFormValues?.recept
         open={isModalOpen}
         onCreate={handleCreateReceptor}
         onClose={()=>setIsModalOpen(false)}/>
-      {/* Modal con el formulario reseptor*/}
-      {/* <Modal
-        title="Agregar Receptor"
-        open={isModalOpen}
-        onOk={handleOk}
-        onCancel={handleCancel}
-        footer={[
-          <Button key="cancelar" onClick={handleCancel}>
-            Cancelar
-          </Button>,
-          <Button key="guardar" type="primary" onClick={handleOk}>
-            Guardar
-          </Button>,
-        ]}
-      >
-        <Form form={formModal} layout="vertical" onFinish={handleCreateReceptor}>
-          <Form.Item
-                name="nombrePila"
-                label="Nombre"
-                rules={[{ required: true, message: 'Por favor ingrese el nombre' }]}
-              >
-                <Input placeholder="Nombre" />
-              </Form.Item>
-            <Form.Item
-            name="apPaterno"
-            label="Apellido Paterno"
-            rules={[{ required: true, message: 'Por favor ingrese el apellido paterno' }]}
-          >
-            <Input placeholder="Apellido Paterno" />
-          </Form.Item>
-          <Form.Item
-              name="apMaterno"
-              label="Apellido Materno"
-              rules={[{ required: true, message: 'Por favor ingrese el apellido materno' }]}
-            >
-              <Input placeholder="Apellido Materno" />
-            </Form.Item>
-            <Form.Item
-              name="correo"
-              label="Correo Electrónico"
-            >
-              <Input placeholder="Correo electrónico" />
-            </Form.Item>
-          <Form.Item
-            label="Celular:"
-            name="celular"
-          >
-            <Input placeholder="Celular" />
-          </Form.Item>
-        </Form>
-      </Modal> */}
 
       {/* Modal de éxito */}
       <Modal

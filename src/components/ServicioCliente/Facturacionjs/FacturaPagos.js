@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Card,
   Row,
@@ -34,6 +34,8 @@ const PaymentCards = ({ idFactura, correoCliente,refreshPagos }) => {
   const [pagoForEmail, setPagoForEmail] = useState(null);
   const [extraEmails, setExtraEmails] = useState(""); // se inicia vacío
   const [loading, setLoading] = useState(false);
+  const [processingPagos, setProcessingPagos] = useState({});
+  const inFlightPagosRef = useRef(new Set());
   // Estado para el modal de confirmación de correo enviado
   const [isConfirmationModalVisible, setIsConfirmationModalVisible] = useState(false);
 
@@ -80,6 +82,14 @@ const openNotificationWithIcon = (text) => {
 
   // Función para realizar el pago
   const handleRealizarPago = async (pagoId) => {
+      // Bloqueo inmediato incluso antes de que React re-renderice
+  if (inFlightPagosRef.current.has(pagoId)) return;
+
+  inFlightPagosRef.current.add(pagoId);
+  setProcessingPagos((prev) => ({
+    ...prev,
+    [pagoId]: true,
+  }));
     try {
 
       const reponse =await getAllFacturaPagosFacturama(pagoId);
@@ -109,7 +119,13 @@ const openNotificationWithIcon = (text) => {
         : mainError;
 
       openNotificationWithIcon(finalMessage);
-    } 
+    } finally {
+    inFlightPagosRef.current.delete(pagoId);
+    setProcessingPagos((prev) => ({
+      ...prev,
+      [pagoId]: false,
+    }));
+  }
   };
 
   // Función para descargar el PDF
@@ -267,6 +283,7 @@ const openNotificationWithIcon = (text) => {
 
   // Renderiza el botón o menú según el estado del pago
   const renderBotonPago = (pago) => {
+    const isProcesando = !!processingPagos[pago.id];
     if (pago.isPDFVisible || pago.facturama_id !== null) {
       const menu = (
         <Menu>
@@ -297,6 +314,8 @@ const openNotificationWithIcon = (text) => {
         {contextHolder}
         <Button
           type="primary"
+          loading={isProcesando}
+          disabled={isProcesando}
           style={{
             backgroundColor: '#faad14',
             borderColor: '#faad14',
@@ -305,10 +324,11 @@ const openNotificationWithIcon = (text) => {
           }}
           onClick={() => handleRealizarPago(pago.id)}
         >
-          Realizar Pago
+          {isProcesando ? "Procesando..." : "Realizar Pago"}
         </Button>
         <Button icon={<DeleteOutlined style={{ color: 'red' }} />} 
-        onClick={() => openDeleteModal(pago.id)}>Eliminar Complemento</Button>
+        onClick={() => openDeleteModal(pago.id)}
+        disabled={isProcesando}>Eliminar Complemento</Button>
         </>
       );
     }
