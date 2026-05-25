@@ -1367,7 +1367,7 @@ const DetallesFactura = () => {
 
           <Form layout="vertical">
             <Form.Item
-              label="Factura a reemplazar"
+              label="Factura a relacionar"
               required
               validateStatus={showErrores && !facturaReemplazoId ? "error" : ""}
               help={
@@ -1378,7 +1378,7 @@ const DetallesFactura = () => {
             >
               <Select
                 style={{ width: "100%" }}
-                placeholder="Selecciona una factura para reemplazar"
+                placeholder="Selecciona una factura para relacionar"
                 value={facturaReemplazoId}
                 onChange={setFacturaReemplazoId}
                 showSearch

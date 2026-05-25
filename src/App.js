@@ -17,7 +17,8 @@ import {
   ThunderboltTwoTone,
   DollarTwoTone,
   UserSwitchOutlined,
-  FundTwoTone
+  FundTwoTone,
+  StarOutlined,
 } from "@ant-design/icons";
 import { Link } from "react-router-dom";
 
@@ -258,6 +259,17 @@ const App = () => {
                     <Card className="card-custom" title="Receptores" bordered={false}>
                       <div className="icon-container">
                         <UserSwitchOutlined />
+                      </div>
+                    </Card>
+                  </Link>
+                </div>
+              </Col>
+              <Col key="LinkEvaluacion" xs={24} sm={12} md={8} lg={6} xl={4} className="col-style">
+                <div>
+                  <Link to="/LinkEvaluacion">
+                    <Card className="card-custom" title="Link de Evaluación" bordered={false}>
+                      <div className="icon-container">
+                        <StarOutlined />
                       </div>
                     </Card>
                   </Link>

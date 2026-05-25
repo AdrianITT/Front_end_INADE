@@ -44,6 +44,8 @@ import RegistroCotizacion from "./components/ServicioCliente/Cotizacionesjs/Regi
 import RegistroWizard from "./components/ServicioCliente/Register/RegistroWizard";
 // import TestCotizar from "./components/ServicioCliente/Cotizacionesjs/TestCotizacion";
 import ReceptoresPage from "./components/ServicioCliente/Receptor/ReceptoresPage";
+import EvaluacionPage from "./components/Surveys/Evaluacion";
+import LinkEvaluacion from "./components/ServicioCliente/LinkEvalucion/linkEvaluacion";
 
 // Hook para cambiar el título de la pestaña
 const usePageTitle = () => {
@@ -101,6 +103,7 @@ const AppRouter = () => {
         <Route path="*" element={<NoAutorizado />} />
         <Route path="/no-autorizado" element={<NoAutorizado />} />
         <Route path="/register" element={<RegistroWizard/>} />
+        <Route path="/evaluacion/:token" element={<EvaluacionPage />} />
         {/* Rutas envueltas con Layout */}
         <Route path="/" element={
             <PageWrapper>
@@ -141,6 +144,7 @@ const AppRouter = () => {
           <Route path="/CrearPagos" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><CrearPagos/></ProtectedRoute>} />
           <Route path="/CrearPagos/:ids" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><CrearPagos/></ProtectedRoute>} />
           <Route path="/Receptores" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><ReceptoresPage/></ProtectedRoute>} />
+          <Route path="/LinkEvaluacion" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><LinkEvaluacion/></ProtectedRoute>} />
           {/* <Route path="/TestCotizar" element={<ProtectedRoute allowedRoles={['UsuarioOrganizacion', 'Administradororganizacion']}><TestCotizar/></ProtectedRoute>} /> */}
         </Route>
       </Routes>
