@@ -400,17 +400,16 @@ const CrearFactura = () => {
     try {
       setLoading(true);
       // 9) Guardar solo los servicios NO seleccionados
-      await Promise.all(
-        serviciosAFacturar.map(s =>
-          createServicioFactura({
-            descripcion: (s.descripcion || "Sin Descripción").slice(0, 500),
-            precio:      parseFloat(s.precio),
-            cantidad:    s.cantidad,
-            factura:     facturaId,
-            servicio:    s.servicio.id
-          })
-        )
-      );
+
+      for (const s of serviciosAFacturar) {
+        await createServicioFactura({
+          descripcion: (s.descripcion || "Sin Descripción").slice(0, 500),
+          precio:      parseFloat(s.precio),
+          cantidad:    s.cantidad,
+          factura:     facturaId,
+          servicio:    s.servicio.id
+        });
+      }
       message.success("Factura creada con éxito");  
       navigate(`/detallesfactura/${cifrarId(facturaId)}`);
     } catch (error) {

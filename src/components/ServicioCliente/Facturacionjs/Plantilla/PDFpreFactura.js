@@ -172,18 +172,31 @@ const styles = StyleSheet.create({
 });
 
 // Componente de la factura
-const FacturaPDF = ({ dataFactura, dataLogo, centavo,centavotext }) => {
+const FacturaPDF = ({ dataFactura, dataLogo, centavo, centavotext, serviciosReferencia }) => {
   if (!dataFactura || !dataLogo) return <p>Cargando datos...</p>;
 
   const filasPrimeraPagina = 10;
   const filasRestoPaginas  = 13;
-  const serviciosPaginados = dataFactura.servicios.reduce((acc, curr, i) => {
-    const page = i < filasPrimeraPagina
-      ? 0
-      : 1 + Math.floor((i - filasPrimeraPagina) / filasRestoPaginas);
-    (acc[page] = acc[page] || []).push(curr);
-    return acc;
-  }, []);
+
+  const nombreServiciosOrdenados = (serviciosReferencia ?? []).map(s => s.servicio?.nombre || s.nombre);
+
+  const serviciosPaginados = [...(dataFactura.servicios || [])]
+    .sort((a, b) => {
+      const nombreA = a.servicio?.nombre || a.nombre || "";
+      const nombreB = b.servicio?.nombre || b.nombre || "";
+      const indexA = nombreServiciosOrdenados.indexOf(nombreA);
+      const indexB = nombreServiciosOrdenados.indexOf(nombreB);
+      if (indexA === -1) return 1;
+      if (indexB === -1) return -1;
+      return indexA - indexB;
+    })
+    .reduce((acc, curr, i) => {
+      const page = i < filasPrimeraPagina
+        ? 0
+        : 1 + Math.floor((i - filasPrimeraPagina) / filasRestoPaginas);
+      (acc[page] = acc[page] || []).push(curr);
+      return acc;
+    }, []);
  
 
       //  <-- importante
@@ -302,7 +315,7 @@ const FacturaPDF = ({ dataFactura, dataLogo, centavo,centavotext }) => {
           </View>
 
           {/* Filas de esta página */}
-          {(Array.isArray(grupo) ? [...grupo].reverse() : []).map((serv, index) => (
+          {(Array.isArray(grupo) ? grupo : []).map((serv, index) => (
             <View key={index} style={styles.tableRow} >
               <Text style={styles.colProducto}>{serv.servicio?.claveCfdi?.codigo ?? 'sin datos'}</Text>
               <Text style={styles.colCantidad}>{serv.cantidad}</Text>

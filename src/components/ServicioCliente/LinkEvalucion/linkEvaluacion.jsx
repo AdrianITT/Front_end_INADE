@@ -262,7 +262,7 @@ const EvaluacionesTable = () => {
       width: 180,
       fixed: "right",
       render: (_, record) => {
-        const surveyLink = `http://localhost:3000/evaluacion/${record.token}`;
+        const surveyLink = `https://localhost/evaluacion/${record.token}`;
         
         return (
           <Space>

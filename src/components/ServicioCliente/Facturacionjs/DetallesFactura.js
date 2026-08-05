@@ -471,7 +471,7 @@ const DetallesFactura = () => {
 
       if (esUSD) {
         const rate = await confirmTipoCambioBanxicoSelects({
-          token: "3487379dee962285e81cbbad6bea7ef19936271d8ec7fff95170cae223bdc144",
+          token: process.env.REACT_TOKEN_BANXICO,
           serie: "SF43718",
           daysBack: 60,
         });
@@ -910,6 +910,7 @@ const DetallesFactura = () => {
                               dataLogo={dataLogo}
                               centavo={preFacturaTexto.centavos}
                               centavotext={preFacturaTexto.centavostext}
+                              serviciosReferencia={factura?.servicios ?? []}
                             />
                           ) : (
                             <Text>Cargando...</Text>
